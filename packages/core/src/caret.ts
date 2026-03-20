@@ -44,10 +44,7 @@ const STYLE_PROPERTIES = [
  * Returns `{ top: 0, left: 0, height: 16 }` when called in an SSR environment
  * where `document` is not available.
  */
-export function getCaretCoordinates(
-	element: HTMLTextAreaElement,
-	position: number,
-): CaretPosition {
+export function getCaretCoordinates(element: HTMLTextAreaElement, position: number): CaretPosition {
 	if (typeof document === "undefined") {
 		return { top: 0, left: 0, height: 16 };
 	}

@@ -1,16 +1,22 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.0.0/schema.json",
-  "formatter": {
-    "indentStyle": "tab",
-    "indentWidth": 2,
-    "lineWidth": 100
-  },
-  "linter": {
-    "rules": {
-      "recommended": true
-    }
-  },
-  "javascript": {
-    "jsxRuntime": "transparent"
-  }
+	"$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
+	"files": {
+		"includes": ["**", "!**/dist"]
+	},
+	"formatter": {
+		"indentStyle": "tab",
+		"indentWidth": 2,
+		"lineWidth": 100
+	},
+	"linter": {
+		"rules": {
+			"recommended": true,
+			"style": {
+				"noNonNullAssertion": "error"
+			}
+		}
+	},
+	"javascript": {
+		"jsxRuntime": "transparent"
+	}
 }

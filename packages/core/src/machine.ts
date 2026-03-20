@@ -98,9 +98,7 @@ export function mentionReducer(state: MentionState, action: MentionAction): Ment
 		case "ARROW_UP": {
 			if (state.items.length === 0) return state;
 			const prev =
-				state.highlightedIndex <= 0
-					? state.items.length - 1
-					: state.highlightedIndex - 1;
+				state.highlightedIndex <= 0 ? state.items.length - 1 : state.highlightedIndex - 1;
 			return { ...state, status: "navigating", highlightedIndex: prev };
 		}
 

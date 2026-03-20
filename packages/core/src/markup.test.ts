@@ -22,9 +22,7 @@ describe("parseMarkup", () => {
 
 	it("returns single text segment for plain text", () => {
 		const result = parseMarkup("hello world", triggers);
-		expect(result).toEqual([
-			{ type: "text", text: "hello world", markupStart: 0, markupEnd: 11 },
-		]);
+		expect(result).toEqual([{ type: "text", text: "hello world", markupStart: 0, markupEnd: 11 }]);
 	});
 
 	it("parses a single @ mention", () => {
@@ -33,8 +31,20 @@ describe("parseMarkup", () => {
 
 		expect(result).toHaveLength(3);
 		expect(result[0]).toEqual({ type: "text", text: "Hey ", markupStart: 0, markupEnd: 4 });
-		expect(result[1]).toEqual({ type: "mention", text: "@John Doe", id: "user:123", trigger: "@", markupStart: 4, markupEnd: 25 });
-		expect(result[2]).toEqual({ type: "text", text: " how are you", markupStart: 25, markupEnd: 37 });
+		expect(result[1]).toEqual({
+			type: "mention",
+			text: "@John Doe",
+			id: "user:123",
+			trigger: "@",
+			markupStart: 4,
+			markupEnd: 25,
+		});
+		expect(result[2]).toEqual({
+			type: "text",
+			text: " how are you",
+			markupStart: 25,
+			markupEnd: 37,
+		});
 	});
 
 	it("parses multiple mentions of different triggers", () => {
@@ -87,7 +97,9 @@ describe("markupToPlainText", () => {
 	});
 
 	it("converts markup with multiple mentions", () => {
-		expect(markupToPlainText("@[Alice](1) and @[Bob](2) met #[today](3)", triggers)).toBe("@Alice and @Bob met #today");
+		expect(markupToPlainText("@[Alice](1) and @[Bob](2) met #[today](3)", triggers)).toBe(
+			"@Alice and @Bob met #today",
+		);
 	});
 
 	it("returns plain text unchanged", () => {
@@ -139,7 +151,14 @@ describe("createMentionMarkup", () => {
 
 describe("insertMention", () => {
 	it("inserts mention replacing trigger+query", () => {
-		const result = insertMention("Hey @jo", { id: "123", label: "John Doe" }, atTrigger, 4, 7, triggers);
+		const result = insertMention(
+			"Hey @jo",
+			{ id: "123", label: "John Doe" },
+			atTrigger,
+			4,
+			7,
+			triggers,
+		);
 		expect(result.markup).toBe("Hey @[John Doe](123) ");
 		expect(result.plainText).toBe("Hey @John Doe ");
 		expect(result.cursor).toBe(14);
@@ -153,7 +172,14 @@ describe("insertMention", () => {
 	});
 
 	it("inserts mention preserving text after cursor", () => {
-		const result = insertMention("Hello @jo world", { id: "2", label: "John" }, atTrigger, 6, 9, triggers);
+		const result = insertMention(
+			"Hello @jo world",
+			{ id: "2", label: "John" },
+			atTrigger,
+			6,
+			9,
+			triggers,
+		);
 		expect(result.markup).toBe("Hello @[John](2) world");
 		expect(result.plainText).toBe("Hello @John world");
 	});
@@ -187,15 +213,21 @@ describe("applyChange", () => {
 	});
 
 	it("handles typing after a mention without breaking it", () => {
-		expect(applyChange("Hey @[John](1) ", "Hey @John x", "Hey @John ", triggers)).toBe("Hey @[John](1) x");
+		expect(applyChange("Hey @[John](1) ", "Hey @John x", "Hey @John ", triggers)).toBe(
+			"Hey @[John](1) x",
+		);
 	});
 
 	it("removes entire mention when backspacing into it", () => {
-		expect(applyChange("@[Alice Johnson](1) ", "@Alice Johnso ", "@Alice Johnson ", triggers)).toBe("@Alice Johnso ");
+		expect(applyChange("@[Alice Johnson](1) ", "@Alice Johnso ", "@Alice Johnson ", triggers)).toBe(
+			"@Alice Johnso ",
+		);
 	});
 
 	it("removes entire mention when deleting from middle", () => {
-		expect(applyChange("Hey @[John](1) bye", "Hey @Jhn bye", "Hey @John bye", triggers)).toBe("Hey @Jhn bye");
+		expect(applyChange("Hey @[John](1) bye", "Hey @Jhn bye", "Hey @John bye", triggers)).toBe(
+			"Hey @Jhn bye",
+		);
 	});
 
 	it("handles typing before a mention without breaking it", () => {

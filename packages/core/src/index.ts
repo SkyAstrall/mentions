@@ -1,39 +1,32 @@
-export { mentionReducer, initialState, createInitialState } from "./machine.ts";
-
+export { getCaretCoordinates } from "./caret.ts";
+export { connect } from "./connect.ts";
+export { filterItems } from "./filter.ts";
+export { createInitialState, initialState, mentionReducer } from "./machine.ts";
 export {
-	parseMarkup,
-	toPlainText,
-	markupToPlainText,
-	plainIndexToMarkupIndex,
 	applyChange,
 	createMentionMarkup,
-	insertMention,
 	extractMentions,
 	getMarkupTemplate,
+	insertMention,
+	markupToPlainText,
+	parseMarkup,
+	plainIndexToMarkupIndex,
+	toPlainText,
 } from "./markup.ts";
-
-export { detectTrigger } from "./triggers.ts";
 export type { TriggerMatch } from "./triggers.ts";
-
-export { filterItems } from "./filter.ts";
-
-export { getCaretCoordinates } from "./caret.ts";
-
-export { connect } from "./connect.ts";
-
-export { escapeRegex } from "./utils.ts";
-
+export { detectTrigger } from "./triggers.ts";
 export type {
-	MentionItem,
-	MentionContext,
-	TriggerConfig,
-	Segment,
-	TextSegment,
-	MentionSegment,
 	CaretPosition,
+	ConnectReturn,
 	MachineStatus,
-	MentionState,
 	MentionAction,
 	MentionCallbacks,
-	ConnectReturn,
+	MentionContext,
+	MentionItem,
+	MentionSegment,
+	MentionState,
+	Segment,
+	TextSegment,
+	TriggerConfig,
 } from "./types.ts";
+export { escapeRegex } from "./utils.ts";

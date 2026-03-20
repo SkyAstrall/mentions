@@ -74,7 +74,13 @@ export type MentionState = {
 
 /** Actions dispatched to the mention state machine. */
 export type MentionAction =
-	| { type: "INPUT_CHANGE"; markup: string; plainText: string; selectionStart: number; selectionEnd: number }
+	| {
+			type: "INPUT_CHANGE";
+			markup: string;
+			plainText: string;
+			selectionStart: number;
+			selectionEnd: number;
+	  }
 	| { type: "TRIGGER_MATCH"; trigger: string; query: string; startIndex: number; endIndex: number }
 	| { type: "TRIGGER_LOST" }
 	| { type: "QUERY_CHANGE"; query: string; endIndex: number }

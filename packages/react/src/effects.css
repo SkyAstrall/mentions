@@ -1,117 +1,118 @@
 @property --border-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
+	syntax: "<angle>";
+	initial-value: 0deg;
+	inherits: false;
 }
 
 :root {
-  --mentions-gradient-from: #687aff;
-  --mentions-gradient-to: #b3beff;
-  --mentions-glow-color: #3b82f6;
-  --mentions-animate-speed: 0.25s;
+	--mentions-gradient-from: #687aff;
+	--mentions-gradient-to: #b3beff;
+	--mentions-glow-color: #3b82f6;
+	--mentions-animate-speed: 0.25s;
 }
 
 /* Animated gradient border — add class "mentions-gradient-border" */
 
 @keyframes mentions-rotate-border {
-  to {
-    --border-angle: 360deg;
-  }
+	to {
+		--border-angle: 360deg;
+	}
 }
 
 [data-mentions].mentions-gradient-border textarea:focus,
 [data-mentions].mentions-gradient-border input:focus {
-  border: 2px solid transparent;
-  background:
-    linear-gradient(var(--dropdown-bg, white), var(--dropdown-bg, white)) padding-box,
-    conic-gradient(
-      from var(--border-angle),
-      var(--mentions-gradient-from),
-      var(--mentions-gradient-to),
-      var(--mentions-gradient-from)
-    ) border-box;
-  animation: mentions-rotate-border 3s linear infinite;
-  outline: none;
+	border: 2px solid transparent;
+	background:
+		linear-gradient(var(--dropdown-bg, white), var(--dropdown-bg, white)) padding-box,
+		conic-gradient(
+			from var(--border-angle),
+			var(--mentions-gradient-from),
+			var(--mentions-gradient-to),
+			var(--mentions-gradient-from)
+		)
+		border-box;
+	animation: mentions-rotate-border 3s linear infinite;
+	outline: none;
 }
 
 /* Shimmer placeholder — add class "mentions-shimmer" */
 
 @keyframes mentions-shimmer {
-  from {
-    background-position: -200% center;
-  }
-  to {
-    background-position: 200% center;
-  }
+	from {
+		background-position: -200% center;
+	}
+	to {
+		background-position: 200% center;
+	}
 }
 
 [data-mentions].mentions-shimmer textarea:placeholder-shown,
 [data-mentions].mentions-shimmer input:placeholder-shown {
-  background: linear-gradient(
-    90deg,
-    currentColor 0%,
-    var(--mentions-gradient-to) 50%,
-    currentColor 100%
-  );
-  background-size: 200% 100%;
-  background-clip: text;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: mentions-shimmer 3s ease-in-out infinite;
+	background: linear-gradient(
+		90deg,
+		currentColor 0%,
+		var(--mentions-gradient-to) 50%,
+		currentColor 100%
+	);
+	background-size: 200% 100%;
+	background-clip: text;
+	-webkit-background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: mentions-shimmer 3s ease-in-out infinite;
 }
 
 [data-mentions].mentions-shimmer textarea:not(:placeholder-shown),
 [data-mentions].mentions-shimmer input:not(:placeholder-shown) {
-  background: none;
-  background-clip: unset;
-  -webkit-background-clip: unset;
-  -webkit-text-fill-color: unset;
+	background: none;
+	background-clip: unset;
+	-webkit-background-clip: unset;
+	-webkit-text-fill-color: unset;
 }
 
 /* Dropdown transitions — add class "mentions-animate" to parent */
 
 [data-mentions-portal] {
-  transition:
-    opacity var(--mentions-animate-speed) ease,
-    transform var(--mentions-animate-speed) ease;
+	transition:
+		opacity var(--mentions-animate-speed) ease,
+		transform var(--mentions-animate-speed) ease;
 }
 
 .mentions-animate [data-mentions-portal] {
-  opacity: 1;
-  transform: translateY(0);
+	opacity: 1;
+	transform: translateY(0);
 
-  @starting-style {
-    opacity: 0;
-    transform: translateY(-4px);
-  }
+	@starting-style {
+		opacity: 0;
+		transform: translateY(-4px);
+	}
 }
 
 /* Mention highlight animation — add class "mentions-animate" to parent */
 
 @keyframes mentions-highlight-in {
-  0% {
-    transform: scale(0.85);
-    opacity: 0;
-  }
-  60% {
-    transform: scale(1.04);
-  }
-  100% {
-    transform: scale(1);
-    opacity: 1;
-  }
+	0% {
+		transform: scale(0.85);
+		opacity: 0;
+	}
+	60% {
+		transform: scale(1.04);
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
 }
 
 .mentions-animate [data-mentions] mark[data-mention-type] {
-  display: inline-block;
-  animation: mentions-highlight-in var(--mentions-animate-speed) ease-out;
+	display: inline-block;
+	animation: mentions-highlight-in var(--mentions-animate-speed) ease-out;
 }
 
 /* Focus glow — add class "mentions-glow" */
 
 [data-mentions].mentions-glow textarea:focus,
 [data-mentions].mentions-glow input:focus {
-  box-shadow: 0 0 0 3px color-mix(in oklch, var(--mentions-glow-color) 30%, transparent);
-  outline: none;
-  transition: box-shadow var(--mentions-animate-speed) ease;
+	box-shadow: 0 0 0 3px color-mix(in oklch, var(--mentions-glow-color) 30%, transparent);
+	outline: none;
+	transition: box-shadow var(--mentions-animate-speed) ease;
 }

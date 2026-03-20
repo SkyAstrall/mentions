@@ -92,7 +92,14 @@ describe("mentionReducer", () => {
 		const suggesting = reduce(
 			initial,
 			{ type: "TRIGGER_MATCH", trigger: "@", query: "", startIndex: 0, endIndex: 1 },
-			{ type: "FETCH_COMPLETE", items: [{ id: "1", label: "A" }, { id: "2", label: "B" }, { id: "3", label: "C" }] },
+			{
+				type: "FETCH_COMPLETE",
+				items: [
+					{ id: "1", label: "A" },
+					{ id: "2", label: "B" },
+					{ id: "3", label: "C" },
+				],
+			},
 		);
 
 		let state = mentionReducer(suggesting, { type: "ARROW_DOWN" });
@@ -114,7 +121,13 @@ describe("mentionReducer", () => {
 		const suggesting = reduce(
 			initial,
 			{ type: "TRIGGER_MATCH", trigger: "@", query: "", startIndex: 0, endIndex: 1 },
-			{ type: "FETCH_COMPLETE", items: [{ id: "1", label: "A" }, { id: "2", label: "B" }] },
+			{
+				type: "FETCH_COMPLETE",
+				items: [
+					{ id: "1", label: "A" },
+					{ id: "2", label: "B" },
+				],
+			},
 		);
 
 		// From -1, ARROW_UP should go to last item

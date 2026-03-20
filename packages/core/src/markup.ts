@@ -31,12 +31,8 @@ function buildMentionRegex(template: string): RegExp {
 
 	const escaped = escapeRegex(template);
 
-	const displayCapture = charAfterDisplay
-		? `([^${escapeRegex(charAfterDisplay)}]+)`
-		: "(.+)";
-	const idCapture = charAfterId
-		? `([^${escapeRegex(charAfterId)}]+)`
-		: "(.+)";
+	const displayCapture = charAfterDisplay ? `([^${escapeRegex(charAfterDisplay)}]+)` : "(.+)";
+	const idCapture = charAfterId ? `([^${escapeRegex(charAfterId)}]+)` : "(.+)";
 
 	const withCaptures = escaped
 		.replace(escapeRegex(DISPLAY_PLACEHOLDER), displayCapture)
@@ -189,14 +185,18 @@ export function applyChange(
 	const newLen = newPlainText.length;
 
 	let prefixLen = 0;
-	while (prefixLen < oldLen && prefixLen < newLen && oldPlainText[prefixLen] === newPlainText[prefixLen]) {
+	while (
+		prefixLen < oldLen &&
+		prefixLen < newLen &&
+		oldPlainText[prefixLen] === newPlainText[prefixLen]
+	) {
 		prefixLen++;
 	}
 
 	let suffixLen = 0;
 	while (
-		suffixLen < (oldLen - prefixLen) &&
-		suffixLen < (newLen - prefixLen) &&
+		suffixLen < oldLen - prefixLen &&
+		suffixLen < newLen - prefixLen &&
 		oldPlainText[oldLen - 1 - suffixLen] === newPlainText[newLen - 1 - suffixLen]
 	) {
 		suffixLen++;
@@ -263,9 +263,7 @@ export function createMentionMarkup(item: MentionItem, trigger: TriggerConfig): 
 	const template = getMarkupTemplate(trigger);
 	const escapedLabel = escapeForTemplate(item.label, template, DISPLAY_PLACEHOLDER);
 	const escapedId = escapeForTemplate(item.id, template, ID_PLACEHOLDER);
-	return template
-		.replace(DISPLAY_PLACEHOLDER, escapedLabel)
-		.replace(ID_PLACEHOLDER, escapedId);
+	return template.replace(DISPLAY_PLACEHOLDER, escapedLabel).replace(ID_PLACEHOLDER, escapedId);
 }
 
 /**
@@ -300,11 +298,7 @@ export function insertMention(
 	const needsSpace = textAfter.length === 0 || !/^\s/.test(textAfter);
 	const separator = needsSpace ? " " : "";
 
-	const newMarkup =
-		currentMarkup.slice(0, markupStart) +
-		mentionMarkup +
-		separator +
-		textAfter;
+	const newMarkup = currentMarkup.slice(0, markupStart) + mentionMarkup + separator + textAfter;
 
 	const newSegments = parseMarkup(newMarkup, triggers);
 	const newPlainText = toPlainText(newSegments);
@@ -314,10 +308,7 @@ export function insertMention(
 }
 
 /** Extract all mentions from a markup string as `MentionItem` objects. */
-export function extractMentions(
-	markup: string,
-	triggers: TriggerConfig[],
-): MentionItem[] {
+export function extractMentions(markup: string, triggers: TriggerConfig[]): MentionItem[] {
 	const segments = parseMarkup(markup, triggers);
 	return segments
 		.filter((s): s is MentionSegment => s.type === "mention")

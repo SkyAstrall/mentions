@@ -1,75 +1,83 @@
 {
-  "name": "@skyastrall/mentions-react",
-  "version": "0.1.0",
-  "type": "module",
-  "description": "Headless React component for @mentions, slash commands, and custom triggers. Compound components + hooks. TypeScript-first.",
-  "license": "MIT",
-  "author": "SkyAstrall",
-  "sideEffects": ["./dist/effects.css"],
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    },
-    "./effects.css": "./dist/effects.css"
-  },
-  "files": ["dist"],
-  "publishConfig": {
-    "access": "public"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SkyAstrall/mentions.git",
-    "directory": "packages/react"
-  },
-  "homepage": "https://github.com/SkyAstrall/mentions",
-  "bugs": {
-    "url": "https://github.com/SkyAstrall/mentions/issues"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "scripts": {
-    "build": "tsdown && cp ./src/effects.css ./dist/effects.css && npx publint"
-  },
-  "dependencies": {
-    "@skyastrall/mentions-core": "workspace:^"
-  },
-  "peerDependencies": {
-    "@types/react": "*",
-    "@types/react-dom": "*",
-    "react": "^18.0.0 || ^19.0.0",
-    "react-dom": "^18.0.0 || ^19.0.0"
-  },
-  "peerDependenciesMeta": {
-    "@types/react": { "optional": true },
-    "@types/react-dom": { "optional": true }
-  },
-  "devDependencies": {
-    "@types/react": "^19.0.0",
-    "@types/react-dom": "^19.0.0",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
-  },
-  "keywords": [
-    "react",
-    "react-component",
-    "mentions",
-    "mention",
-    "react-mentions",
-    "autocomplete",
-    "autosuggest",
-    "typeahead",
-    "combobox",
-    "trigger",
-    "at-mention",
-    "hashtag",
-    "slash-commands",
-    "textarea-autocomplete",
-    "mention-input",
-    "headless",
-    "headless-ui",
-    "input",
-    "react-mentions-alternative"
-  ]
+	"name": "@skyastrall/mentions-react",
+	"version": "0.1.0",
+	"type": "module",
+	"description": "Headless React component for @mentions, slash commands, and custom triggers. Compound components + hooks. TypeScript-first.",
+	"license": "MIT",
+	"author": "SkyAstrall",
+	"sideEffects": [
+		"./dist/effects.css"
+	],
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		},
+		"./effects.css": "./dist/effects.css"
+	},
+	"files": [
+		"dist"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/SkyAstrall/mentions.git",
+		"directory": "packages/react"
+	},
+	"homepage": "https://github.com/SkyAstrall/mentions",
+	"bugs": {
+		"url": "https://github.com/SkyAstrall/mentions/issues"
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"build": "tsdown && cp ./src/effects.css ./dist/effects.css && npx publint"
+	},
+	"dependencies": {
+		"@skyastrall/mentions-core": "workspace:^"
+	},
+	"peerDependencies": {
+		"@types/react": "*",
+		"@types/react-dom": "*",
+		"react": "^18.0.0 || ^19.0.0",
+		"react-dom": "^18.0.0 || ^19.0.0"
+	},
+	"peerDependenciesMeta": {
+		"@types/react": {
+			"optional": true
+		},
+		"@types/react-dom": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/react": "^19.0.0",
+		"@types/react-dom": "^19.0.0",
+		"react": "^19.0.0",
+		"react-dom": "^19.0.0"
+	},
+	"keywords": [
+		"react",
+		"react-component",
+		"mentions",
+		"mention",
+		"react-mentions",
+		"autocomplete",
+		"autosuggest",
+		"typeahead",
+		"combobox",
+		"trigger",
+		"at-mention",
+		"hashtag",
+		"slash-commands",
+		"textarea-autocomplete",
+		"mention-input",
+		"headless",
+		"headless-ui",
+		"input",
+		"react-mentions-alternative"
+	]
 }

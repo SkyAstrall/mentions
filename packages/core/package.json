@@ -1,52 +1,54 @@
 {
-  "name": "@skyastrall/mentions-core",
-  "version": "0.1.0",
-  "type": "module",
-  "description": "Framework-agnostic engine for trigger detection, markup parsing, and mention state management. Zero dependencies.",
-  "license": "MIT",
-  "author": "SkyAstrall",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/SkyAstrall/mentions.git",
-    "directory": "packages/core"
-  },
-  "homepage": "https://github.com/SkyAstrall/mentions",
-  "bugs": {
-    "url": "https://github.com/SkyAstrall/mentions/issues"
-  },
-  "engines": {
-    "node": ">=18"
-  },
-  "sideEffects": false,
-  "publishConfig": {
-    "access": "public"
-  },
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
-    }
-  },
-  "files": ["dist"],
-  "scripts": {
-    "build": "tsdown"
-  },
-  "keywords": [
-    "mentions",
-    "mention",
-    "autocomplete",
-    "autosuggest",
-    "typeahead",
-    "combobox",
-    "trigger",
-    "at-mention",
-    "hashtag",
-    "slash-commands",
-    "textarea-autocomplete",
-    "mention-input",
-    "headless",
-    "framework-agnostic",
-    "vanilla-js",
-    "input"
-  ]
+	"name": "@skyastrall/mentions-core",
+	"version": "0.1.0",
+	"type": "module",
+	"description": "Framework-agnostic engine for trigger detection, markup parsing, and mention state management. Zero dependencies.",
+	"license": "MIT",
+	"author": "SkyAstrall",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/SkyAstrall/mentions.git",
+		"directory": "packages/core"
+	},
+	"homepage": "https://github.com/SkyAstrall/mentions",
+	"bugs": {
+		"url": "https://github.com/SkyAstrall/mentions/issues"
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"sideEffects": false,
+	"publishConfig": {
+		"access": "public"
+	},
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"scripts": {
+		"build": "tsdown"
+	},
+	"keywords": [
+		"mentions",
+		"mention",
+		"autocomplete",
+		"autosuggest",
+		"typeahead",
+		"combobox",
+		"trigger",
+		"at-mention",
+		"hashtag",
+		"slash-commands",
+		"textarea-autocomplete",
+		"mention-input",
+		"headless",
+		"framework-agnostic",
+		"vanilla-js",
+		"input"
+	]
 }

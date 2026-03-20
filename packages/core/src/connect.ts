@@ -25,9 +25,7 @@ export function connect(
 		"aria-controls": isOpen ? listboxId : undefined,
 		"aria-autocomplete": "list",
 		"aria-activedescendant":
-			isOpen && state.highlightedIndex >= 0
-				? itemId(state.highlightedIndex)
-				: undefined,
+			isOpen && state.highlightedIndex >= 0 ? itemId(state.highlightedIndex) : undefined,
 		"aria-haspopup": "listbox",
 
 		onKeyDown: (e: KeyboardEvent) => {

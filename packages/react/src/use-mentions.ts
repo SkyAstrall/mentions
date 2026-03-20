@@ -1,9 +1,4 @@
 import {
-	type MentionCallbacks,
-	type MentionItem,
-	type MentionSegment,
-	type MentionState,
-	type TriggerConfig,
 	applyChange,
 	connect,
 	createInitialState,
@@ -12,9 +7,14 @@ import {
 	filterItems,
 	getCaretCoordinates,
 	insertMention,
+	type MentionCallbacks,
+	type MentionItem,
+	type MentionSegment,
+	type MentionState,
 	markupToPlainText,
 	mentionReducer,
 	parseMarkup,
+	type TriggerConfig,
 } from "@skyastrall/mentions-core";
 import {
 	type RefObject,
@@ -27,8 +27,7 @@ import {
 	useRef,
 } from "react";
 
-const useIsomorphicLayoutEffect =
-	typeof window !== "undefined" ? useLayoutEffect : useEffect;
+const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export type UseMentionsOptions = {
 	triggers: TriggerConfig[];
@@ -85,9 +84,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const overlayRef = useRef<HTMLDivElement | null>(null);
 	const prevStatusRef = useRef<MentionState["status"]>("idle");
 	const pendingCursorRef = useRef<number | null>(null);
-	const prevMentionsRef = useRef<
-		Array<{ id: string; label: string; trigger: string }>
-	>([]);
+	const prevMentionsRef = useRef<Array<{ id: string; label: string; trigger: string }>>([]);
 
 	const callbacksRef = useRef({
 		onChange,
@@ -150,10 +147,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 
 	useEffect(() => {
 		const wasOpen =
-			prevStatusRef.current === "suggesting" ||
-			prevStatusRef.current === "navigating";
-		const isOpen =
-			state.status === "suggesting" || state.status === "navigating";
+			prevStatusRef.current === "suggesting" || prevStatusRef.current === "navigating";
+		const isOpen = state.status === "suggesting" || state.status === "navigating";
 
 		if (!wasOpen && isOpen && state.activeTrigger) {
 			callbacksRef.current.onOpen?.(state.activeTrigger);
@@ -204,8 +199,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 				.catch((err) => {
 					if (!controller.signal.aborted) {
 						dispatch({ type: "FETCH_ERROR" });
-						if (err instanceof Error)
-							callbacksRef.current.onError?.(err);
+						if (err instanceof Error) callbacksRef.current.onError?.(err);
 					}
 				});
 		}, delay);
@@ -242,9 +236,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		queryEndIndex: state.queryEndIndex,
 	};
 
-	const handleInput = (
-		e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>,
-	) => {
+	const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
 		if (state.isComposing) return;
 
 		const triggers = triggersRef.current;
@@ -252,12 +244,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		const selStart = e.target.selectionStart ?? 0;
 		const selEnd = e.target.selectionEnd ?? 0;
 
-		const newMarkup = applyChange(
-			state.markup,
-			newPlainText,
-			state.plainText,
-			triggers,
-		);
+		const newMarkup = applyChange(state.markup, newPlainText, state.plainText, triggers);
 
 		const prevMentions = prevMentionsRef.current;
 		const newSegments = parseMarkup(newMarkup, triggers);
@@ -273,10 +260,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			const newIds = new Set(newMentions.map((m) => `${m.trigger}:${m.id}`));
 			for (const prev of prevMentions) {
 				if (!newIds.has(`${prev.trigger}:${prev.id}`)) {
-					callbacksRef.current.onRemove(
-						{ id: prev.id, label: prev.label },
-						prev.trigger,
-					);
+					callbacksRef.current.onRemove({ id: prev.id, label: prev.label }, prev.trigger);
 				}
 			}
 		}
@@ -302,10 +286,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			});
 
 			if (textareaRef.current) {
-				const caretPos = getCaretCoordinates(
-					textareaRef.current,
-					match.startIndex,
-				);
+				const caretPos = getCaretCoordinates(textareaRef.current, match.startIndex);
 				dispatch({ type: "CARET_POSITION", position: caretPos });
 			}
 		} else if (state.activeTrigger) {
@@ -317,8 +298,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 
 	const handleSelect = useCallback((item: MentionItem) => {
 		const triggers = triggersRef.current;
-		const { activeTrigger, markup, queryStartIndex, queryEndIndex } =
-			selectionStateRef.current;
+		const { activeTrigger, markup, queryStartIndex, queryEndIndex } = selectionStateRef.current;
 		const triggerConfig = triggers.find((t) => t.char === activeTrigger);
 		if (!triggerConfig) return;
 
@@ -455,30 +435,18 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		| ((e: React.KeyboardEvent) => void)
 		| undefined;
 
-	const wrappedOnKeyDown = (
-		e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>,
-	) => {
-		if (
-			e.key === "Tab" &&
-			ghostTextRef.current &&
-			!(api.isOpen && state.highlightedIndex >= 0)
-		) {
+	const wrappedOnKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+		if (e.key === "Tab" && ghostTextRef.current && !(api.isOpen && state.highlightedIndex >= 0)) {
 			e.preventDefault();
 			const el = textareaRef.current;
 			if (!el) return;
 			const cursor = el.selectionStart ?? el.value.length;
 			const gt = ghostTextRef.current;
-			const newPlainText =
-				state.plainText.slice(0, cursor) + gt + state.plainText.slice(cursor);
+			const newPlainText = state.plainText.slice(0, cursor) + gt + state.plainText.slice(cursor);
 			const newCursor = cursor + gt.length;
 			const triggers = triggersRef.current;
 
-			const newMarkup = applyChange(
-				state.markup,
-				newPlainText,
-				state.plainText,
-				triggers,
-			);
+			const newMarkup = applyChange(state.markup, newPlainText, state.plainText, triggers);
 
 			dispatch({
 				type: "INPUT_CHANGE",
