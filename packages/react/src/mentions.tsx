@@ -8,7 +8,9 @@ import {
 	useContext,
 	useEffect,
 	useImperativeHandle,
+	useLayoutEffect,
 	useRef,
+	useState,
 } from "react";
 import { createPortal } from "react-dom";
 import { type UseMentionsReturn, useMentions } from "./use-mentions.ts";
@@ -266,7 +268,6 @@ export namespace Mentions {
 
 	export type OverlayProps = {
 		className?: string;
-		style?: React.CSSProperties;
 		highlightClassName?: string;
 		highlightStyle?: React.CSSProperties;
 	};
@@ -301,10 +302,67 @@ export namespace Mentions {
 		return parts.length > 0 ? parts : text;
 	}
 
+	const SYNC_PROPERTIES: string[] = [
+		"direction",
+		"font-family",
+		"font-size",
+		"font-style",
+		"font-variant",
+		"font-weight",
+		"font-stretch",
+		"font-size-adjust",
+		"line-height",
+		"letter-spacing",
+		"word-spacing",
+		"text-align",
+		"text-indent",
+		"text-transform",
+		"text-decoration",
+		"tab-size",
+		"-moz-tab-size",
+		"white-space",
+		"word-break",
+		"overflow-wrap",
+		"padding-top",
+		"padding-right",
+		"padding-bottom",
+		"padding-left",
+		"border-top-width",
+		"border-right-width",
+		"border-bottom-width",
+		"border-left-width",
+		"border-top-style",
+		"border-right-style",
+		"border-bottom-style",
+		"border-left-style",
+		"box-sizing",
+	];
+
+	function syncOverlayStyles(
+		textarea: HTMLTextAreaElement | HTMLInputElement,
+		overlay: HTMLDivElement,
+	): void {
+		const computed = getComputedStyle(textarea);
+		for (const prop of SYNC_PROPERTIES) {
+			overlay.style.setProperty(prop, computed.getPropertyValue(prop));
+		}
+		overlay.style.setProperty("border-color", "transparent");
+		overlay.style.setProperty("color", "transparent");
+		overlay.style.setProperty("pointer-events", "none");
+		overlay.style.setProperty("position", "absolute");
+		overlay.style.setProperty("top", "0");
+		overlay.style.setProperty("left", "0");
+		overlay.style.setProperty("right", "0");
+		overlay.style.setProperty("bottom", "0");
+		overlay.style.setProperty("overflow", "hidden");
+		overlay.style.setProperty("z-index", "0");
+		overlay.style.setProperty("-webkit-text-size-adjust", "100%");
+		overlay.style.setProperty("text-size-adjust", "100%");
+	}
+
 	/** Transparent overlay that renders mention highlights behind the input text. */
 	export function Overlay({
 		className,
-		style,
 		highlightClassName,
 		highlightStyle,
 	}: OverlayProps = {}): ReactNode {
@@ -312,25 +370,26 @@ export namespace Mentions {
 		const segments = parseMarkup(ctx.state.markup, ctx.triggers);
 		const triggerMap = new Map(ctx.triggers.map((t) => [t.char, t]));
 
+		useEffect(() => {
+			const textarea = ctx.textareaRef.current;
+			const overlay = ctx.overlayRef.current;
+			if (!textarea || !overlay) return;
+
+			syncOverlayStyles(textarea, overlay);
+
+			const observer = new ResizeObserver(() => {
+				syncOverlayStyles(textarea, overlay);
+			});
+			observer.observe(textarea);
+
+			return () => observer.disconnect();
+		}, [ctx.textareaRef, ctx.overlayRef]);
+
 		return (
 			<div
 				ref={ctx.overlayRef}
 				className={className}
 				aria-hidden="true"
-				style={{
-					position: "absolute",
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					pointerEvents: "none",
-					whiteSpace: ctx.singleLine ? "nowrap" : "pre-wrap",
-					wordWrap: ctx.singleLine ? undefined : "break-word",
-					overflow: "hidden",
-					color: "transparent",
-					zIndex: 0,
-					...style,
-				}}
 			>
 				{segments.map((seg) => {
 					if (seg.type === "mention") {
@@ -374,6 +433,32 @@ export namespace Mentions {
 		container?: HTMLElement;
 	};
 
+	const MENTION_CSS_VARS = [
+		"--mention-bg",
+		"--mention-radius",
+		"--dropdown-bg",
+		"--dropdown-border",
+		"--dropdown-radius",
+		"--dropdown-shadow",
+		"--dropdown-max-height",
+		"--item-padding",
+		"--item-active-bg",
+		"--ghost-text-color",
+	];
+
+	function getMentionsCSSVars(textarea: HTMLElement | null): Record<string, string> {
+		const container = textarea?.closest("[data-mentions]");
+		if (!container) return {};
+
+		const computed = getComputedStyle(container);
+		const vars: Record<string, string> = {};
+		for (const v of MENTION_CSS_VARS) {
+			const val = computed.getPropertyValue(v).trim();
+			if (val) vars[v] = val;
+		}
+		return vars;
+	}
+
 	/** Portals the suggestion dropdown to a DOM node (defaults to `document.body`). SSR-safe. */
 	export function Portal({ children, container }: PortalProps): ReactNode {
 		const ctx = useMentionsContext();
@@ -384,9 +469,12 @@ export namespace Mentions {
 		const target = container ?? document.body;
 		const textareaEl = ctx.textareaRef.current;
 
+		const cssVars = getMentionsCSSVars(textareaEl);
+
 		let dropdownStyle: React.CSSProperties = {
 			position: "fixed",
 			zIndex: 9999,
+			...cssVars as React.CSSProperties,
 		};
 
 		if (textareaEl && ctx.caretPosition) {
@@ -404,6 +492,7 @@ export namespace Mentions {
 				role="presentation"
 				style={dropdownStyle}
 				data-mentions-portal=""
+				data-mentions=""
 				onMouseDown={(e) => e.preventDefault()}
 			>
 				{children}

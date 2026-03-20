@@ -1,0 +1,116 @@
+---
+import BaseLayout from "../layouts/BaseLayout.astro";
+import HeroDemo from "../components/react/HeroDemo";
+---
+
+<BaseLayout title="@skyastrall/mentions — Multi-trigger inline suggestions for React">
+	<div class="relative overflow-hidden">
+		<div class="absolute inset-0 pointer-events-none">
+			<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.08)_0%,transparent_70%)]"></div>
+		</div>
+
+		<nav class="relative z-10 max-w-5xl mx-auto px-6 py-6 flex items-center justify-between">
+			<a href="/" class="text-sm font-semibold tracking-tight">@skyastrall/mentions</a>
+			<div class="flex items-center gap-6">
+				<a href="/playground" class="text-sm text-text-secondary hover:text-text transition-colors">Playground</a>
+				<a href="/docs" class="text-sm text-text-secondary hover:text-text transition-colors">Docs</a>
+				<a href="https://github.com/SkyAstrall/mentions" target="_blank" rel="noopener" class="text-sm text-text-secondary hover:text-text transition-colors">GitHub</a>
+				<a href="https://www.npmjs.com/package/@skyastrall/mentions-react" target="_blank" rel="noopener" class="text-sm text-text-secondary hover:text-text transition-colors">npm</a>
+			</div>
+		</nav>
+
+		<section class="relative z-10 max-w-5xl mx-auto px-6 pt-24 pb-16 text-center">
+			<div class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-border text-xs text-text-secondary mb-8">
+				<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+				v0.1.0 — Now on npm
+			</div>
+
+			<h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-[-0.04em] leading-[1.1] mb-6">
+				Mentions that<br />
+				<span class="bg-gradient-to-r from-accent via-purple-400 to-pink-400 bg-clip-text text-transparent">just work.</span>
+			</h1>
+
+			<p class="text-lg text-text-secondary max-w-2xl mx-auto mb-12 leading-relaxed">
+				Multi-trigger inline suggestions for React. @mentions, #hashtags, /commands,
+				ghost text, and custom triggers. Headless hook or drop-in component. 8KB gzipped.
+			</p>
+
+			<HeroDemo client:load />
+
+			<div class="mt-8 flex items-center justify-center gap-4">
+				<a href="/docs" class="px-6 py-2.5 bg-accent hover:bg-accent-hover text-white text-sm font-medium rounded-lg transition-colors">
+					Get Started
+				</a>
+				<a href="https://github.com/SkyAstrall/mentions" target="_blank" rel="noopener" class="px-6 py-2.5 border border-border hover:border-border-hover text-sm font-medium rounded-lg transition-colors">
+					View on GitHub
+				</a>
+			</div>
+
+			<div class="mt-8 inline-flex items-center gap-3 px-4 py-2 rounded-lg bg-bg-elevated border border-border font-mono text-sm text-text-secondary">
+				<span>npm install @skyastrall/mentions-react</span>
+				<button
+					id="copy-install"
+					class="text-text-muted hover:text-text transition-colors cursor-pointer"
+					title="Copy to clipboard"
+				>
+					<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+						<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+						<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+					</svg>
+				</button>
+			</div>
+		</section>
+
+		<section class="relative z-10 max-w-5xl mx-auto px-6 py-24">
+			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+				<div class="p-6 rounded-2xl border border-border bg-bg-elevated/50 hover:border-border-hover transition-colors">
+					<h3 class="text-sm font-semibold mb-2">Multi-trigger</h3>
+					<p class="text-sm text-text-secondary leading-relaxed">@ for users, # for tags, / for commands — each with its own data source, color, and config.</p>
+				</div>
+				<div class="p-6 rounded-2xl border border-border bg-bg-elevated/50 hover:border-border-hover transition-colors">
+					<h3 class="text-sm font-semibold mb-2">Three API layers</h3>
+					<p class="text-sm text-text-secondary leading-relaxed">Drop-in component, compound components, or a fully headless hook. Pick your level of control.</p>
+				</div>
+				<div class="p-6 rounded-2xl border border-border bg-bg-elevated/50 hover:border-border-hover transition-colors">
+					<h3 class="text-sm font-semibold mb-2">Ghost text</h3>
+					<p class="text-sm text-text-secondary leading-relaxed">Dimmed inline AI completions. Tab to accept. Wire up any LLM in 5 lines.</p>
+				</div>
+				<div class="p-6 rounded-2xl border border-border bg-bg-elevated/50 hover:border-border-hover transition-colors">
+					<h3 class="text-sm font-semibold mb-2">8KB gzipped</h3>
+					<p class="text-sm text-text-secondary leading-relaxed">Zero runtime dependencies in core. React adapter is a thin wrapper. No bloat.</p>
+				</div>
+				<div class="p-6 rounded-2xl border border-border bg-bg-elevated/50 hover:border-border-hover transition-colors">
+					<h3 class="text-sm font-semibold mb-2">AI-ready</h3>
+					<p class="text-sm text-text-secondary leading-relaxed">Async data with context (textBefore, textAfter, activeMentions). Built for LLM-powered suggestions.</p>
+				</div>
+				<div class="p-6 rounded-2xl border border-border bg-bg-elevated/50 hover:border-border-hover transition-colors">
+					<h3 class="text-sm font-semibold mb-2">Accessible</h3>
+					<p class="text-sm text-text-secondary leading-relaxed">WAI-ARIA combobox pattern. Keyboard navigation. Unique IDs per instance. Screen reader support.</p>
+				</div>
+			</div>
+		</section>
+
+		<footer class="relative z-10 max-w-5xl mx-auto px-6 py-12 border-t border-border">
+			<div class="flex items-center justify-between text-sm text-text-muted">
+				<span>Built by <a href="https://skyastrall.com" class="text-text-secondary hover:text-text transition-colors">SkyAstrall</a></span>
+				<div class="flex items-center gap-6">
+					<a href="https://github.com/SkyAstrall/mentions" target="_blank" rel="noopener" class="hover:text-text transition-colors">GitHub</a>
+					<a href="https://www.npmjs.com/package/@skyastrall/mentions-react" target="_blank" rel="noopener" class="hover:text-text transition-colors">npm</a>
+				</div>
+			</div>
+		</footer>
+	</div>
+
+	<script>
+		document.getElementById("copy-install")?.addEventListener("click", () => {
+			navigator.clipboard.writeText("npm install @skyastrall/mentions-react");
+			const btn = document.getElementById("copy-install");
+			if (btn) {
+				btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+				setTimeout(() => {
+					btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+				}, 2000);
+			}
+		});
+	</script>
+</BaseLayout>

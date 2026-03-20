@@ -1,6 +1,7 @@
 packages:
   - "packages/*"
   - "playground"
+  - "website"
 allowBuilds:
   esbuild: false
   rolldown: false
