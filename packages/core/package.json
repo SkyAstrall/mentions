@@ -2,7 +2,7 @@
   "name": "@skyastrall/mentions-core",
   "version": "0.0.1",
   "type": "module",
-  "description": "Framework-agnostic core engine for @skyastrall/mentions. Trigger detection, state machine, markup parsing.",
+  "description": "Framework-agnostic engine for trigger detection, markup parsing, and mention state management. Zero dependencies.",
   "license": "MIT",
   "author": "SkyAstrall",
   "repository": {
@@ -32,14 +32,20 @@
   },
   "keywords": [
     "mentions",
+    "mention",
     "autocomplete",
+    "autosuggest",
+    "typeahead",
+    "combobox",
     "trigger",
-    "inline-suggestions",
+    "at-mention",
     "hashtag",
     "slash-commands",
-    "typeahead",
-    "framework-agnostic",
+    "textarea-autocomplete",
+    "mention-input",
     "headless",
-    "combobox"
+    "framework-agnostic",
+    "vanilla-js",
+    "input"
   ]
 }

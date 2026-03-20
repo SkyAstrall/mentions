@@ -2,7 +2,7 @@
   "name": "@skyastrall/mentions-react",
   "version": "0.0.1",
   "type": "module",
-  "description": "Ultra-performant React mentions, slash commands, hashtags & triggers. Headless hook + compound components. TypeScript-first.",
+  "description": "Headless React component for @mentions, slash commands, and custom triggers. Compound components + hooks. TypeScript-first.",
   "license": "MIT",
   "author": "SkyAstrall",
   "sideEffects": ["./dist/effects.css"],
@@ -51,17 +51,24 @@
     "react-dom": "^19.0.0"
   },
   "keywords": [
-    "mentions",
     "react",
+    "react-component",
+    "mentions",
+    "mention",
+    "react-mentions",
     "autocomplete",
+    "autosuggest",
+    "typeahead",
+    "combobox",
     "trigger",
-    "inline-suggestions",
+    "at-mention",
     "hashtag",
     "slash-commands",
-    "typeahead",
+    "textarea-autocomplete",
+    "mention-input",
     "headless",
-    "combobox",
-    "at-mention",
+    "headless-ui",
+    "input",
     "react-mentions-alternative"
   ]
 }
