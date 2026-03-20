@@ -1,6 +1,6 @@
 {
   "name": "@skyastrall/mentions-react",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "type": "module",
   "description": "Headless React component for @mentions, slash commands, and custom triggers. Compound components + hooks. TypeScript-first.",
   "license": "MIT",
@@ -19,17 +19,18 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/skyAstrall/mentions.git"
+    "url": "git+https://github.com/SkyAstrall/mentions.git",
+    "directory": "packages/react"
   },
-  "homepage": "https://github.com/skyAstrall/mentions",
+  "homepage": "https://github.com/SkyAstrall/mentions",
   "bugs": {
-    "url": "https://github.com/skyAstrall/mentions/issues"
+    "url": "https://github.com/SkyAstrall/mentions/issues"
   },
   "engines": {
     "node": ">=18"
   },
   "scripts": {
-    "build": "tsdown && cp ./src/effects.css ./dist/effects.css"
+    "build": "tsdown && cp ./src/effects.css ./dist/effects.css && npx publint"
   },
   "dependencies": {
     "@skyastrall/mentions-core": "workspace:^"

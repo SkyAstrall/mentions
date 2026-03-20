@@ -8,6 +8,5 @@ export default defineConfig({
 	dts: true,
 	clean: true,
 	sourcemap: true,
-	publint: true,
 	banner: { js: `'use client';` },
 });

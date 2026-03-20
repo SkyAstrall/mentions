@@ -4,8 +4,8 @@ This document explains how to contribute. All participants are expected to follo
 
 ## Ways to Contribute
 
-- Report bugs or request features via [Issues](https://github.com/skyAstrall/mentions/issues)
-- Ask or answer questions in [Discussions](https://github.com/skyAstrall/mentions/discussions)
+- Report bugs or request features via [Issues](https://github.com/SkyAstrall/mentions/issues)
+- Ask or answer questions in [Discussions](https://github.com/SkyAstrall/mentions/discussions)
 - Submit pull requests for bug fixes or features
 - Improve documentation
 
@@ -13,7 +13,7 @@ New to open source? Check out [How to Contribute to an Open Source Project on Gi
 
 ## Reporting Bugs
 
-Search [existing issues](https://github.com/skyAstrall/mentions/issues) first. If your bug isn't reported, open a new issue using the bug report template. Include a minimal reproduction (StackBlitz or CodeSandbox link).
+Search [existing issues](https://github.com/SkyAstrall/mentions/issues) first. If your bug isn't reported, open a new issue using the bug report template. Include a minimal reproduction (StackBlitz or CodeSandbox link).
 
 ## Development Setup
 
@@ -29,7 +29,7 @@ cd mentions
 2. Add the upstream remote:
 
 ```bash
-git remote add upstream https://github.com/skyAstrall/mentions.git
+git remote add upstream https://github.com/SkyAstrall/mentions.git
 ```
 
 3. Install dependencies, build, and test:

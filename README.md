@@ -4,7 +4,7 @@ Trigger-based inline suggestions for React. Mentions, hashtags, slash commands, 
 
 [![npm version](https://img.shields.io/npm/v/@skyastrall/mentions-react)](https://www.npmjs.com/package/@skyastrall/mentions-react)
 [![bundle size](https://img.shields.io/bundlejs/size/@skyastrall/mentions-react)](https://bundlejs.com/?q=%40skyastrall%2Fmentions-react)
-[![build](https://img.shields.io/github/actions/workflow/status/skyAstrall/mentions/ci.yml)](https://github.com/skyAstrall/mentions/actions)
+[![build](https://img.shields.io/github/actions/workflow/status/SkyAstrall/mentions/ci.yml)](https://github.com/SkyAstrall/mentions/actions)
 [![license](https://img.shields.io/npm/l/@skyastrall/mentions-react)](./LICENSE)
 
 ## Install
