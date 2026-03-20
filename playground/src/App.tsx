@@ -111,7 +111,7 @@ function CustomRenderDemo() {
 				placeholder="Type @ for avatars, # for colored tags..."
 				renderItem={(item, highlighted) => (
 					<div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-						{item.avatar && (
+						{typeof item.avatar === "string" && (
 							<span
 								style={{
 									width: 28,
@@ -126,7 +126,7 @@ function CustomRenderDemo() {
 									fontWeight: 600,
 								}}
 							>
-								{item.avatar as string}
+								{item.avatar}
 							</span>
 						)}
 						<span style={{ fontWeight: highlighted ? 600 : 400 }}>{item.label}</span>
