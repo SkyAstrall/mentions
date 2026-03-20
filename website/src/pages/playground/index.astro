@@ -1,0 +1,30 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import Playground from "../../components/react/Playground";
+---
+
+<BaseLayout title="Playground — @skyastrall/mentions">
+	<div class="relative">
+		<div class="absolute inset-0 pointer-events-none">
+			<div class="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-[radial-gradient(ellipse_at_center,rgba(99,102,241,0.06)_0%,transparent_70%)]"></div>
+		</div>
+
+		<nav class="relative z-10 max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+			<a href="/" class="text-sm font-semibold tracking-tight">@skyastrall/mentions</a>
+			<div class="flex items-center gap-6">
+				<a href="/playground" class="text-sm text-text font-medium">Playground</a>
+				<a href="/docs" class="text-sm text-text-secondary hover:text-text transition-colors">Docs</a>
+				<a href="https://github.com/SkyAstrall/mentions" target="_blank" rel="noopener" class="text-sm text-text-secondary hover:text-text transition-colors">GitHub</a>
+			</div>
+		</nav>
+
+		<section class="relative z-10 max-w-6xl mx-auto px-6 pt-12 pb-24">
+			<div class="mb-10">
+				<h1 class="text-3xl font-bold tracking-tight mb-2">Playground</h1>
+				<p class="text-text-secondary">Customize triggers, presets, and options. Copy the generated code.</p>
+			</div>
+
+			<Playground client:load />
+		</section>
+	</div>
+</BaseLayout>

@@ -1,12 +1,10 @@
 import {
-	applyChange,
 	connect,
 	createInitialState,
+	createMentionMarkup,
 	detectTrigger,
 	extractMentions,
 	filterItems,
-	getCaretCoordinates,
-	insertMention,
 	type MentionCallbacks,
 	type MentionItem,
 	type MentionSegment,
@@ -40,16 +38,13 @@ export type UseMentionsOptions = {
 	onOpen?: MentionCallbacks["onOpen"];
 	onClose?: MentionCallbacks["onClose"];
 	onError?: MentionCallbacks["onError"];
-	/** Dimmed inline suggestion shown after the cursor. Tab accepts, any other key dismisses. */
 	ghostText?: string;
-	/** Called when the user presses Tab to accept the ghost text. */
 	onAcceptGhostText?: () => void;
 };
 
 export type UseMentionsReturn = ReturnType<typeof connect> & {
 	state: MentionState;
-	textareaRef: RefObject<HTMLTextAreaElement | null>;
-	overlayRef: RefObject<HTMLDivElement | null>;
+	editorRef: RefObject<HTMLDivElement | null>;
 	markup: string;
 	plainText: string;
 	mentions: MentionItem[];
@@ -57,12 +52,96 @@ export type UseMentionsReturn = ReturnType<typeof connect> & {
 	focus: () => void;
 	insertTrigger: (trigger: string) => void;
 	ghostText?: string;
+	buildHTML: (markup: string) => string;
+	syncEditor: () => void;
+	handleInput: () => void;
 };
 
-/**
- * Headless hook for mention/trigger functionality in a textarea or input.
- * Returns ARIA-ready props, state, and imperative helpers for building mention UIs.
- */
+function escapeHTML(str: string): string {
+	return str
+		.replace(/&/g, "&amp;")
+		.replace(/</g, "&lt;")
+		.replace(/>/g, "&gt;")
+		.replace(/"/g, "&quot;");
+}
+
+function getPlainTextFromDOM(el: HTMLElement): string {
+	let text = "";
+	const walk = (node: Node) => {
+		if (node.nodeType === Node.TEXT_NODE) {
+			text += (node.textContent ?? "").replace(/\u200B/g, "");
+		} else if (node.nodeType === Node.ELEMENT_NODE) {
+			const elem = node as HTMLElement;
+			if (elem.tagName === "MARK" && elem.hasAttribute("data-mention")) {
+				text += elem.textContent ?? "";
+			} else if (elem.tagName === "BR") {
+				text += "\n";
+			} else {
+				for (const child of elem.childNodes) walk(child);
+			}
+		}
+	};
+	walk(el);
+	return text;
+}
+
+function getMarkupFromDOM(el: HTMLElement, triggers: TriggerConfig[]): string {
+	let markup = "";
+	const walk = (node: Node) => {
+		if (node.nodeType === Node.TEXT_NODE) {
+			markup += (node.textContent ?? "").replace(/\u200B/g, "");
+		} else if (node.nodeType === Node.ELEMENT_NODE) {
+			const elem = node as HTMLElement;
+			if (elem.tagName === "MARK" && elem.hasAttribute("data-mention")) {
+				const trigger = elem.getAttribute("data-mention") ?? "";
+				const id = elem.getAttribute("data-id") ?? "";
+				const displayText = elem.textContent ?? "";
+				const label = displayText.startsWith(trigger) ? displayText.slice(trigger.length) : displayText;
+				const cfg = triggers.find((t) => t.char === trigger);
+				if (cfg) {
+					markup += createMentionMarkup({ id, label }, cfg);
+				} else {
+					markup += displayText;
+				}
+			} else if (elem.tagName === "BR") {
+				markup += "\n";
+			} else {
+				for (const child of elem.childNodes) walk(child);
+			}
+		}
+	};
+	walk(el);
+	return markup;
+}
+
+function getCursorOffset(el: HTMLElement): number {
+	const sel = window.getSelection();
+	if (!sel || sel.rangeCount === 0) return 0;
+	const range = sel.getRangeAt(0);
+	const pre = document.createRange();
+	pre.selectNodeContents(el);
+	pre.setEnd(range.startContainer, range.startOffset);
+	return pre.toString().replace(/\u200B/g, "").length;
+}
+
+function getCaretRect(): { top: number; left: number; height: number } | null {
+	const sel = window.getSelection();
+	if (!sel || sel.rangeCount === 0) return null;
+	const range = sel.getRangeAt(0).cloneRange();
+	range.collapse(true);
+	let rect = range.getBoundingClientRect();
+	if (rect.width === 0 && rect.height === 0) {
+		const span = document.createElement("span");
+		span.textContent = "\u200B";
+		range.insertNode(span);
+		rect = span.getBoundingClientRect();
+		const parent = span.parentNode;
+		parent?.removeChild(span);
+		parent?.normalize();
+	}
+	return { top: rect.top, left: rect.left, height: rect.height };
+}
+
 export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const {
 		triggers,
@@ -80,32 +159,13 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	} = options;
 
 	const instanceId = useId();
-	const textareaRef = useRef<HTMLTextAreaElement | null>(null);
-	const overlayRef = useRef<HTMLDivElement | null>(null);
+	const editorRef = useRef<HTMLDivElement | null>(null);
 	const prevStatusRef = useRef<MentionState["status"]>("idle");
-	const pendingCursorRef = useRef<number | null>(null);
 	const prevMentionsRef = useRef<Array<{ id: string; label: string; trigger: string }>>([]);
+	const lastReportedMarkupRef = useRef("");
 
-	const callbacksRef = useRef({
-		onChange,
-		onSelect,
-		onRemove,
-		onQueryChange,
-		onOpen,
-		onClose,
-		onError,
-		onAcceptGhostText,
-	});
-	callbacksRef.current = {
-		onChange,
-		onSelect,
-		onRemove,
-		onQueryChange,
-		onOpen,
-		onClose,
-		onError,
-		onAcceptGhostText,
-	};
+	const callbacksRef = useRef({ onChange, onSelect, onRemove, onQueryChange, onOpen, onClose, onError, onAcceptGhostText });
+	callbacksRef.current = { onChange, onSelect, onRemove, onQueryChange, onOpen, onClose, onError, onAcceptGhostText };
 
 	const ghostTextRef = useRef(ghostText);
 	ghostTextRef.current = ghostText;
@@ -137,17 +197,46 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	}
 	prevValueRef.current = value;
 
-	useIsomorphicLayoutEffect(() => {
-		if (pendingCursorRef.current !== null && textareaRef.current) {
-			const pos = pendingCursorRef.current;
-			textareaRef.current.setSelectionRange(pos, pos);
-			pendingCursorRef.current = null;
+	const stateRef = useRef(state);
+	stateRef.current = state;
+
+	const buildHTML = useCallback((markup: string): string => {
+		const trigs = triggersRef.current;
+		const segments = parseMarkup(markup, trigs);
+		return segments.map((seg) => {
+			if (seg.type === "mention") {
+				const cfg = trigs.find((t) => t.char === seg.trigger);
+				const bg = cfg?.color ?? "var(--mention-bg, oklch(0.93 0.03 250))";
+				const radius = "var(--mention-radius, 3px)";
+				return `<mark data-mention="${escapeHTML(seg.trigger)}" data-id="${escapeHTML(seg.id)}" contenteditable="false" style="background-color:${bg};border-radius:${radius};padding:0 2px">${escapeHTML(seg.text)}</mark>\u200B`;
+			}
+			return escapeHTML(seg.text);
+		}).join("");
+	}, []);
+
+	const syncEditor = useCallback(() => {
+		const el = editorRef.current;
+		if (!el) return;
+		const html = buildHTML(stateRef.current.markup);
+		if (el.innerHTML !== html) {
+			el.innerHTML = html;
 		}
-	});
+	}, [buildHTML]);
 
 	useEffect(() => {
-		const wasOpen =
-			prevStatusRef.current === "suggesting" || prevStatusRef.current === "navigating";
+		syncEditor();
+	}, [syncEditor]);
+
+	useEffect(() => {
+		if (!isControlled || value === undefined) return;
+		if (value === lastReportedMarkupRef.current) return;
+		const el = editorRef.current;
+		if (!el) return;
+		el.innerHTML = buildHTML(value);
+	}, [value, isControlled, buildHTML]);
+
+	useEffect(() => {
+		const wasOpen = prevStatusRef.current === "suggesting" || prevStatusRef.current === "navigating";
 		const isOpen = state.status === "suggesting" || state.status === "navigating";
 
 		if (!wasOpen && isOpen && state.activeTrigger) {
@@ -183,11 +272,12 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		const timer = setTimeout(() => {
 			dispatch({ type: "FETCH_START" });
 
+			const currentState = stateRef.current;
 			const context = {
-				textBefore: state.plainText.slice(0, state.queryStartIndex),
-				textAfter: state.plainText.slice(state.queryEndIndex),
-				activeMentions: extractMentions(state.markup, triggers),
-				fullText: state.plainText,
+				textBefore: currentState.plainText.slice(0, currentState.queryStartIndex),
+				textAfter: currentState.plainText.slice(currentState.queryEndIndex),
+				activeMentions: extractMentions(currentState.markup, triggers),
+				fullText: currentState.plainText,
 			};
 
 			data(state.query, context)
@@ -208,14 +298,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			clearTimeout(timer);
 			controller.abort();
 		};
-	}, [
-		state.activeTrigger,
-		state.query,
-		state.plainText,
-		state.queryStartIndex,
-		state.queryEndIndex,
-		state.markup,
-	]);
+	}, [state.activeTrigger, state.query]);
 
 	useEffect(() => {
 		if (state.activeTrigger && state.query !== undefined) {
@@ -223,38 +306,21 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		}
 	}, [state.query, state.activeTrigger]);
 
-	const selectionStateRef = useRef({
-		activeTrigger: state.activeTrigger,
-		markup: state.markup,
-		queryStartIndex: state.queryStartIndex,
-		queryEndIndex: state.queryEndIndex,
-	});
-	selectionStateRef.current = {
-		activeTrigger: state.activeTrigger,
-		markup: state.markup,
-		queryStartIndex: state.queryStartIndex,
-		queryEndIndex: state.queryEndIndex,
-	};
-
-	const handleInput = (e: React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) => {
-		if (state.isComposing) return;
+	const handleInput = useCallback(() => {
+		if (stateRef.current.isComposing) return;
+		const el = editorRef.current;
+		if (!el) return;
 
 		const triggers = triggersRef.current;
-		const newPlainText = e.target.value;
-		const selStart = e.target.selectionStart ?? 0;
-		const selEnd = e.target.selectionEnd ?? 0;
-
-		const newMarkup = applyChange(state.markup, newPlainText, state.plainText, triggers);
+		const cursorOffset = getCursorOffset(el);
+		const newPlainText = getPlainTextFromDOM(el);
+		const newMarkup = getMarkupFromDOM(el, triggers);
 
 		const prevMentions = prevMentionsRef.current;
 		const newSegments = parseMarkup(newMarkup, triggers);
 		const newMentions = newSegments
 			.filter((s): s is MentionSegment => s.type === "mention")
-			.map((s) => ({
-				id: s.id,
-				label: s.text.slice(s.trigger.length),
-				trigger: s.trigger,
-			}));
+			.map((s) => ({ id: s.id, label: s.text.slice(s.trigger.length), trigger: s.trigger }));
 
 		if (callbacksRef.current.onRemove && prevMentions.length > 0) {
 			const newIds = new Set(newMentions.map((m) => `${m.trigger}:${m.id}`));
@@ -271,11 +337,11 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			type: "INPUT_CHANGE",
 			markup: newMarkup,
 			plainText: newPlainText,
-			selectionStart: selStart,
-			selectionEnd: selEnd,
+			selectionStart: cursorOffset,
+			selectionEnd: cursorOffset,
 		});
 
-		const match = detectTrigger(newPlainText, selStart, triggers);
+		const match = detectTrigger(newPlainText, cursorOffset, triggers);
 		if (match) {
 			dispatch({
 				type: "TRIGGER_MATCH",
@@ -285,52 +351,90 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 				endIndex: match.endIndex,
 			});
 
-			if (textareaRef.current) {
-				const caretPos = getCaretCoordinates(textareaRef.current, match.startIndex);
+			const caretPos = getCaretRect();
+			if (caretPos) {
 				dispatch({ type: "CARET_POSITION", position: caretPos });
 			}
-		} else if (state.activeTrigger) {
+		} else if (stateRef.current.activeTrigger) {
 			dispatch({ type: "TRIGGER_LOST" });
 		}
 
+		lastReportedMarkupRef.current = newMarkup;
 		callbacksRef.current.onChange?.(newMarkup, newPlainText);
-	};
+	}, []);
 
 	const handleSelect = useCallback((item: MentionItem) => {
 		const triggers = triggersRef.current;
-		const { activeTrigger, markup, queryStartIndex, queryEndIndex } = selectionStateRef.current;
+		const activeTrigger = stateRef.current.activeTrigger;
+		const query = stateRef.current.query;
 		const triggerConfig = triggers.find((t) => t.char === activeTrigger);
-		if (!triggerConfig) return;
+		if (!triggerConfig || !activeTrigger) return;
 
-		const result = insertMention(
-			markup,
-			item,
-			triggerConfig,
-			queryStartIndex,
-			queryEndIndex,
-			triggers,
-		);
+		const el = editorRef.current;
+		if (!el) return;
 
-		const newSegments = parseMarkup(result.markup, triggers);
+		const sel = window.getSelection();
+		if (!sel || sel.rangeCount === 0) return;
+
+		const range = sel.getRangeAt(0);
+		const textNode = range.startContainer;
+		if (textNode.nodeType !== Node.TEXT_NODE) return;
+
+		const cursorRawOffset = range.startOffset;
+		const triggerQueryLen = activeTrigger.length + query.length;
+		const startRawOffset = cursorRawOffset - triggerQueryLen;
+		if (startRawOffset < 0) return;
+
+		const mark = document.createElement("mark");
+		mark.setAttribute("data-mention", activeTrigger);
+		mark.setAttribute("data-id", item.id);
+		mark.contentEditable = "false";
+		const bg = triggerConfig.color ?? "var(--mention-bg, oklch(0.93 0.03 250))";
+		mark.style.cssText = `background-color:${bg};border-radius:var(--mention-radius, 3px);padding:0 2px`;
+		mark.textContent = activeTrigger + item.label;
+
+		const fullText = textNode.textContent!;
+		const before = fullText.slice(0, startRawOffset);
+		const after = fullText.slice(cursorRawOffset);
+
+		const parent = textNode.parentNode!;
+		const frag = document.createDocumentFragment();
+
+		if (before) frag.appendChild(document.createTextNode(before));
+		frag.appendChild(mark);
+
+		const spacer = document.createTextNode("\u200B ");
+		frag.appendChild(spacer);
+
+		if (after) frag.appendChild(document.createTextNode(after));
+
+		parent.replaceChild(frag, textNode);
+
+		const newRange = document.createRange();
+		newRange.setStart(spacer, spacer.length);
+		newRange.collapse(true);
+		sel.removeAllRanges();
+		sel.addRange(newRange);
+
+		const newPlainText = getPlainTextFromDOM(el);
+		const newMarkup = getMarkupFromDOM(el, triggers);
+		const newCursor = getCursorOffset(el);
+
+		const newSegments = parseMarkup(newMarkup, triggers);
 		prevMentionsRef.current = newSegments
 			.filter((s): s is MentionSegment => s.type === "mention")
-			.map((s) => ({
-				id: s.id,
-				label: s.text.slice(s.trigger.length),
-				trigger: s.trigger,
-			}));
-
-		pendingCursorRef.current = result.cursor;
+			.map((s) => ({ id: s.id, label: s.text.slice(s.trigger.length), trigger: s.trigger }));
 
 		dispatch({
 			type: "INSERT_COMPLETE",
-			markup: result.markup,
-			plainText: result.plainText,
-			cursor: result.cursor,
+			markup: newMarkup,
+			plainText: newPlainText,
+			cursor: newCursor,
 		});
 
-		callbacksRef.current.onSelect?.(item, triggerConfig.char);
-		callbacksRef.current.onChange?.(result.markup, result.plainText);
+		lastReportedMarkupRef.current = newMarkup;
+		callbacksRef.current.onSelect?.(item, activeTrigger);
+		callbacksRef.current.onChange?.(newMarkup, newPlainText);
 	}, []);
 
 	const wrappedDispatch = useCallback(
@@ -344,81 +448,36 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		[handleSelect],
 	);
 
-	const handleScroll = () => {
-		if (textareaRef.current && overlayRef.current) {
-			overlayRef.current.scrollTop = textareaRef.current.scrollTop;
-			overlayRef.current.scrollLeft = textareaRef.current.scrollLeft;
-		}
-	};
-
 	const clear = useCallback(() => {
 		prevMentionsRef.current = [];
-		dispatch({
-			type: "INPUT_CHANGE",
-			markup: "",
-			plainText: "",
-			selectionStart: 0,
-			selectionEnd: 0,
-		});
+		dispatch({ type: "INPUT_CHANGE", markup: "", plainText: "", selectionStart: 0, selectionEnd: 0 });
 		dispatch({ type: "TRIGGER_LOST" });
-		if (textareaRef.current) {
-			textareaRef.current.value = "";
+		if (editorRef.current) {
+			editorRef.current.innerHTML = "";
 		}
+		lastReportedMarkupRef.current = "";
 		callbacksRef.current.onChange?.("", "");
 	}, []);
 
 	const focus = useCallback(() => {
-		textareaRef.current?.focus();
+		editorRef.current?.focus();
 	}, []);
 
 	const insertTrigger = useCallback((trigger: string) => {
-		const el = textareaRef.current;
+		const el = editorRef.current;
 		if (!el) return;
+		el.focus();
 
-		const cursor = el.selectionStart ?? el.value.length;
-		const before = el.value.slice(0, cursor);
-		const after = el.value.slice(cursor);
+		const sel = window.getSelection();
+		if (!sel || sel.rangeCount === 0) return;
+
+		const cursorOffset = getCursorOffset(el);
+		const currentPlain = getPlainTextFromDOM(el);
+		const before = currentPlain.slice(0, cursorOffset);
 		const needsSpace = before.length > 0 && !/\s$/.test(before);
 		const insert = (needsSpace ? " " : "") + trigger;
-		const newPlainText = before + insert + after;
-		const newCursor = cursor + insert.length;
 
-		const triggers = triggersRef.current;
-		const newMarkup = applyChange(
-			selectionStateRef.current.markup,
-			newPlainText,
-			el.value,
-			triggers,
-		);
-
-		dispatch({
-			type: "INPUT_CHANGE",
-			markup: newMarkup,
-			plainText: newPlainText,
-			selectionStart: newCursor,
-			selectionEnd: newCursor,
-		});
-
-		const match = detectTrigger(newPlainText, newCursor, triggers);
-		if (match) {
-			dispatch({
-				type: "TRIGGER_MATCH",
-				trigger: match.trigger.char,
-				query: match.query,
-				startIndex: match.startIndex,
-				endIndex: match.endIndex,
-			});
-
-			const caretPos = getCaretCoordinates(el, match.startIndex);
-			dispatch({ type: "CARET_POSITION", position: caretPos });
-		}
-
-		pendingCursorRef.current = newCursor;
-		callbacksRef.current.onChange?.(newMarkup, newPlainText);
-
-		requestAnimationFrame(() => {
-			el.focus();
-		});
+		document.execCommand("insertText", false, insert);
 	}, []);
 
 	const api = useMemo(
@@ -431,50 +490,28 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		[state.markup],
 	);
 
-	const originalOnKeyDown = api.inputProps.onKeyDown as
-		| ((e: React.KeyboardEvent) => void)
-		| undefined;
+	const originalOnKeyDown = api.inputProps.onKeyDown as ((e: React.KeyboardEvent) => void) | undefined;
 
-	const wrappedOnKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement | HTMLInputElement>) => {
+	const wrappedOnKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
 		if (e.key === "Tab" && ghostTextRef.current && !(api.isOpen && state.highlightedIndex >= 0)) {
 			e.preventDefault();
-			const el = textareaRef.current;
+			const el = editorRef.current;
 			if (!el) return;
-			const cursor = el.selectionStart ?? el.value.length;
-			const gt = ghostTextRef.current;
-			const newPlainText = state.plainText.slice(0, cursor) + gt + state.plainText.slice(cursor);
-			const newCursor = cursor + gt.length;
-			const triggers = triggersRef.current;
-
-			const newMarkup = applyChange(state.markup, newPlainText, state.plainText, triggers);
-
-			dispatch({
-				type: "INPUT_CHANGE",
-				markup: newMarkup,
-				plainText: newPlainText,
-				selectionStart: newCursor,
-				selectionEnd: newCursor,
-			});
-			pendingCursorRef.current = newCursor;
+			document.execCommand("insertText", false, ghostTextRef.current);
 			callbacksRef.current.onAcceptGhostText?.();
-			callbacksRef.current.onChange?.(newMarkup, newPlainText);
 			return;
 		}
-		originalOnKeyDown?.(e);
-	};
+		originalOnKeyDown?.(e as unknown as React.KeyboardEvent);
+	}, [api.isOpen, state.highlightedIndex, originalOnKeyDown]);
 
 	return {
 		...api,
 		inputProps: {
 			...api.inputProps,
-			value: state.plainText,
-			onChange: handleInput,
-			onScroll: handleScroll,
 			onKeyDown: wrappedOnKeyDown,
 		},
 		state,
-		textareaRef,
-		overlayRef,
+		editorRef,
 		markup: state.markup,
 		plainText: state.plainText,
 		mentions,
@@ -482,5 +519,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		focus,
 		insertTrigger,
 		ghostText,
+		buildHTML,
+		syncEditor,
+		handleInput,
 	};
 }

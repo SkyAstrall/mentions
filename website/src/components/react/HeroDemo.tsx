@@ -32,13 +32,9 @@ export default function HeroDemo() {
 					{ char: "/", data: commands, color: "oklch(0.80 0.12 80)" },
 				]}
 				placeholder="Try it — type @ for users, # for tags, / for commands..."
+				className="hero-editor"
 			/>
 			<style>{`
-				.hero-demo {
-					width: 100%;
-					max-width: 36rem;
-					margin: 0 auto;
-				}
 				.hero-demo [data-mentions] {
 					--mention-radius: 4px;
 					--dropdown-bg: #18181b;
@@ -47,8 +43,9 @@ export default function HeroDemo() {
 					--dropdown-shadow: 0 8px 32px rgba(0,0,0,0.5);
 					--item-active-bg: rgba(99,102,241,0.2);
 					--item-padding: 10px 14px;
+					--mention-placeholder: #71717a;
 				}
-				.hero-demo textarea {
+				.hero-editor {
 					width: 100%;
 					min-height: 120px;
 					padding: 16px;
@@ -57,17 +54,13 @@ export default function HeroDemo() {
 					font-family: 'Inter', system-ui, sans-serif;
 					font-size: 16px;
 					line-height: 1.6;
-					resize: none;
-					background: rgba(255,255,255,0.03);
+					box-sizing: border-box;
 					color: #fafafa;
+					background: rgba(255,255,255,0.03);
 				}
-				.hero-demo textarea:focus {
-					outline: none;
+				.hero-editor:focus {
 					border-color: #6366f1;
 					box-shadow: 0 0 0 3px rgba(99,102,241,0.2);
-				}
-				.hero-demo textarea::placeholder {
-					color: #71717a;
 				}
 				.hero-demo [data-mentions-portal] ul {
 					color: #fafafa;
