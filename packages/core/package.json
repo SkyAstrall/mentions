@@ -1,0 +1,45 @@
+{
+  "name": "@skyastrall/mentions-core",
+  "version": "0.0.1",
+  "type": "module",
+  "description": "Framework-agnostic core engine for @skyastrall/mentions. Trigger detection, state machine, markup parsing.",
+  "license": "MIT",
+  "author": "SkyAstrall",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/skyAstrall/mentions.git"
+  },
+  "homepage": "https://github.com/skyAstrall/mentions",
+  "bugs": {
+    "url": "https://github.com/skyAstrall/mentions/issues"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "sideEffects": false,
+  "publishConfig": {
+    "access": "public"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist"],
+  "scripts": {
+    "build": "tsdown"
+  },
+  "keywords": [
+    "mentions",
+    "autocomplete",
+    "trigger",
+    "inline-suggestions",
+    "hashtag",
+    "slash-commands",
+    "typeahead",
+    "framework-agnostic",
+    "headless",
+    "combobox"
+  ]
+}

@@ -1,0 +1,22 @@
+{
+  "name": "mentions",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "pnpm -r build",
+    "test": "vitest",
+    "lint": "biome check .",
+    "lint:fix": "biome check --fix .",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && pnpm -r publish --access public"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.0.0",
+    "@changesets/cli": "^2.29.0",
+    "publint": "^0.3.18",
+    "tsdown": "^0.9.0",
+    "typescript": "^5.8.0",
+    "vitest": "^3.2.0"
+  }
+}
