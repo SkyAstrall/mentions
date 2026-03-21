@@ -14,9 +14,9 @@ export type {
 	TriggerConfig,
 } from "@skyastrall/mentions-core";
 export {
-	MentionController,
 	buildMentionHTML,
 	extractMentions,
+	MentionController,
 	markupToPlainText,
 	parseMarkup,
 } from "@skyastrall/mentions-core";

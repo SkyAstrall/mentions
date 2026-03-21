@@ -5,7 +5,6 @@ import { detectTrigger } from "./triggers.ts";
 import type {
 	CaretPosition,
 	KeyDownResult,
-	MentionCallbacks,
 	MentionControllerOptions,
 	MentionItem,
 	MentionSegment,
@@ -69,7 +68,7 @@ export class MentionController {
 	 */
 	handleInputChange(markup: string, plainText: string, cursor: number): void {
 		const prevState = this.state;
-		const callbacks = this.options.callbacks ?? {};
+		const callbacks = this.options.callbacks;
 
 		this.diffMentions(markup);
 
@@ -105,12 +104,12 @@ export class MentionController {
 			if (triggerChanged || queryChanged) {
 				this.fetchForTrigger(match.trigger.char, match.query);
 			}
-			callbacks.onQueryChange?.(match.query, match.trigger.char);
+			callbacks?.onQueryChange?.(match.query, match.trigger.char);
 		} else if (prevState.activeTrigger) {
 			this.cancelFetch();
 		}
 
-		callbacks.onChange?.(markup, plainText);
+		callbacks?.onChange?.(markup, plainText);
 	}
 
 	/**
@@ -118,7 +117,7 @@ export class MentionController {
 	 */
 	handleInsertComplete(markup: string, plainText: string, cursor: number, item: MentionItem): void {
 		const trigger = this.state.activeTrigger ?? "";
-		const callbacks = this.options.callbacks ?? {};
+		const callbacks = this.options.callbacks;
 
 		this.state = mentionReducer(this.state, {
 			type: "INSERT_COMPLETE",
@@ -131,8 +130,8 @@ export class MentionController {
 		this.cancelFetch();
 		this.notify();
 
-		callbacks.onSelect?.(item, trigger);
-		callbacks.onChange?.(markup, plainText);
+		callbacks?.onSelect?.(item, trigger);
+		callbacks?.onChange?.(markup, plainText);
 	}
 
 	/**
@@ -214,7 +213,7 @@ export class MentionController {
 		next = mentionReducer(next, { type: "TRIGGER_LOST" });
 		this.state = next;
 		this.notify();
-		(this.options.callbacks ?? {}).onChange?.("", "");
+		this.options.callbacks?.onChange?.("", "");
 	}
 
 	destroy(): void {
@@ -253,14 +252,14 @@ export class MentionController {
 	}
 
 	private emitOpenClose(prev: MentionState): void {
-		const callbacks = this.options.callbacks ?? {};
+		const callbacks = this.options.callbacks;
 		const wasOpen = prev.status === "suggesting" || prev.status === "navigating";
 		const isOpen = this.state.status === "suggesting" || this.state.status === "navigating";
 
 		if (!wasOpen && isOpen && this.state.activeTrigger) {
-			callbacks.onOpen?.(this.state.activeTrigger);
+			callbacks?.onOpen?.(this.state.activeTrigger);
 		} else if (wasOpen && !isOpen) {
-			callbacks.onClose?.();
+			callbacks?.onClose?.();
 		}
 	}
 
@@ -320,7 +319,7 @@ export class MentionController {
 				.catch((err) => {
 					if (!signal.aborted) {
 						this.dispatch({ type: "FETCH_ERROR" });
-						if (err instanceof Error) (this.options.callbacks ?? {}).onError?.(err);
+						if (err instanceof Error) this.options.callbacks?.onError?.(err);
 					}
 				});
 		}, delay);
@@ -328,7 +327,7 @@ export class MentionController {
 
 	private diffMentions(newMarkup: string): void {
 		const newMentions = this.mentionsFromMarkup(newMarkup);
-		const onRemove = (this.options.callbacks ?? {}).onRemove;
+		const onRemove = this.options.callbacks?.onRemove;
 
 		if (onRemove && this.prevMentions.length > 0) {
 			const newIds = new Set(newMentions.map((m) => `${m.trigger}:${m.id}`));

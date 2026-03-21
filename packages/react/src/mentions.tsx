@@ -197,6 +197,7 @@ export namespace Mentions {
 			injectStyles();
 		}, []);
 
+		// biome-ignore lint/correctness/useExhaustiveDependencies: ctx.editorRef is a stable ref
 		useEffect(() => {
 			if (!isSingleLine) return;
 			const el = ctx.editorRef.current;
@@ -236,6 +237,7 @@ export namespace Mentions {
 			}
 		};
 
+		// biome-ignore lint/correctness/useExhaustiveDependencies: mount-only autofocus
 		useEffect(() => {
 			if (autoFocus) ctx.editorRef.current?.focus();
 		}, []);
@@ -256,6 +258,8 @@ export namespace Mentions {
 					: true;
 
 		return (
+			// biome-ignore lint/a11y/noStaticElementInteractions: contentEditable div with role="combobox" from inputProps spread
+			// biome-ignore lint/a11y/useAriaPropsSupportedByRole: role="combobox" comes from inputProps spread, not statically visible
 			<div
 				ref={ctx.editorRef}
 				className={className}

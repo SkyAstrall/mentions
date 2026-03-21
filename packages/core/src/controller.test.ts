@@ -379,6 +379,7 @@ describe("MentionController", () => {
 		expect(ctrl.getState().status).toBe("loading");
 		expect(asyncData).toHaveBeenCalledWith("al", expect.any(Object));
 
+		// biome-ignore lint/style/noNonNullAssertion: test assertion after assignment
 		resolveFetch!([{ id: "1", label: "Alice" }]);
 		await new Promise((r) => setTimeout(r, 5));
 		expect(ctrl.getState().items).toHaveLength(1);
@@ -408,6 +409,7 @@ describe("MentionController", () => {
 		ctrl.handleInputChange("@b", "@b", 2);
 		await new Promise((r) => setTimeout(r, 10));
 
+		// biome-ignore lint/style/noNonNullAssertion: test assertion after assignment
 		resolveFirst!([{ id: "1", label: "Alice" }]);
 		await new Promise((r) => setTimeout(r, 10));
 

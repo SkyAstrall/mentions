@@ -1,11 +1,6 @@
 import {
-	type ConnectReturn,
-	MentionController,
-	type MentionCallbacks,
-	type MentionItem,
-	type MentionState,
-	type TriggerConfig,
 	buildMentionHTML,
+	type ConnectReturn,
 	connect,
 	extractMentions,
 	getCaretRect,
@@ -13,6 +8,11 @@ import {
 	getMarkupFromDOM,
 	getPlainTextFromDOM,
 	insertTextAtCursor,
+	type MentionCallbacks,
+	MentionController,
+	type MentionItem,
+	type MentionState,
+	type TriggerConfig,
 } from "@skyastrall/mentions-core";
 import {
 	type RefObject,
@@ -293,11 +293,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		(e: React.KeyboardEvent<HTMLDivElement>) => {
 			const s = stateRef.current;
 			const isOpen = s.status === "suggesting" || s.status === "navigating";
-			if (
-				e.key === "Tab" &&
-				ghostTextRef.current &&
-				!(isOpen && s.highlightedIndex >= 0)
-			) {
+			if (e.key === "Tab" && ghostTextRef.current && !(isOpen && s.highlightedIndex >= 0)) {
 				e.preventDefault();
 				const el = editorRef.current;
 				if (!el) return;
