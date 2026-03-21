@@ -1,7 +1,7 @@
 import type { MentionAction, MentionState } from "./types.ts";
 
 /** Default initial state for the mention state machine. */
-export const initialState: MentionState = {
+const initialState: MentionState = {
 	status: "idle",
 	activeTrigger: null,
 	query: "",
@@ -22,7 +22,23 @@ export function createInitialState(overrides?: Partial<MentionState>): MentionSt
 	return { ...initialState, ...overrides };
 }
 
-/** Pure reducer for the mention state machine. Handles all mention lifecycle actions. */
+const idleReset = {
+	status: "idle" as const,
+	activeTrigger: null,
+	query: "",
+	queryStartIndex: 0,
+	queryEndIndex: 0,
+	items: [],
+	highlightedIndex: -1,
+	caretPosition: null,
+};
+
+/**
+ * Pure reducer for the mention state machine with state-scoped transitions.
+ *
+ * Actions not valid in the current status are no-ops (return unchanged state).
+ * This prevents impossible states like FETCH_COMPLETE after ESCAPE.
+ */
 export function mentionReducer(state: MentionState, action: MentionAction): MentionState {
 	switch (action.type) {
 		case "INPUT_CHANGE":
@@ -45,32 +61,15 @@ export function mentionReducer(state: MentionState, action: MentionAction): Ment
 				highlightedIndex: state.status === "idle" ? -1 : state.highlightedIndex,
 			};
 
-		case "QUERY_CHANGE":
-			return {
-				...state,
-				status: "suggesting",
-				query: action.query,
-				queryEndIndex: action.endIndex,
-				highlightedIndex: -1,
-			};
-
 		case "TRIGGER_LOST":
-			return {
-				...state,
-				status: "idle",
-				activeTrigger: null,
-				query: "",
-				queryStartIndex: 0,
-				queryEndIndex: 0,
-				items: [],
-				highlightedIndex: -1,
-				caretPosition: null,
-			};
+			return { ...state, ...idleReset };
 
 		case "FETCH_START":
+			if (state.status !== "suggesting" && state.status !== "navigating") return state;
 			return { ...state, status: "loading" };
 
 		case "FETCH_COMPLETE":
+			if (state.status !== "loading" && state.status !== "suggesting") return state;
 			return {
 				...state,
 				status: "suggesting",
@@ -79,55 +78,42 @@ export function mentionReducer(state: MentionState, action: MentionAction): Ment
 			};
 
 		case "FETCH_ERROR":
-			return {
-				...state,
-				status: "idle",
-				items: [],
-				activeTrigger: null,
-				query: "",
-				queryStartIndex: 0,
-				queryEndIndex: 0,
-				highlightedIndex: -1,
-				caretPosition: null,
-			};
+			if (state.status !== "loading") return state;
+			return { ...state, ...idleReset };
 
 		case "ARROW_DOWN": {
+			if (state.status !== "suggesting" && state.status !== "navigating") return state;
 			if (state.items.length === 0) return state;
 			const next = (state.highlightedIndex + 1) % state.items.length;
 			return { ...state, status: "navigating", highlightedIndex: next };
 		}
 
 		case "ARROW_UP": {
+			if (state.status !== "suggesting" && state.status !== "navigating") return state;
 			if (state.items.length === 0) return state;
 			const prev =
 				state.highlightedIndex <= 0 ? state.items.length - 1 : state.highlightedIndex - 1;
 			return { ...state, status: "navigating", highlightedIndex: prev };
 		}
 
+		case "HOME":
+			if (state.status !== "suggesting" && state.status !== "navigating") return state;
+			if (state.items.length === 0) return state;
+			return { ...state, status: "navigating", highlightedIndex: 0 };
+
+		case "END":
+			if (state.status !== "suggesting" && state.status !== "navigating") return state;
+			if (state.items.length === 0) return state;
+			return { ...state, status: "navigating", highlightedIndex: state.items.length - 1 };
+
 		case "SELECT":
-			return {
-				...state,
-				status: "idle",
-				activeTrigger: null,
-				query: "",
-				queryStartIndex: 0,
-				queryEndIndex: 0,
-				items: [],
-				highlightedIndex: -1,
-				caretPosition: null,
-			};
+			if (state.status !== "suggesting" && state.status !== "navigating") return state;
+			return { ...state, ...idleReset };
 
 		case "INSERT_COMPLETE":
 			return {
 				...state,
-				status: "idle",
-				activeTrigger: null,
-				query: "",
-				queryStartIndex: 0,
-				queryEndIndex: 0,
-				items: [],
-				highlightedIndex: -1,
-				caretPosition: null,
+				...idleReset,
 				markup: action.markup,
 				plainText: action.plainText,
 				selectionStart: action.cursor,
@@ -136,23 +122,14 @@ export function mentionReducer(state: MentionState, action: MentionAction): Ment
 
 		case "ESCAPE":
 		case "BLUR":
-			return {
-				...state,
-				status: "idle",
-				activeTrigger: null,
-				query: "",
-				queryStartIndex: 0,
-				queryEndIndex: 0,
-				items: [],
-				highlightedIndex: -1,
-				caretPosition: null,
-			};
+			if (state.status === "idle") return state;
+			return { ...state, ...idleReset };
 
 		case "COMPOSITION_START":
-			return { ...state, isComposing: true };
+			return state.isComposing ? state : { ...state, isComposing: true };
 
 		case "COMPOSITION_END":
-			return { ...state, isComposing: false };
+			return state.isComposing ? { ...state, isComposing: false } : state;
 
 		case "CARET_POSITION":
 			return { ...state, caretPosition: action.position };

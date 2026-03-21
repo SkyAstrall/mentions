@@ -3,21 +3,39 @@ import DocsLayout from "../../../layouts/DocsLayout.astro";
 import PropsTable from "../../../components/PropsTable.astro";
 import Code from "../../../components/Code.astro";
 
+const optionProps = [
+	{ name: "triggers", type: "TriggerConfig[]", description: "Trigger configurations (required)" },
+	{ name: "value", type: "string", description: "Controlled markup value" },
+	{ name: "defaultValue", type: "string", description: "Initial markup for uncontrolled mode" },
+	{ name: "onChange", type: "(markup, plainText) => void", description: "Called on every content change" },
+	{ name: "onSelect", type: "(item, trigger) => void", description: "Called when a mention is selected" },
+	{ name: "onRemove", type: "(item, trigger) => void", description: "Called when a mention is removed" },
+	{ name: "onQueryChange", type: "(query, trigger) => void", description: "Called when the search query changes" },
+	{ name: "onOpen", type: "(trigger) => void", description: "Called when the dropdown opens" },
+	{ name: "onClose", type: "() => void", description: "Called when the dropdown closes" },
+	{ name: "onError", type: "(error) => void", description: "Called on async fetch errors" },
+	{ name: "ghostText", type: "string", description: "Dimmed inline completion text" },
+	{ name: "onAcceptGhostText", type: "() => void", description: "Called when ghost text is accepted via Tab" },
+];
+
 const returnProps = [
-	{ name: "editorRef", type: "RefObject<HTMLDivElement>", description: "Attach to your contenteditable div" },
-	{ name: "inputProps", type: "object", description: "ARIA + event handlers for the editor" },
+	{ name: "editorRef", type: "RefObject<HTMLDivElement | null>", description: "Attach to your contenteditable div" },
+	{ name: "inputProps", type: "object", description: "ARIA + event handlers — spread onto the editor div" },
 	{ name: "listProps", type: "object", description: "ARIA attributes for the suggestion list" },
 	{ name: "getItemProps", type: "(index) => object", description: "ARIA + handlers for each item" },
 	{ name: "isOpen", type: "boolean", description: "Whether the dropdown is visible" },
 	{ name: "isLoading", type: "boolean", description: "Whether an async fetch is in progress" },
 	{ name: "items", type: "MentionItem[]", description: "Current suggestion items" },
+	{ name: "query", type: "string", description: "Current search query text" },
 	{ name: "highlightedIndex", type: "number", description: "Highlighted item (-1 = none)" },
 	{ name: "activeTrigger", type: "string | null", description: "Active trigger character" },
 	{ name: "caretPosition", type: "CaretPosition | null", description: "Caret viewport coordinates" },
+	{ name: "state", type: "MentionState", description: "Full state machine state (status, isComposing, etc.)" },
 	{ name: "markup", type: "string", description: "Current markup string" },
 	{ name: "plainText", type: "string", description: "Current plain text" },
 	{ name: "mentions", type: "MentionItem[]", description: "All active mentions" },
-	{ name: "handleInput", type: "() => void", description: "Call from editor's onInput" },
+	{ name: "ghostText", type: "string | undefined", description: "Current ghost text value" },
+	{ name: "handleInput", type: "() => void", description: "Wire to onInput on your contenteditable div" },
 	{ name: "clear", type: "() => void", description: "Clears all content" },
 	{ name: "focus", type: "() => void", description: "Focuses the editor" },
 	{ name: "insertTrigger", type: "(trigger) => void", description: "Inserts trigger and opens dropdown" },
@@ -30,14 +48,26 @@ const returnProps = [
 	<h2>Import</h2>
 	<Code code={`import { useMentions } from "@skyastrall/mentions-react";`} />
 
+	<h2>Options</h2>
+	<PropsTable props={optionProps} />
+
 	<h2>Return Value</h2>
 	<PropsTable props={returnProps} />
 
-	<h2>Usage</h2>
-	<Code code={`function CustomEditor() {
+	<p><code>inputProps</code> includes ARIA combobox attributes (<code>role="combobox"</code>, <code>aria-expanded</code>, <code>aria-activedescendant</code>, etc.) plus <code>onKeyDown</code>, <code>onBlur</code>, <code>onCompositionStart</code>, and <code>onCompositionEnd</code> handlers. Spread it onto your contenteditable div.</p>
+
+	<h2>Basic Example</h2>
+	<Code code={`import { useMentions } from "@skyastrall/mentions-react";
+
+const users = [
+  { id: "1", label: "Alice" },
+  { id: "2", label: "Bob" },
+];
+
+function CustomEditor() {
   const {
     editorRef, inputProps, listProps, getItemProps,
-    isOpen, items, highlightedIndex, caretPosition, handleInput,
+    isOpen, items, highlightedIndex, caretPosition,
   } = useMentions({
     triggers: [{ char: "@", data: users }],
     onChange: (markup, plainText) => console.log(markup),
@@ -48,7 +78,6 @@ const returnProps = [
       <div
         ref={editorRef}
         contentEditable="plaintext-only"
-        onInput={handleInput}
         data-mentions-editor=""
         {...inputProps}
         style={{ outline: "none", whiteSpace: "pre-wrap", padding: 12 }}

@@ -13,8 +13,6 @@ function reduce(state: MentionState, ...actions: MentionAction[]): MentionState 
 describe("mentionReducer", () => {
 	const initial = createInitialState();
 
-	// ---- INPUT_CHANGE --------------------------------------------------
-
 	it("updates markup and plain text on INPUT_CHANGE", () => {
 		const state = mentionReducer(initial, {
 			type: "INPUT_CHANGE",
@@ -30,8 +28,6 @@ describe("mentionReducer", () => {
 		expect(state.status).toBe("idle");
 	});
 
-	// ---- TRIGGER_MATCH → suggesting ------------------------------------
-
 	it("transitions idle → suggesting on TRIGGER_MATCH", () => {
 		const state = mentionReducer(initial, {
 			type: "TRIGGER_MATCH",
@@ -46,9 +42,7 @@ describe("mentionReducer", () => {
 		expect(state.highlightedIndex).toBe(-1);
 	});
 
-	// ---- FETCH lifecycle ------------------------------------------------
-
-	it("transitions to loading on FETCH_START", () => {
+	it("transitions to loading on FETCH_START from suggesting", () => {
 		const suggesting = mentionReducer(initial, {
 			type: "TRIGGER_MATCH",
 			trigger: "@",
@@ -60,7 +54,7 @@ describe("mentionReducer", () => {
 		expect(loading.status).toBe("loading");
 	});
 
-	it("transitions loading → suggesting on FETCH_COMPLETE with items", () => {
+	it("transitions loading → suggesting on FETCH_COMPLETE", () => {
 		const loading = reduce(
 			initial,
 			{ type: "TRIGGER_MATCH", trigger: "@", query: "jo", startIndex: 0, endIndex: 3 },
@@ -86,8 +80,6 @@ describe("mentionReducer", () => {
 		expect(state.items).toEqual([]);
 	});
 
-	// ---- ARROW navigation -----------------------------------------------
-
 	it("moves highlight down on ARROW_DOWN", () => {
 		const suggesting = reduce(
 			initial,
@@ -112,7 +104,6 @@ describe("mentionReducer", () => {
 		state = mentionReducer(state, { type: "ARROW_DOWN" });
 		expect(state.highlightedIndex).toBe(2);
 
-		// Wraps around
 		state = mentionReducer(state, { type: "ARROW_DOWN" });
 		expect(state.highlightedIndex).toBe(0);
 	});
@@ -130,14 +121,12 @@ describe("mentionReducer", () => {
 			},
 		);
 
-		// From -1, ARROW_UP should go to last item
 		let state = mentionReducer(suggesting, { type: "ARROW_UP" });
 		expect(state.highlightedIndex).toBe(1);
 
 		state = mentionReducer(state, { type: "ARROW_UP" });
 		expect(state.highlightedIndex).toBe(0);
 
-		// Wraps to end
 		state = mentionReducer(state, { type: "ARROW_UP" });
 		expect(state.highlightedIndex).toBe(1);
 	});
@@ -152,7 +141,43 @@ describe("mentionReducer", () => {
 		expect(state.highlightedIndex).toBe(-1);
 	});
 
-	// ---- SELECT ---------------------------------------------------------
+	it("HOME jumps to first item", () => {
+		const navigating = reduce(
+			initial,
+			{ type: "TRIGGER_MATCH", trigger: "@", query: "", startIndex: 0, endIndex: 1 },
+			{
+				type: "FETCH_COMPLETE",
+				items: [
+					{ id: "1", label: "A" },
+					{ id: "2", label: "B" },
+					{ id: "3", label: "C" },
+				],
+			},
+			{ type: "ARROW_DOWN" },
+			{ type: "ARROW_DOWN" },
+		);
+		expect(navigating.highlightedIndex).toBe(1);
+
+		const state = mentionReducer(navigating, { type: "HOME" });
+		expect(state.highlightedIndex).toBe(0);
+	});
+
+	it("END jumps to last item", () => {
+		const suggesting = reduce(
+			initial,
+			{ type: "TRIGGER_MATCH", trigger: "@", query: "", startIndex: 0, endIndex: 1 },
+			{
+				type: "FETCH_COMPLETE",
+				items: [
+					{ id: "1", label: "A" },
+					{ id: "2", label: "B" },
+					{ id: "3", label: "C" },
+				],
+			},
+		);
+		const state = mentionReducer(suggesting, { type: "END" });
+		expect(state.highlightedIndex).toBe(2);
+	});
 
 	it("resets to idle on SELECT", () => {
 		const navigating = reduce(
@@ -170,8 +195,6 @@ describe("mentionReducer", () => {
 		expect(state.items).toEqual([]);
 		expect(state.highlightedIndex).toBe(-1);
 	});
-
-	// ---- ESCAPE / BLUR --------------------------------------------------
 
 	it("resets to idle on ESCAPE", () => {
 		const suggesting = mentionReducer(initial, {
@@ -198,8 +221,6 @@ describe("mentionReducer", () => {
 		expect(state.status).toBe("idle");
 	});
 
-	// ---- TRIGGER_LOST ---------------------------------------------------
-
 	it("resets to idle on TRIGGER_LOST", () => {
 		const suggesting = mentionReducer(initial, {
 			type: "TRIGGER_MATCH",
@@ -214,8 +235,6 @@ describe("mentionReducer", () => {
 		expect(state.query).toBe("");
 	});
 
-	// ---- COMPOSITION ----------------------------------------------------
-
 	it("sets isComposing on COMPOSITION_START/END", () => {
 		const composing = mentionReducer(initial, { type: "COMPOSITION_START" });
 		expect(composing.isComposing).toBe(true);
@@ -223,8 +242,6 @@ describe("mentionReducer", () => {
 		const done = mentionReducer(composing, { type: "COMPOSITION_END" });
 		expect(done.isComposing).toBe(false);
 	});
-
-	// ---- INSERT_COMPLETE ------------------------------------------------
 
 	it("resets to idle and updates value on INSERT_COMPLETE", () => {
 		const suggesting = reduce(
@@ -251,8 +268,6 @@ describe("mentionReducer", () => {
 		expect(state.selectionStart).toBe(10);
 	});
 
-	// ---- CARET_POSITION -------------------------------------------------
-
 	it("stores caret position", () => {
 		const state = mentionReducer(initial, {
 			type: "CARET_POSITION",
@@ -261,25 +276,78 @@ describe("mentionReducer", () => {
 		expect(state.caretPosition).toEqual({ top: 42, left: 156, height: 20 });
 	});
 
-	// ---- QUERY_CHANGE ---------------------------------------------------
+	// ---- State-scoped transition guards --------------------------------
 
-	it("resets highlight and updates query on QUERY_CHANGE", () => {
-		const navigating = reduce(
+	it("FETCH_COMPLETE is no-op in idle (prevents ghost popup after Escape)", () => {
+		const state = mentionReducer(initial, {
+			type: "FETCH_COMPLETE",
+			items: [{ id: "1", label: "John" }],
+		});
+		expect(state).toBe(initial);
+		expect(state.status).toBe("idle");
+		expect(state.items).toEqual([]);
+	});
+
+	it("FETCH_START is no-op in idle", () => {
+		const state = mentionReducer(initial, { type: "FETCH_START" });
+		expect(state).toBe(initial);
+	});
+
+	it("FETCH_ERROR is no-op in idle", () => {
+		const state = mentionReducer(initial, { type: "FETCH_ERROR" });
+		expect(state).toBe(initial);
+	});
+
+	it("ARROW_DOWN is no-op in idle", () => {
+		const state = mentionReducer(initial, { type: "ARROW_DOWN" });
+		expect(state).toBe(initial);
+	});
+
+	it("ARROW_DOWN is no-op in loading", () => {
+		const loading = reduce(
 			initial,
-			{ type: "TRIGGER_MATCH", trigger: "@", query: "j", startIndex: 0, endIndex: 2 },
-			{ type: "FETCH_COMPLETE", items: [{ id: "1", label: "John" }] },
-			{ type: "ARROW_DOWN" },
+			{ type: "TRIGGER_MATCH", trigger: "@", query: "jo", startIndex: 0, endIndex: 3 },
+			{ type: "FETCH_START" },
 		);
-		expect(navigating.status).toBe("navigating");
-		expect(navigating.highlightedIndex).toBe(0);
+		const state = mentionReducer(loading, { type: "ARROW_DOWN" });
+		expect(state).toBe(loading);
+	});
 
-		const state = mentionReducer(navigating, {
-			type: "QUERY_CHANGE",
+	it("SELECT is no-op in idle", () => {
+		const state = mentionReducer(initial, {
+			type: "SELECT",
+			item: { id: "1", label: "John" },
+		});
+		expect(state).toBe(initial);
+	});
+
+	it("ESCAPE is no-op in idle (returns same reference)", () => {
+		const state = mentionReducer(initial, { type: "ESCAPE" });
+		expect(state).toBe(initial);
+	});
+
+	it("BLUR is no-op in idle (returns same reference)", () => {
+		const state = mentionReducer(initial, { type: "BLUR" });
+		expect(state).toBe(initial);
+	});
+
+	it("FETCH_COMPLETE after ESCAPE stays idle (critical ghost popup prevention)", () => {
+		const suggesting = mentionReducer(initial, {
+			type: "TRIGGER_MATCH",
+			trigger: "@",
 			query: "jo",
+			startIndex: 0,
 			endIndex: 3,
 		});
-		expect(state.status).toBe("suggesting");
-		expect(state.query).toBe("jo");
-		expect(state.highlightedIndex).toBe(-1);
+		const escaped = mentionReducer(suggesting, { type: "ESCAPE" });
+		expect(escaped.status).toBe("idle");
+
+		const afterFetch = mentionReducer(escaped, {
+			type: "FETCH_COMPLETE",
+			items: [{ id: "1", label: "John" }],
+		});
+		expect(afterFetch).toBe(escaped);
+		expect(afterFetch.status).toBe("idle");
+		expect(afterFetch.items).toEqual([]);
 	});
 });

@@ -1,0 +1,83 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Migration: v0.2 → v0.3">
+	<p class="lead">v0.3 introduces a headless architecture with <code>MentionController</code> — a framework-agnostic state machine. The <code>&lt;Mentions&gt;</code> component and compound component APIs remain the same.</p>
+
+	<h2>What Changed</h2>
+	<ul>
+		<li><strong>New:</strong> <code>MentionController</code> class in core — subscribe/getState pattern for multi-framework support</li>
+		<li><strong>New:</strong> DOM utilities (<code>getPlainTextFromDOM</code>, <code>getMarkupFromDOM</code>, <code>getCursorOffset</code>, <code>getCaretRect</code>, <code>buildMentionHTML</code>) now exported from core</li>
+		<li><strong>New:</strong> Typed ARIA props (<code>InputAriaProps</code>, <code>ListAriaProps</code>, <code>ItemAriaProps</code>)</li>
+		<li><strong>Changed:</strong> <code>connect()</code> now requires an <code>id</code> parameter (was optional with random fallback)</li>
+		<li><strong>Changed:</strong> <code>connect()</code> returns pure ARIA props only — no DOM event handlers</li>
+		<li><strong>Changed:</strong> React adapter uses <code>useSyncExternalStore</code> internally instead of <code>useReducer</code></li>
+		<li><strong>Changed:</strong> <code>buildHTML</code> renamed to <code>_buildHTML</code> (internal). <code>handleInput</code> remains public.</li>
+		<li><strong>Removed:</strong> <code>syncEditor</code> from the hook return — editor sync is now handled internally</li>
+		<li><strong>Removed:</strong> <code>QUERY_CHANGE</code> action type</li>
+		<li><strong>Removed:</strong> <code>initialState</code>, <code>escapeRegex</code> from public exports</li>
+	</ul>
+
+	<h2>Drop-in Component — No Changes</h2>
+	<p>If you use the <code>&lt;Mentions&gt;</code> component, no migration needed:</p>
+	<Code code={`// Works the same in v0.2 and v0.3
+<Mentions
+  triggers={[{ char: "@", data: users }]}
+  onChange={(markup, plainText) => save(markup)}
+/>`} />
+
+	<h2>Compound Components — No Changes</h2>
+	<p><code>&lt;Mentions.Editor&gt;</code>, <code>&lt;Mentions.List&gt;</code>, <code>&lt;Mentions.Item&gt;</code>, etc. all work the same.</p>
+
+	<h2>Headless Hook — Minor Changes</h2>
+	<Code code={`// Before (v0.2):
+const { handleInput, buildHTML, ... } = useMentions(opts);
+<div onInput={handleInput} ... />
+
+// After (v0.3):
+const { _handleInput, _buildHTML, ... } = useMentions(opts);
+<div onInput={_handleInput} ... />`} />
+	<p>The underscore prefix signals these are internal plumbing. For most custom editors, you only need <code>editorRef</code>, <code>inputProps</code>, <code>listProps</code>, <code>getItemProps</code>, and the state accessors.</p>
+
+	<h2>Using MentionController Directly</h2>
+	<p>v0.3 exposes the core controller for building adapters in other frameworks:</p>
+	<Code code={`import { MentionController, connect } from "@skyastrall/mentions-core";
+
+const ctrl = new MentionController({
+  triggers: [{ char: "@", data: users }],
+  callbacks: {
+    onChange: (markup, plainText) => console.log(markup),
+    onSelect: (item, trigger) => console.log(item),
+  },
+});
+
+// Subscribe to state changes
+const unsub = ctrl.subscribe(() => {
+  const state = ctrl.getState();
+  const aria = connect(state, "my-id");
+  // Update your UI...
+});
+
+// Feed input changes
+ctrl.handleInputChange(markup, plainText, cursor);
+
+// Keyboard
+const result = ctrl.handleKeyDown("ArrowDown");
+if (result.handled) preventDefault();
+
+// Cleanup
+ctrl.destroy();`} />
+
+	<h2>New Core Exports</h2>
+	<Code code={`// DOM utilities (for building framework adapters)
+import {
+  getPlainTextFromDOM,
+  getMarkupFromDOM,
+  getCursorOffset,
+  getCaretRect,
+  insertTextAtCursor,
+  buildMentionHTML,
+} from "@skyastrall/mentions-core";`} />
+</DocsLayout>

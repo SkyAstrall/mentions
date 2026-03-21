@@ -1,4 +1,4 @@
-import { type MentionItem, type TriggerConfig } from "@skyastrall/mentions-core";
+import type { MentionItem, TriggerConfig } from "@skyastrall/mentions-core";
 import {
 	createContext,
 	type ReactNode,
@@ -162,11 +162,13 @@ export namespace Mentions {
 		singleLine?: boolean;
 	};
 
-	const SUPPORTS_PLAINTEXT_ONLY = typeof document !== "undefined" && (() => {
-		const div = document.createElement("div");
-		div.contentEditable = "plaintext-only";
-		return div.contentEditable === "plaintext-only";
-	})();
+	const SUPPORTS_PLAINTEXT_ONLY =
+		typeof document !== "undefined" &&
+		(() => {
+			const div = document.createElement("div");
+			div.contentEditable = "plaintext-only";
+			return div.contentEditable === "plaintext-only";
+		})();
 
 	function injectStyles(): void {
 		if (typeof document === "undefined") return;
@@ -201,7 +203,10 @@ export namespace Mentions {
 			if (!el) return;
 			const handler = (e: Event) => {
 				const inputEvent = e as InputEvent;
-				if (inputEvent.inputType === "insertParagraph" || inputEvent.inputType === "insertLineBreak") {
+				if (
+					inputEvent.inputType === "insertParagraph" ||
+					inputEvent.inputType === "insertLineBreak"
+				) {
 					e.preventDefault();
 				}
 			};
@@ -209,10 +214,11 @@ export namespace Mentions {
 			return () => el.removeEventListener("beforeinput", handler);
 		}, [isSingleLine]);
 
-		const { onKeyDown, onCompositionStart, onCompositionEnd, onBlur, ...ariaProps } = ctx.inputProps as Record<string, unknown>;
+		const { onKeyDown, onCompositionStart, onCompositionEnd, onBlur, ...ariaProps } =
+			ctx.inputProps;
 
 		const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-			(onKeyDown as React.KeyboardEventHandler<HTMLDivElement>)?.(e);
+			onKeyDown(e);
 			if (isSingleLine && e.key === "Enter" && !e.defaultPrevented) {
 				e.preventDefault();
 			}
@@ -234,17 +240,20 @@ export namespace Mentions {
 			if (autoFocus) ctx.editorRef.current?.focus();
 		}, []);
 
-		const handleDrop = isSingleLine ? (e: React.DragEvent<HTMLDivElement>) => {
-			e.preventDefault();
-			const text = e.dataTransfer.getData("text/plain").replace(/[\n\r]/g, " ");
-			document.execCommand("insertText", false, text);
-		} : undefined;
+		const handleDrop = isSingleLine
+			? (e: React.DragEvent<HTMLDivElement>) => {
+					e.preventDefault();
+					const text = e.dataTransfer.getData("text/plain").replace(/[\n\r]/g, " ");
+					document.execCommand("insertText", false, text);
+				}
+			: undefined;
 
-		const editableValue = disabled || readOnly
-			? false
-			: SUPPORTS_PLAINTEXT_ONLY
-				? ("plaintext-only" as unknown as boolean)
-				: true;
+		const editableValue =
+			disabled || readOnly
+				? false
+				: SUPPORTS_PLAINTEXT_ONLY
+					? ("plaintext-only" as unknown as boolean)
+					: true;
 
 		return (
 			<div
@@ -259,9 +268,7 @@ export namespace Mentions {
 				data-gramm_editor="false"
 				data-enable-grammarly="false"
 				{...(isSingleLine ? { "data-singleline": "" } : {})}
-				role="textbox"
 				aria-multiline={!isSingleLine}
-				// biome-ignore lint/a11y/noNoninteractiveTabindex: contenteditable needs tabindex
 				tabIndex={disabled ? -1 : 0}
 				onInput={() => {
 					ctx.handleInput();
@@ -269,14 +276,14 @@ export namespace Mentions {
 				onKeyDown={handleKeyDown}
 				onPaste={handlePaste}
 				onDrop={handleDrop}
-				onCompositionStart={onCompositionStart as React.CompositionEventHandler<HTMLDivElement>}
+				onCompositionStart={onCompositionStart}
 				onCompositionEnd={(e) => {
-					(onCompositionEnd as React.CompositionEventHandler<HTMLDivElement>)?.(e);
+					onCompositionEnd(e);
 					requestAnimationFrame(() => {
 						ctx.handleInput();
 					});
 				}}
-				onBlur={onBlur as React.FocusEventHandler<HTMLDivElement>}
+				onBlur={onBlur}
 				style={{
 					outline: "none",
 					whiteSpace: isSingleLine ? "nowrap" : "pre-wrap",
@@ -361,7 +368,7 @@ export namespace Mentions {
 					minWidth: 200,
 					...style,
 				}}
-				{...(ctx.listProps as React.HTMLAttributes<HTMLUListElement>)}
+				{...ctx.listProps}
 			>
 				{children}
 			</ul>
@@ -405,13 +412,19 @@ export namespace Mentions {
 		);
 	}
 
-	function ItemSingle({ index, children, className, style, render }: ItemProps & { index: number }): ReactNode {
+	function ItemSingle({
+		index,
+		children,
+		className,
+		style,
+		render,
+	}: ItemProps & { index: number }): ReactNode {
 		const ctx = useMentionsContext();
 		const itemRef = useRef<HTMLLIElement>(null);
 
 		const item = ctx.items[index];
 		const highlighted = index === ctx.highlightedIndex;
-		const itemProps = ctx.getItemProps(index) as React.LiHTMLAttributes<HTMLLIElement>;
+		const itemProps = ctx.getItemProps(index);
 
 		useEffect(() => {
 			if (highlighted && itemRef.current) {
@@ -449,7 +462,15 @@ export namespace Mentions {
 		if (ctx.items.length > 0) return null;
 
 		return (
-			<div className={className} style={{ padding: "var(--item-padding, 8px 12px)", color: "#94a3b8", fontSize: "0.875rem", ...style }}>
+			<div
+				className={className}
+				style={{
+					padding: "var(--item-padding, 8px 12px)",
+					color: "#94a3b8",
+					fontSize: "0.875rem",
+					...style,
+				}}
+			>
 				{children}
 			</div>
 		);
@@ -463,7 +484,15 @@ export namespace Mentions {
 
 	export function Loading({ children, className, style }: LoadingProps): ReactNode {
 		return (
-			<div className={className} style={{ padding: "var(--item-padding, 8px 12px)", color: "#94a3b8", fontSize: "0.875rem", ...style }}>
+			<div
+				className={className}
+				style={{
+					padding: "var(--item-padding, 8px 12px)",
+					color: "#94a3b8",
+					fontSize: "0.875rem",
+					...style,
+				}}
+			>
 				{children}
 			</div>
 		);

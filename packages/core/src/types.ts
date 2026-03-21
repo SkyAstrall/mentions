@@ -1,9 +1,8 @@
-/** A mention candidate with an ID and display label. Additional fields are passed through. */
-export type MentionItem = {
+/** A mention candidate with an ID and display label. */
+export type MentionItem<TData extends Record<string, unknown> = Record<string, unknown>> = {
 	id: string;
 	label: string;
-	[key: string]: unknown;
-};
+} & TData;
 
 /** Contextual information passed to async data fetchers. */
 export type MentionContext = {
@@ -19,13 +18,9 @@ export type TriggerConfig = {
 	data: MentionItem[] | ((query: string, context: MentionContext) => Promise<MentionItem[]>);
 	markup?: string;
 	allowSpaceInQuery?: boolean;
-	/** Debounce delay (ms) for async data fetchers. Used by adapters. */
-	debounce?: number;
-	/** Minimum characters before suggestions appear. */
 	minChars?: number;
-	/** Maximum number of suggestions to show. Used by adapters. */
+	debounce?: number;
 	maxSuggestions?: number;
-	/** Highlight color for mentions. Used by adapters. */
 	color?: string;
 };
 
@@ -83,12 +78,13 @@ export type MentionAction =
 	  }
 	| { type: "TRIGGER_MATCH"; trigger: string; query: string; startIndex: number; endIndex: number }
 	| { type: "TRIGGER_LOST" }
-	| { type: "QUERY_CHANGE"; query: string; endIndex: number }
 	| { type: "FETCH_START" }
 	| { type: "FETCH_COMPLETE"; items: MentionItem[] }
 	| { type: "FETCH_ERROR" }
 	| { type: "ARROW_DOWN" }
 	| { type: "ARROW_UP" }
+	| { type: "HOME" }
+	| { type: "END" }
 	| { type: "SELECT"; item: MentionItem }
 	| { type: "ESCAPE" }
 	| { type: "BLUR" }
@@ -108,11 +104,35 @@ export type MentionCallbacks = {
 	onError?: (error: Error) => void;
 };
 
-/** Return value of the `connect()` function with ARIA props and state. */
+/** ARIA attributes for the combobox input element. */
+export type InputAriaProps = {
+	role: "combobox";
+	"aria-expanded": boolean;
+	"aria-controls"?: string;
+	"aria-autocomplete": "list";
+	"aria-activedescendant"?: string;
+	"aria-haspopup": "listbox";
+};
+
+/** ARIA attributes for the listbox element. */
+export type ListAriaProps = {
+	id: string;
+	role: "listbox";
+	"aria-label": string;
+	"aria-busy"?: boolean;
+};
+
+/** ARIA attributes for a single listbox option. */
+export type ItemAriaProps = {
+	id: string;
+	role: "option";
+};
+
+/** Return value of the `connect()` function with ARIA props and derived state. */
 export type ConnectReturn = {
-	inputProps: Record<string, unknown>;
-	listProps: Record<string, unknown>;
-	getItemProps: (index: number) => Record<string, unknown>;
+	inputProps: InputAriaProps;
+	listProps: ListAriaProps;
+	getItemProps: (index: number) => ItemAriaProps;
 	isOpen: boolean;
 	query: string;
 	items: MentionItem[];
@@ -120,4 +140,18 @@ export type ConnectReturn = {
 	activeTrigger: string | null;
 	caretPosition: CaretPosition | null;
 	isLoading: boolean;
+};
+
+/** Result of a keyboard interaction with the controller. */
+export type KeyDownResult =
+	| { handled: true; action: "select"; item: MentionItem }
+	| { handled: true }
+	| { handled: false };
+
+/** Options for creating a MentionController instance. */
+export type MentionControllerOptions = {
+	triggers: TriggerConfig[];
+	initialMarkup?: string;
+	callbacks?: MentionCallbacks;
+	filterFn?: (items: MentionItem[], query: string) => MentionItem[];
 };

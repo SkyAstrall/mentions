@@ -6,7 +6,7 @@ import Code from "../../../components/Code.astro";
 const triggerProps = [
 	{ name: "char", type: "string", description: "Trigger character — @, #, /, or any string", required: true },
 	{ name: "data", type: "MentionItem[] | (query, ctx) => Promise<MentionItem[]>", description: "Static array or async fetcher", required: true },
-	{ name: "markup", type: "string", default: '"@[__display__](__id__)"', description: "Markup template" },
+	{ name: "markup", type: "string", default: '"{char}[__display__](__id__)"', description: "Markup template (uses trigger char)" },
 	{ name: "allowSpaceInQuery", type: "boolean", default: "false", description: "Allow spaces in queries" },
 	{ name: "minChars", type: "number", default: "0", description: "Min chars before suggestions" },
 	{ name: "debounce", type: "number", default: "200", description: "Debounce ms for async fetchers" },

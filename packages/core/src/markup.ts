@@ -4,6 +4,8 @@ import { escapeRegex } from "./utils.ts";
 const DISPLAY_PLACEHOLDER = "__display__";
 const ID_PLACEHOLDER = "__id__";
 
+const regexCache = new Map<string, RegExp>();
+
 /** Get the markup template for a trigger, falling back to the default `@[Display](ID)` format. */
 export function getMarkupTemplate(trigger: TriggerConfig): string {
 	return trigger.markup ?? `${trigger.char}[${DISPLAY_PLACEHOLDER}](${ID_PLACEHOLDER})`;
@@ -70,7 +72,13 @@ export function parseMarkup(markup: string, triggers: TriggerConfig[]): Segment[
 	const patterns: Array<{ regex: RegExp; trigger: string }> = [];
 	for (const t of triggers) {
 		const template = getMarkupTemplate(t);
-		patterns.push({ regex: buildMentionRegex(template), trigger: t.char });
+		let regex = regexCache.get(template);
+		if (!regex) {
+			regex = buildMentionRegex(template);
+			regexCache.set(template, regex);
+		}
+		regex.lastIndex = 0;
+		patterns.push({ regex, trigger: t.char });
 	}
 
 	type Match = { index: number; length: number; display: string; id: string; trigger: string };

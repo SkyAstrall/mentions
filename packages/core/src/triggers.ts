@@ -22,9 +22,8 @@ export function detectTrigger(
 	if (cursorPosition <= 0) return null;
 
 	const textBeforeCursor = plainText.slice(0, cursorPosition);
-	const sorted = triggers.length > 1
-		? [...triggers].sort((a, b) => b.char.length - a.char.length)
-		: triggers;
+	const sorted =
+		triggers.length > 1 ? [...triggers].sort((a, b) => b.char.length - a.char.length) : triggers;
 
 	for (const trigger of sorted) {
 		const triggerChar = trigger.char;

@@ -8,13 +8,15 @@ import Code from "../../../components/Code.astro";
 
 	<h2>When to Use</h2>
 	<ul>
-		<li>You need a custom editor element (not the default contenteditable div)</li>
-		<li>You want to integrate mentions into an existing editor</li>
-		<li>You need complete control over the dropdown positioning and rendering</li>
+		<li>You want to customize the dropdown layout and positioning</li>
+		<li>You need to integrate mentions into an existing UI</li>
+		<li>You need complete control over item rendering</li>
 	</ul>
 
-	<h2>Minimal Example</h2>
-	<Code code={`import { useMentions } from "@skyastrall/mentions-react";
+	<p>For most headless use cases, the <a href="/docs/guides/compound-components">compound component API</a> gives you layout control while the library handles the editor internals. Use the raw hook only when you need to control the contenteditable element itself.</p>
+
+	<h2>Compound Components (Recommended)</h2>
+	<Code code={`import { Mentions } from "@skyastrall/mentions-react";
 
 const users = [
   { id: "1", label: "Alice" },
@@ -22,9 +24,31 @@ const users = [
 ];
 
 function Editor() {
+  return (
+    <Mentions triggers={[{ char: "@", data: users }]}>
+      <Mentions.Editor placeholder="Type @..." />
+      <Mentions.Portal>
+        <Mentions.List>
+          <Mentions.Item render={({ item, highlighted }) => (
+            <div style={{ fontWeight: highlighted ? 600 : 400 }}>
+              {item.label}
+            </div>
+          )} />
+        </Mentions.List>
+      </Mentions.Portal>
+    </Mentions>
+  );
+}`} />
+
+	<h2>Raw Hook (Full Control)</h2>
+	<p>When you need to render the contenteditable div yourself:</p>
+	<Code code={`import { useMentions } from "@skyastrall/mentions-react";
+
+function CustomEditor() {
   const {
     editorRef, inputProps, listProps, getItemProps,
-    isOpen, items, highlightedIndex, caretPosition, handleInput,
+    isOpen, items, highlightedIndex, caretPosition,
+    handleInput,
   } = useMentions({
     triggers: [{ char: "@", data: users }],
   });
@@ -59,7 +83,7 @@ function Editor() {
 	<ul>
 		<li><code>data-mentions=""</code> on a wrapper div — needed for blur detection</li>
 		<li><code>data-mentions-editor=""</code> on the editor — needed for placeholder CSS</li>
-		<li><code>onInput={'{handleInput}'}</code> — triggers state derivation from DOM</li>
+		<li><code>inputProps</code> includes <code>role="combobox"</code> and all ARIA attributes — always spread it</li>
 	</ul>
 
 	<h2>Reading Values</h2>

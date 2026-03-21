@@ -1,6 +1,17 @@
 export { connect } from "./connect.ts";
+export { MentionController } from "./controller.ts";
+export {
+	buildMentionHTML,
+	escapeHTML,
+	getCaretRect,
+	getCursorOffset,
+	getMarkupFromDOM,
+	getPlainTextFromDOM,
+	insertTextAtCursor,
+	isExtensionNode,
+} from "./dom.ts";
 export { filterItems } from "./filter.ts";
-export { createInitialState, initialState, mentionReducer } from "./machine.ts";
+export { createInitialState, mentionReducer } from "./machine.ts";
 export {
 	applyChange,
 	createMentionMarkup,
@@ -17,10 +28,15 @@ export { detectTrigger } from "./triggers.ts";
 export type {
 	CaretPosition,
 	ConnectReturn,
+	InputAriaProps,
+	ItemAriaProps,
+	KeyDownResult,
+	ListAriaProps,
 	MachineStatus,
 	MentionAction,
 	MentionCallbacks,
 	MentionContext,
+	MentionControllerOptions,
 	MentionItem,
 	MentionSegment,
 	MentionState,
@@ -28,4 +44,3 @@ export type {
 	TextSegment,
 	TriggerConfig,
 } from "./types.ts";
-export { escapeRegex } from "./utils.ts";

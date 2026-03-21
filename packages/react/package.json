@@ -5,6 +5,8 @@
 	"description": "Headless React component for @mentions, slash commands, and custom triggers. Compound components + hooks. TypeScript-first.",
 	"license": "MIT",
 	"author": "SkyAstrall",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
 	"sideEffects": [
 		"./dist/effects.css"
 	],

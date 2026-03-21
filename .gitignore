@@ -2,8 +2,12 @@ node_modules/
 dist/
 *.tsbuildinfo
 *.tgz
+*.log
 .DS_Store
 ARCHITECTURE.md
+ROADMAP.md
 coverage/
+test-results/
+playwright-report/
 .env
 .env.*
