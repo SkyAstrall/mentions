@@ -44,8 +44,9 @@ export function connect(
 						if (state.highlightedIndex >= 0 && state.items[state.highlightedIndex]) {
 							e.preventDefault();
 							send({ type: "SELECT", item: state.items[state.highlightedIndex] });
+							return;
 						}
-						return;
+						break;
 					case "Escape":
 						e.preventDefault();
 						send({ type: "ESCAPE" });
@@ -59,8 +60,12 @@ export function connect(
 		onCompositionEnd: () => send({ type: "COMPOSITION_END" }),
 
 		onBlur: (e: FocusEvent) => {
-			const container = (e.currentTarget as HTMLElement)?.parentElement;
-			if (container?.contains(e.relatedTarget as Node)) return;
+			const related = e.relatedTarget as HTMLElement | null;
+			if (related) {
+				const mentionsRoot = (e.currentTarget as HTMLElement)?.closest?.("[data-mentions]");
+				if (mentionsRoot?.contains(related)) return;
+				if (related.closest?.("[data-mentions-portal]")) return;
+			}
 			send({ type: "BLUR" });
 		},
 	};

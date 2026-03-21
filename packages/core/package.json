@@ -1,6 +1,6 @@
 {
 	"name": "@skyastrall/mentions-core",
-	"version": "0.1.0",
+	"version": "0.2.0",
 	"type": "module",
 	"description": "Framework-agnostic engine for trigger detection, markup parsing, and mention state management. Zero dependencies.",
 	"license": "MIT",

@@ -1,0 +1,51 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import PropsTable from "../../../components/PropsTable.astro";
+import Code from "../../../components/Code.astro";
+
+const triggerProps = [
+	{ name: "char", type: "string", description: "Trigger character — @, #, /, or any string", required: true },
+	{ name: "data", type: "MentionItem[] | (query, ctx) => Promise<MentionItem[]>", description: "Static array or async fetcher", required: true },
+	{ name: "markup", type: "string", default: '"@[__display__](__id__)"', description: "Markup template" },
+	{ name: "allowSpaceInQuery", type: "boolean", default: "false", description: "Allow spaces in queries" },
+	{ name: "minChars", type: "number", default: "0", description: "Min chars before suggestions" },
+	{ name: "debounce", type: "number", default: "200", description: "Debounce ms for async fetchers" },
+	{ name: "maxSuggestions", type: "number", description: "Cap number of suggestions" },
+	{ name: "color", type: "string", description: "Mention highlight color" },
+];
+
+const contextProps = [
+	{ name: "textBefore", type: "string", description: "Plain text before the trigger" },
+	{ name: "textAfter", type: "string", description: "Plain text after the query" },
+	{ name: "activeMentions", type: "MentionItem[]", description: "All mentions in the editor" },
+	{ name: "fullText", type: "string", description: "Complete plain text" },
+];
+---
+
+<DocsLayout title="Trigger Config">
+	<p class="lead">Configure each trigger with its own data source, behavior, and appearance.</p>
+
+	<h2>TriggerConfig</h2>
+	<PropsTable props={triggerProps} />
+
+	<h2>MentionContext</h2>
+	<p>Second argument to async fetchers — provides editor context.</p>
+	<PropsTable props={contextProps} />
+
+	<h2>Async Data</h2>
+	<Code code={`const triggers = [{
+  char: "@",
+  data: async (query, context) => {
+    const res = await fetch(\`/api/users?q=\${query}\`);
+    return res.json();
+  },
+  debounce: 300,
+  minChars: 2,
+}];`} />
+	<p>Debouncing, aborting stale requests, and loading states are handled automatically.</p>
+
+	<h2>Custom Markup</h2>
+	<Code code={`{ char: "@", data: users, markup: "{{@__display__:__id__}}" }
+// Produces: {{@Alice Johnson:1}}`} />
+	<p><code>__display__</code> and <code>__id__</code> are replaced with the selected item's label and id. Delimiter characters are escaped automatically.</p>
+</DocsLayout>

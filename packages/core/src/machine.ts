@@ -85,6 +85,8 @@ export function mentionReducer(state: MentionState, action: MentionAction): Ment
 				items: [],
 				activeTrigger: null,
 				query: "",
+				queryStartIndex: 0,
+				queryEndIndex: 0,
 				highlightedIndex: -1,
 				caretPosition: null,
 			};
@@ -139,6 +141,8 @@ export function mentionReducer(state: MentionState, action: MentionAction): Ment
 				status: "idle",
 				activeTrigger: null,
 				query: "",
+				queryStartIndex: 0,
+				queryEndIndex: 0,
 				items: [],
 				highlightedIndex: -1,
 				caretPosition: null,

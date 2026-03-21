@@ -1,0 +1,75 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import PropsTable from "../../../components/PropsTable.astro";
+import Code from "../../../components/Code.astro";
+
+const mentionsProps = [
+	{ name: "triggers", type: "TriggerConfig[]", description: "Trigger configurations", required: true },
+	{ name: "value", type: "string", description: "Controlled markup value" },
+	{ name: "defaultValue", type: "string", default: '""', description: "Initial markup (uncontrolled)" },
+	{ name: "onChange", type: "(markup, plainText) => void", description: "Fires on every content change" },
+	{ name: "onSelect", type: "(item, trigger) => void", description: "Fires when a mention is inserted" },
+	{ name: "onRemove", type: "(item, trigger) => void", description: "Fires when a mention is deleted" },
+	{ name: "onQueryChange", type: "(query, trigger) => void", description: "Fires as the user types after a trigger" },
+	{ name: "onOpen", type: "(trigger) => void", description: "Fires when the dropdown opens" },
+	{ name: "onClose", type: "() => void", description: "Fires when the dropdown closes" },
+	{ name: "onError", type: "(error: Error) => void", description: "Fires on async data fetch errors" },
+	{ name: "placeholder", type: "string", description: "Editor placeholder text" },
+	{ name: "className", type: "string", description: "CSS class for the editor div" },
+	{ name: "disabled", type: "boolean", default: "false", description: "Disables editing" },
+	{ name: "readOnly", type: "boolean", default: "false", description: "Makes the editor read-only" },
+	{ name: "autoFocus", type: "boolean", default: "false", description: "Focuses editor on mount" },
+	{ name: "singleLine", type: "boolean", default: "false", description: "Prevents newlines" },
+	{ name: "renderItem", type: "(item, highlighted) => ReactNode", description: "Custom suggestion renderer" },
+	{ name: "ghostText", type: "string", description: "Dimmed inline completion" },
+	{ name: "onAcceptGhostText", type: "() => void", description: "Fires when Tab accepts ghost text" },
+	{ name: "ref", type: "Ref<MentionsHandle>", description: "Imperative handle" },
+];
+
+const handleMethods = [
+	{ name: "focus", type: "() => void", description: "Focuses the editor" },
+	{ name: "clear", type: "() => void", description: "Clears all content" },
+	{ name: "getValue", type: "() => { markup, plainText }", description: "Returns current values" },
+	{ name: "insertTrigger", type: "(trigger: string) => void", description: "Inserts trigger and opens dropdown" },
+];
+---
+
+<DocsLayout title="Mentions Component">
+	<p class="lead">The main component. Renders a complete mentions editor with dropdown.</p>
+
+	<h2>Import</h2>
+	<Code code={`import { Mentions } from "@skyastrall/mentions-react";`} />
+
+	<h2>Props</h2>
+	<PropsTable props={mentionsProps} />
+
+	<h2>MentionsHandle</h2>
+	<p>Methods available via the <code>ref</code> prop.</p>
+	<PropsTable props={handleMethods} />
+
+	<h2>Compound Components</h2>
+	<p>Provide <code>children</code> to use compound components for custom layouts:</p>
+
+	<h3>Mentions.Editor</h3>
+	<p>The contenteditable editor. Accepts <code>placeholder</code>, <code>className</code>, <code>style</code>, <code>disabled</code>, <code>readOnly</code>, <code>autoFocus</code>, <code>singleLine</code>.</p>
+
+	<h3>Mentions.Portal</h3>
+	<p>Positions the dropdown at the caret. Renders inline by default. Pass <code>container</code> to portal elsewhere.</p>
+
+	<h3>Mentions.List</h3>
+	<p>The suggestion list (<code>&lt;ul&gt;</code> with ARIA listbox attributes).</p>
+
+	<h3>Mentions.Item</h3>
+	<p>A suggestion item. Use <code>render</code> for custom rendering, or pass children.</p>
+	<Code code={`<Mentions.Item render={({ item, highlighted }) => (
+  <div style={{ fontWeight: highlighted ? 600 : 400 }}>
+    {item.label}
+  </div>
+)} />`} />
+
+	<h3>Mentions.Empty</h3>
+	<p>Shown when there are no matching suggestions.</p>
+
+	<h3>Mentions.Loading</h3>
+	<p>Shown during async data fetching.</p>
+</DocsLayout>

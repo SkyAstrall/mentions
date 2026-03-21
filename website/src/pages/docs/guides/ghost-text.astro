@@ -1,0 +1,52 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Ghost Text / AI Completions">
+	<p class="lead">Show dimmed inline completions. Tab to accept. Wire up any LLM or autocomplete backend.</p>
+
+	<h2>Basic Usage</h2>
+	<Code code={`import { useState } from "react";
+import { Mentions } from "@skyastrall/mentions-react";
+
+function AIEditor() {
+  const [ghost, setGhost] = useState("");
+
+  const handleChange = (_markup: string, plainText: string) => {
+    fetchCompletion(plainText).then(setGhost);
+  };
+
+  return (
+    <Mentions
+      triggers={[{ char: "@", data: users }]}
+      ghostText={ghost}
+      onChange={handleChange}
+      onAcceptGhostText={() => setGhost("")}
+    />
+  );
+}`} />
+
+	<h2>How It Works</h2>
+	<ul>
+		<li>Pass <code>ghostText</code> — it appears dimmed after the cursor</li>
+		<li>Press <strong>Tab</strong> to accept — the ghost text is inserted into the editor</li>
+		<li>Any other key dismisses the ghost text (it simply disappears on next input)</li>
+		<li><code>onAcceptGhostText</code> fires when Tab is pressed — clear the ghost and fetch a new one</li>
+	</ul>
+
+	<h2>With Dropdown</h2>
+	<p>Ghost text and the mention dropdown coexist. When the dropdown is open with a highlighted item, Tab selects the item instead of accepting ghost text. When the dropdown is closed (or nothing is highlighted), Tab accepts ghost text.</p>
+
+	<h2>Integration with AI APIs</h2>
+	<Code code={`async function fetchCompletion(text: string): Promise<string> {
+  const res = await fetch("/api/complete", {
+    method: "POST",
+    body: JSON.stringify({ prompt: text }),
+  });
+  const { completion } = await res.json();
+  return completion;
+}`} />
+
+	<p>Debounce the fetch in your application code — the library doesn't debounce ghost text updates.</p>
+</DocsLayout>

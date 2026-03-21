@@ -92,10 +92,19 @@ export function parseMarkup(markup: string, triggers: TriggerConfig[]): Segment[
 
 	matches.sort((a, b) => a.index - b.index);
 
+	let end = 0;
+	const filtered: Match[] = [];
+	for (const m of matches) {
+		if (m.index >= end) {
+			filtered.push(m);
+			end = m.index + m.length;
+		}
+	}
+
 	const segments: Segment[] = [];
 	let cursor = 0;
 
-	for (const match of matches) {
+	for (const match of filtered) {
 		if (match.index > cursor) {
 			segments.push({
 				type: "text",
@@ -302,7 +311,7 @@ export function insertMention(
 
 	const newSegments = parseMarkup(newMarkup, triggers);
 	const newPlainText = toPlainText(newSegments);
-	const cursor = queryStartIndex + trigger.char.length + item.label.length + 1;
+	const cursor = queryStartIndex + trigger.char.length + item.label.length + (needsSpace ? 1 : 0);
 
 	return { markup: newMarkup, plainText: newPlainText, cursor };
 }

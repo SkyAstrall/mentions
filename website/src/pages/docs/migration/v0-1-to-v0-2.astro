@@ -1,0 +1,57 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Migration: v0.1 → v0.2">
+	<p class="lead">v0.2 replaces textarea+overlay rendering with contenteditable. Here's what changed.</p>
+
+	<h2>Mentions.Input → Mentions.Editor</h2>
+	<Code code={`// Before (v0.1):
+<Mentions.Input placeholder="Type @..." />
+
+// After (v0.2):
+<Mentions.Editor placeholder="Type @..." />`} />
+
+	<h2>Mentions.Overlay removed</h2>
+	<p>Mentions render inline as <code>&lt;mark&gt;</code> elements. No overlay needed.</p>
+	<Code code={`// Before (v0.1):
+<Mentions triggers={triggers}>
+  <Mentions.Overlay />
+  <Mentions.Input placeholder="Type @..." />
+  <Mentions.Portal>...</Mentions.Portal>
+</Mentions>
+
+// After (v0.2):
+<Mentions triggers={triggers}>
+  <Mentions.Editor placeholder="Type @..." />
+  <Mentions.Portal>...</Mentions.Portal>
+</Mentions>`} />
+
+	<h2>textareaRef → editorRef</h2>
+	<Code code={`// Before:
+const { textareaRef } = useMentions({ triggers });
+<textarea ref={textareaRef} {...inputProps} />
+
+// After:
+const { editorRef } = useMentions({ triggers });
+<div ref={editorRef} contentEditable="plaintext-only" {...inputProps} />`} />
+
+	<h2>Other Removals</h2>
+	<ul>
+		<li><code>overlayRef</code> — removed (no overlay)</li>
+		<li><code>rows</code> prop — use CSS <code>min-height</code> instead</li>
+		<li><code>insertText</code> on handle — use <code>insertTrigger</code></li>
+		<li><code>getCaretCoordinates</code> — removed from core exports</li>
+	</ul>
+
+	<h2>New in v0.2</h2>
+	<ul>
+		<li>Inline mention highlighting</li>
+		<li>Native cursor handling</li>
+		<li>CSS <code>::before</code> placeholder</li>
+		<li>Single-line mode with 5-layer defense</li>
+		<li>Grammarly/extension defense</li>
+		<li>Runtime <code>plaintext-only</code> detection</li>
+	</ul>
+</DocsLayout>

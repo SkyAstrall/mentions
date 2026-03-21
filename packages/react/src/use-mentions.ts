@@ -19,13 +19,10 @@ import {
 	useCallback,
 	useEffect,
 	useId,
-	useLayoutEffect,
 	useMemo,
 	useReducer,
 	useRef,
 } from "react";
-
-const useIsomorphicLayoutEffect = typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 export type UseMentionsOptions = {
 	triggers: TriggerConfig[];
@@ -62,12 +59,24 @@ function escapeHTML(str: string): string {
 		.replace(/&/g, "&amp;")
 		.replace(/</g, "&lt;")
 		.replace(/>/g, "&gt;")
-		.replace(/"/g, "&quot;");
+		.replace(/"/g, "&quot;")
+		.replace(/'/g, "&#39;");
+}
+
+function isExtensionNode(node: Node): boolean {
+	if (node.nodeType !== Node.ELEMENT_NODE) return false;
+	const el = node as HTMLElement;
+	const tag = el.tagName.toLowerCase();
+	if (tag.includes("-")) return true;
+	if (el.hasAttribute("data-grammarly-shadow-root")) return true;
+	if (el.className && typeof el.className === "string" && el.className.startsWith("gr_")) return true;
+	return false;
 }
 
 function getPlainTextFromDOM(el: HTMLElement): string {
 	let text = "";
 	const walk = (node: Node) => {
+		if (isExtensionNode(node)) return;
 		if (node.nodeType === Node.TEXT_NODE) {
 			text += (node.textContent ?? "").replace(/\u200B/g, "");
 		} else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -88,6 +97,7 @@ function getPlainTextFromDOM(el: HTMLElement): string {
 function getMarkupFromDOM(el: HTMLElement, triggers: TriggerConfig[]): string {
 	let markup = "";
 	const walk = (node: Node) => {
+		if (isExtensionNode(node)) return;
 		if (node.nodeType === Node.TEXT_NODE) {
 			markup += (node.textContent ?? "").replace(/\u200B/g, "");
 		} else if (node.nodeType === Node.ELEMENT_NODE) {
@@ -121,25 +131,65 @@ function getCursorOffset(el: HTMLElement): number {
 	const pre = document.createRange();
 	pre.selectNodeContents(el);
 	pre.setEnd(range.startContainer, range.startOffset);
-	return pre.toString().replace(/\u200B/g, "").length;
+	const frag = pre.cloneContents();
+	const temp = document.createElement("div");
+	temp.appendChild(frag);
+	return getPlainTextFromDOM(temp).length;
 }
 
-function getCaretRect(): { top: number; left: number; height: number } | null {
+function getCaretRect(el: HTMLElement): { top: number; left: number; height: number } {
 	const sel = window.getSelection();
-	if (!sel || sel.rangeCount === 0) return null;
+	if (!sel || sel.rangeCount === 0) {
+		const r = el.getBoundingClientRect();
+		return { top: r.top, left: r.left, height: 20 };
+	}
+
 	const range = sel.getRangeAt(0).cloneRange();
 	range.collapse(true);
+
 	let rect = range.getBoundingClientRect();
-	if (rect.width === 0 && rect.height === 0) {
-		const span = document.createElement("span");
-		span.textContent = "\u200B";
-		range.insertNode(span);
-		rect = span.getBoundingClientRect();
-		const parent = span.parentNode;
-		parent?.removeChild(span);
-		parent?.normalize();
+	if (rect.height > 0) return { top: rect.top, left: rect.left, height: rect.height };
+
+	const rects = range.getClientRects();
+	if (rects.length > 0 && rects[0].height > 0) {
+		return { top: rects[0].top, left: rects[0].left, height: rects[0].height };
 	}
-	return { top: rect.top, left: rect.left, height: rect.height };
+
+	const { startContainer, startOffset } = range;
+	if (startContainer.nodeType === Node.TEXT_NODE) {
+		const textLen = startContainer.textContent?.length ?? 0;
+		if (startOffset < textLen) {
+			range.setEnd(startContainer, startOffset + 1);
+			rect = range.getBoundingClientRect();
+			if (rect.height > 0) return { top: rect.top, left: rect.left, height: rect.height };
+		}
+		if (startOffset > 0) {
+			range.setStart(startContainer, startOffset - 1);
+			range.setEnd(startContainer, startOffset);
+			rect = range.getBoundingClientRect();
+			if (rect.height > 0) return { top: rect.top, left: rect.right, height: rect.height };
+		}
+	}
+
+	const r = el.getBoundingClientRect();
+	return { top: r.top, left: r.left, height: 20 };
+}
+
+function insertTextAtCursor(text: string): void {
+	const success = document.execCommand("insertText", false, text);
+	if (!success) {
+		const sel = window.getSelection();
+		if (sel && sel.rangeCount > 0) {
+			const range = sel.getRangeAt(0);
+			range.deleteContents();
+			const node = document.createTextNode(text);
+			range.insertNode(node);
+			range.setStartAfter(node);
+			range.collapse(true);
+			sel.removeAllRanges();
+			sel.addRange(range);
+		}
+	}
 }
 
 export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
@@ -163,6 +213,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const prevStatusRef = useRef<MentionState["status"]>("idle");
 	const prevMentionsRef = useRef<Array<{ id: string; label: string; trigger: string }>>([]);
 	const lastReportedMarkupRef = useRef("");
+	const isComposingRef = useRef(false);
 
 	const callbacksRef = useRef({ onChange, onSelect, onRemove, onQueryChange, onOpen, onClose, onError, onAcceptGhostText });
 	callbacksRef.current = { onChange, onSelect, onRemove, onQueryChange, onOpen, onClose, onError, onAcceptGhostText };
@@ -185,17 +236,18 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	);
 
 	const prevValueRef = useRef(value);
-	if (isControlled && value !== prevValueRef.current && value !== state.markup) {
-		const plainText = markupToPlainText(value, triggers);
+	useEffect(() => {
+		if (!isControlled || value === prevValueRef.current || value === stateRef.current.markup) return;
+		prevValueRef.current = value;
+		const plainText = markupToPlainText(value, triggersRef.current);
 		dispatch({
 			type: "INPUT_CHANGE",
 			markup: value,
 			plainText,
-			selectionStart: state.selectionStart,
-			selectionEnd: state.selectionEnd,
+			selectionStart: stateRef.current.selectionStart,
+			selectionEnd: stateRef.current.selectionEnd,
 		});
-	}
-	prevValueRef.current = value;
+	}, [value, isControlled]);
 
 	const stateRef = useRef(state);
 	stateRef.current = state;
@@ -268,6 +320,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 
 		const delay = triggerConfig.debounce ?? 200;
 		const controller = new AbortController();
+		const queryAtFetchTime = state.query;
 
 		const timer = setTimeout(() => {
 			dispatch({ type: "FETCH_START" });
@@ -280,9 +333,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 				fullText: currentState.plainText,
 			};
 
-			data(state.query, context)
+			data(queryAtFetchTime, context)
 				.then((items) => {
-					if (!controller.signal.aborted) {
+					if (!controller.signal.aborted && stateRef.current.query === queryAtFetchTime) {
 						dispatch({ type: "FETCH_COMPLETE", items });
 					}
 				})
@@ -307,7 +360,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	}, [state.query, state.activeTrigger]);
 
 	const handleInput = useCallback(() => {
-		if (stateRef.current.isComposing) return;
+		if (isComposingRef.current) return;
 		const el = editorRef.current;
 		if (!el) return;
 
@@ -351,11 +404,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 				endIndex: match.endIndex,
 			});
 
-			const caretPos = getCaretRect();
-			if (caretPos) {
-				dispatch({ type: "CARET_POSITION", position: caretPos });
-			}
-		} else if (stateRef.current.activeTrigger) {
+			const caretPos = getCaretRect(el);
+			dispatch({ type: "CARET_POSITION", position: caretPos });
+		} else {
 			dispatch({ type: "TRIGGER_LOST" });
 		}
 
@@ -363,27 +414,77 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		callbacksRef.current.onChange?.(newMarkup, newPlainText);
 	}, []);
 
-	const handleSelect = useCallback((item: MentionItem) => {
+	const handleSelect = useCallback((item: MentionItem, triggerOverride?: string, queryOverride?: string) => {
 		const triggers = triggersRef.current;
-		const activeTrigger = stateRef.current.activeTrigger;
-		const query = stateRef.current.query;
+		const activeTrigger = triggerOverride ?? stateRef.current.activeTrigger;
+		const query = queryOverride ?? stateRef.current.query;
 		const triggerConfig = triggers.find((t) => t.char === activeTrigger);
-		if (!triggerConfig || !activeTrigger) return;
+
+		if (!triggerConfig || !activeTrigger) {
+			dispatch({ type: "TRIGGER_LOST" });
+			return;
+		}
+
+		if (isComposingRef.current) {
+			dispatch({ type: "TRIGGER_LOST" });
+			return;
+		}
 
 		const el = editorRef.current;
-		if (!el) return;
+		if (!el) {
+			dispatch({ type: "TRIGGER_LOST" });
+			return;
+		}
 
 		const sel = window.getSelection();
-		if (!sel || sel.rangeCount === 0) return;
+		if (!sel || sel.rangeCount === 0) {
+			dispatch({ type: "TRIGGER_LOST" });
+			return;
+		}
 
 		const range = sel.getRangeAt(0);
-		const textNode = range.startContainer;
-		if (textNode.nodeType !== Node.TEXT_NODE) return;
+		let container: Node = range.startContainer;
+		let offset = range.startOffset;
 
-		const cursorRawOffset = range.startOffset;
+		if (container.nodeType === Node.ELEMENT_NODE) {
+			if (offset > 0 && container.childNodes[offset - 1]?.nodeType === Node.TEXT_NODE) {
+				container = container.childNodes[offset - 1];
+				offset = container.textContent?.length ?? 0;
+			} else if (offset < container.childNodes.length && container.childNodes[offset]?.nodeType === Node.TEXT_NODE) {
+				container = container.childNodes[offset];
+				offset = 0;
+			} else {
+				dispatch({ type: "TRIGGER_LOST" });
+				return;
+			}
+		}
+
+		if (container.nodeType !== Node.TEXT_NODE) {
+			dispatch({ type: "TRIGGER_LOST" });
+			return;
+		}
+
 		const triggerQueryLen = activeTrigger.length + query.length;
-		const startRawOffset = cursorRawOffset - triggerQueryLen;
-		if (startRawOffset < 0) return;
+		if (offset < triggerQueryLen) {
+			dispatch({ type: "TRIGGER_LOST" });
+			return;
+		}
+
+		const startRawOffset = offset - triggerQueryLen;
+		const expectedText = activeTrigger + query;
+		const fullText = container.textContent ?? "";
+		const actualText = fullText.slice(startRawOffset, offset);
+
+		if (actualText !== expectedText) {
+			dispatch({ type: "TRIGGER_LOST" });
+			return;
+		}
+
+		const parent = container.parentNode;
+		if (!parent || !el.contains(parent)) {
+			dispatch({ type: "TRIGGER_LOST" });
+			return;
+		}
 
 		const mark = document.createElement("mark");
 		mark.setAttribute("data-mention", activeTrigger);
@@ -393,11 +494,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		mark.style.cssText = `background-color:${bg};border-radius:var(--mention-radius, 3px);padding:0 2px`;
 		mark.textContent = activeTrigger + item.label;
 
-		const fullText = textNode.textContent!;
 		const before = fullText.slice(0, startRawOffset);
-		const after = fullText.slice(cursorRawOffset);
+		const after = fullText.slice(offset);
 
-		const parent = textNode.parentNode!;
 		const frag = document.createDocumentFragment();
 
 		if (before) frag.appendChild(document.createTextNode(before));
@@ -408,7 +507,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 
 		if (after) frag.appendChild(document.createTextNode(after));
 
-		parent.replaceChild(frag, textNode);
+		parent.replaceChild(frag, container);
 
 		const newRange = document.createRange();
 		newRange.setStart(spacer, spacer.length);
@@ -440,7 +539,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const wrappedDispatch = useCallback(
 		(action: Parameters<typeof dispatch>[0]) => {
 			if (action.type === "SELECT") {
-				handleSelect(action.item);
+				const trigger = stateRef.current.activeTrigger;
+				const query = stateRef.current.query;
+				handleSelect(action.item, trigger ?? undefined, query);
 				return;
 			}
 			dispatch(action);
@@ -477,38 +578,49 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		const needsSpace = before.length > 0 && !/\s$/.test(before);
 		const insert = (needsSpace ? " " : "") + trigger;
 
-		document.execCommand("insertText", false, insert);
+		insertTextAtCursor(insert);
 	}, []);
 
-	const api = useMemo(
-		() => connect(state, wrappedDispatch, undefined, instanceId),
-		[state, wrappedDispatch, instanceId],
-	);
+	const api = connect(state, wrappedDispatch, undefined, instanceId);
+
+	const apiRef = useRef(api);
+	apiRef.current = api;
 
 	const mentions = useMemo(
 		() => extractMentions(state.markup, triggersRef.current),
 		[state.markup],
 	);
 
-	const originalOnKeyDown = api.inputProps.onKeyDown as ((e: React.KeyboardEvent) => void) | undefined;
-
 	const wrappedOnKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
-		if (e.key === "Tab" && ghostTextRef.current && !(api.isOpen && state.highlightedIndex >= 0)) {
+		if (e.key === "Tab" && ghostTextRef.current && !(apiRef.current.isOpen && stateRef.current.highlightedIndex >= 0)) {
 			e.preventDefault();
 			const el = editorRef.current;
 			if (!el) return;
-			document.execCommand("insertText", false, ghostTextRef.current);
+			insertTextAtCursor(ghostTextRef.current);
 			callbacksRef.current.onAcceptGhostText?.();
 			return;
 		}
-		originalOnKeyDown?.(e as unknown as React.KeyboardEvent);
-	}, [api.isOpen, state.highlightedIndex, originalOnKeyDown]);
+		const onKeyDown = apiRef.current.inputProps.onKeyDown as ((e: React.KeyboardEvent) => void) | undefined;
+		onKeyDown?.(e as unknown as React.KeyboardEvent);
+	}, []);
+
+	const onCompositionStart = useCallback(() => {
+		isComposingRef.current = true;
+		dispatch({ type: "COMPOSITION_START" });
+	}, []);
+
+	const onCompositionEnd = useCallback(() => {
+		isComposingRef.current = false;
+		dispatch({ type: "COMPOSITION_END" });
+	}, []);
 
 	return {
 		...api,
 		inputProps: {
 			...api.inputProps,
 			onKeyDown: wrappedOnKeyDown,
+			onCompositionStart,
+			onCompositionEnd,
 		},
 		state,
 		editorRef,

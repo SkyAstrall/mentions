@@ -1,0 +1,35 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Single Line">
+	<p class="lead">Restrict the editor to a single line. Newlines are blocked from all input sources.</p>
+
+	<h2>Usage</h2>
+	<Code code={`<Mentions singleLine triggers={triggers} />`} />
+
+	<h2>How It Works</h2>
+	<p>Single-line mode uses a 5-layer defense to prevent newlines:</p>
+	<ol>
+		<li><code>beforeinput</code> event — blocks <code>insertParagraph</code> and <code>insertLineBreak</code> from all sources</li>
+		<li><code>keydown</code> — fallback Enter prevention for older browsers</li>
+		<li><code>paste</code> handler — strips <code>\n</code> and <code>\r</code>, replaces with spaces</li>
+		<li><code>drop</code> handler — same treatment for dragged text</li>
+		<li>CSS — <code>white-space: nowrap</code>, <code>overflow: hidden</code>, and <code>br {'{'} display: none {'}'}</code></li>
+	</ol>
+
+	<h2>Enter Key and Dropdown</h2>
+	<p>The Enter key still works for selecting items from the dropdown. Only "bare" Enter presses (when nothing is being selected) are blocked.</p>
+
+	<h2>Styling</h2>
+	<p>In single-line mode, the editor gets a <code>data-singleline</code> attribute. Overflow is hidden with horizontal scrolling:</p>
+	<Code lang="css" code={`[data-mentions-editor][data-singleline] {
+  white-space: nowrap;
+  overflow: hidden;
+  overflow-x: auto;
+}`} />
+
+	<h2>Accessibility</h2>
+	<p>The editor sets <code>aria-multiline="false"</code> in single-line mode, signaling to screen readers that this is a single-line input.</p>
+</DocsLayout>

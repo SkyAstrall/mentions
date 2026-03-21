@@ -1,0 +1,74 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import Code from "../../components/Code.astro";
+---
+
+<DocsLayout title="Quick Start">
+	<p class="lead">Get a working mentions input in under a minute.</p>
+
+	<h2>Basic Usage</h2>
+	<p>Import <code>Mentions</code>, define your data, render the component.</p>
+	<Code code={`import { Mentions } from "@skyastrall/mentions-react";
+
+const users = [
+  { id: "1", label: "Alice Johnson" },
+  { id: "2", label: "Bob Smith" },
+  { id: "3", label: "Charlie Brown" },
+];
+
+function App() {
+  return (
+    <Mentions
+      triggers={[{ char: "@", data: users }]}
+      placeholder="Type @ to mention someone..."
+      onChange={(markup, plainText) => {
+        console.log("Markup:", markup);
+        console.log("Plain:", plainText);
+      }}
+    />
+  );
+}`} />
+	<p>Type <code>@</code> in the editor. A dropdown appears. Select a user — it becomes a highlighted mention.</p>
+
+	<h2>Multiple Triggers</h2>
+	<Code code={`<Mentions
+  triggers={[
+    { char: "@", data: users, color: "oklch(0.75 0.15 250)" },
+    { char: "#", data: tags, color: "oklch(0.75 0.12 300)" },
+    { char: "/", data: commands, color: "oklch(0.80 0.12 80)" },
+  ]}
+  onChange={(markup, plainText) => {}}
+/>`} />
+
+	<h2>Understanding the Markup</h2>
+	<p>The <code>onChange</code> callback receives two values:</p>
+	<ul>
+		<li><code>markup</code> — Serialized string: <code>@[Alice Johnson](1) hello #[urgent](t1)</code></li>
+		<li><code>plainText</code> — Display string: <code>@Alice Johnson hello #urgent</code></li>
+	</ul>
+	<p>Store the markup. Display the plain text. Parse mentions when needed:</p>
+	<Code code={`import { extractMentions } from "@skyastrall/mentions-react";
+
+const mentions = extractMentions(markup, triggers);
+// [{ id: "1", label: "Alice Johnson" }, { id: "t1", label: "urgent" }]`} />
+
+	<h2>Imperative Handle</h2>
+	<Code code={`import { useRef } from "react";
+import { Mentions, type MentionsHandle } from "@skyastrall/mentions-react";
+
+function Editor() {
+  const ref = useRef<MentionsHandle>(null);
+
+  return (
+    <>
+      <Mentions ref={ref} triggers={triggers} />
+      <button onClick={() => ref.current?.focus()}>Focus</button>
+      <button onClick={() => ref.current?.clear()}>Clear</button>
+      <button onClick={() => ref.current?.insertTrigger("@")}>Insert @</button>
+    </>
+  );
+}`} />
+
+	<h2>Next</h2>
+	<p><a href="/docs/guides/compound-components">Compound Components</a> for custom layouts, or <a href="/docs/api/mentions">API Reference</a> for full details.</p>
+</DocsLayout>

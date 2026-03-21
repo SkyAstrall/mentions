@@ -1,4 +1,3 @@
-export { getCaretCoordinates } from "./caret.ts";
 export { connect } from "./connect.ts";
 export { filterItems } from "./filter.ts";
 export { createInitialState, initialState, mentionReducer } from "./machine.ts";

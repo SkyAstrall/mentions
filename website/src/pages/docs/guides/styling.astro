@@ -1,0 +1,79 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import PropsTable from "../../../components/PropsTable.astro";
+import Code from "../../../components/Code.astro";
+
+const cssVars = [
+	{ name: "--mention-bg", type: "color", default: "oklch(0.93 0.03 250)", description: "Mention highlight background" },
+	{ name: "--mention-radius", type: "length", default: "3px", description: "Mention border radius" },
+	{ name: "--mention-placeholder", type: "color", default: "#9ca3af", description: "Placeholder text color" },
+	{ name: "--dropdown-bg", type: "color", default: "white", description: "Dropdown background" },
+	{ name: "--dropdown-border", type: "border", default: "1px solid #e2e8f0", description: "Dropdown border" },
+	{ name: "--dropdown-radius", type: "length", default: "8px", description: "Dropdown border radius" },
+	{ name: "--dropdown-shadow", type: "shadow", default: "0 4px 12px rgba(0,0,0,0.08)", description: "Dropdown shadow" },
+	{ name: "--dropdown-max-height", type: "length", default: "240px", description: "Dropdown max height" },
+	{ name: "--item-padding", type: "length", default: "8px 12px", description: "Item padding" },
+	{ name: "--item-active-bg", type: "color", default: "#f1f5f9", description: "Highlighted item background" },
+];
+---
+
+<DocsLayout title="Styling">
+	<p class="lead">CSS variables, classes, and data attributes. No CSS-in-JS required.</p>
+
+	<h2>CSS Variables</h2>
+	<p>Set on <code>[data-mentions]</code> or any ancestor.</p>
+	<PropsTable props={cssVars} />
+	<Code lang="css" code={`/* Dark theme */
+[data-mentions] {
+  --mention-bg: oklch(0.75 0.15 250);
+  --dropdown-bg: #18181b;
+  --dropdown-border: 1px solid rgba(255,255,255,0.1);
+  --dropdown-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  --item-active-bg: rgba(99,102,241,0.2);
+  --mention-placeholder: #71717a;
+}`} />
+
+	<h2>Editor Styling</h2>
+	<Code code={`<Mentions className="my-editor" triggers={triggers} />`} />
+	<Code lang="css" code={`.my-editor {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 120px;
+}
+.my-editor:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99,102,241,0.15);
+  outline: none;
+}`} />
+
+	<h2>Per-Trigger Colors</h2>
+	<Code code={`triggers={[
+  { char: "@", data: users, color: "#dbeafe" },
+  { char: "#", data: tags, color: "#fef3c7" },
+  { char: "/", data: commands, color: "#dcfce7" },
+]}`} />
+
+	<h2>Data Attributes</h2>
+	<ul>
+		<li><code>[data-mentions]</code> — root wrapper</li>
+		<li><code>[data-mentions-editor]</code> — contenteditable div</li>
+		<li><code>[data-mentions-portal]</code> — dropdown container</li>
+		<li><code>[data-empty]</code> — present when editor is empty</li>
+		<li><code>[data-singleline]</code> — present in single-line mode</li>
+		<li><code>[data-mention]</code> — each mention <code>&lt;mark&gt;</code> element</li>
+	</ul>
+
+	<h2>CSS Effects</h2>
+	<Code code={`import "@skyastrall/mentions-react/effects.css";
+
+<Mentions className="mentions-gradient-border mentions-animate" triggers={triggers} />`} />
+	<ul>
+		<li><code>mentions-gradient-border</code> — Animated gradient border on focus</li>
+		<li><code>mentions-glow</code> — Soft glow on focus</li>
+		<li><code>mentions-shimmer</code> — Shimmer placeholder animation</li>
+		<li><code>mentions-animate</code> — Dropdown and mention animations</li>
+	</ul>
+</DocsLayout>

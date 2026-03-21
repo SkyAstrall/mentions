@@ -19,8 +19,7 @@
 	}
 }
 
-[data-mentions].mentions-gradient-border textarea:focus,
-[data-mentions].mentions-gradient-border input:focus {
+[data-mentions].mentions-gradient-border [data-mentions-editor]:focus {
 	border: 2px solid transparent;
 	background:
 		linear-gradient(var(--dropdown-bg, white), var(--dropdown-bg, white)) padding-box,
@@ -46,8 +45,7 @@
 	}
 }
 
-[data-mentions].mentions-shimmer textarea:placeholder-shown,
-[data-mentions].mentions-shimmer input:placeholder-shown {
+[data-mentions].mentions-shimmer [data-mentions-editor][data-empty] {
 	background: linear-gradient(
 		90deg,
 		currentColor 0%,
@@ -61,8 +59,7 @@
 	animation: mentions-shimmer 3s ease-in-out infinite;
 }
 
-[data-mentions].mentions-shimmer textarea:not(:placeholder-shown),
-[data-mentions].mentions-shimmer input:not(:placeholder-shown) {
+[data-mentions].mentions-shimmer [data-mentions-editor]:not([data-empty]) {
 	background: none;
 	background-clip: unset;
 	-webkit-background-clip: unset;
@@ -110,8 +107,7 @@
 
 /* Focus glow — add class "mentions-glow" */
 
-[data-mentions].mentions-glow textarea:focus,
-[data-mentions].mentions-glow input:focus {
+[data-mentions].mentions-glow [data-mentions-editor]:focus {
 	box-shadow: 0 0 0 3px color-mix(in oklch, var(--mentions-glow-color) 30%, transparent);
 	outline: none;
 	transition: box-shadow var(--mentions-animate-speed) ease;

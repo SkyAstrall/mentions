@@ -1,0 +1,31 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import Code from "../../components/Code.astro";
+---
+
+<DocsLayout title="Installation">
+	<p class="lead">Install the React adapter. The core package is included automatically.</p>
+
+	<h2>Package Manager</h2>
+	<Code lang="bash" code="npm install @skyastrall/mentions-react" />
+	<Code lang="bash" code="pnpm add @skyastrall/mentions-react" />
+	<Code lang="bash" code="yarn add @skyastrall/mentions-react" />
+
+	<h2>Requirements</h2>
+	<ul>
+		<li>React 18 or 19</li>
+		<li>ReactDOM 18 or 19</li>
+	</ul>
+	<p>Works with Next.js, Remix, Vite, Astro, and any React project.</p>
+
+	<h2>What Gets Installed</h2>
+	<p><code>@skyastrall/mentions-react</code> depends on <code>@skyastrall/mentions-core</code>, which is installed automatically. You only need core separately for non-React adapters or server-side usage.</p>
+
+	<h2>TypeScript</h2>
+	<p>Both packages ship with full TypeScript declarations. No <code>@types/*</code> packages needed.</p>
+
+	<h2>Optional: CSS Effects</h2>
+	<p>For animated borders, glow, and dropdown animations:</p>
+	<Code code={`import "@skyastrall/mentions-react/effects.css";`} />
+	<p>Entirely optional. The component works without it.</p>
+</DocsLayout>

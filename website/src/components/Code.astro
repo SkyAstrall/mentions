@@ -1,0 +1,26 @@
+---
+interface Props {
+	lang?: string;
+	code: string;
+}
+
+const { lang = "tsx", code } = Astro.props;
+const trimmed = code.replace(/^\n/, "").replace(/\n$/, "");
+---
+
+<pre class="code-pre"><code class={`language-${lang}`} set:text={trimmed} /></pre>
+
+<style>
+	.code-pre {
+		margin: 16px 0 24px;
+		padding: 16px;
+		background: var(--color-code-bg);
+		border: 1px solid var(--color-code-border);
+		border-radius: 8px;
+		overflow-x: auto;
+		font-family: var(--font-mono);
+		font-size: 13px;
+		line-height: 1.6;
+		color: var(--color-code-text);
+	}
+</style>

@@ -1,0 +1,103 @@
+---
+interface Prop {
+	name: string;
+	type: string;
+	default?: string;
+	description: string;
+	required?: boolean;
+}
+
+interface Props {
+	props: Prop[];
+}
+
+const { props } = Astro.props;
+---
+
+<div class="props-table-wrap">
+	<table class="props-table">
+		<thead>
+			<tr>
+				<th>Prop</th>
+				<th>Type</th>
+				<th>Default</th>
+				<th>Description</th>
+			</tr>
+		</thead>
+		<tbody>
+			{props.map((p) => (
+				<tr>
+					<td>
+						<code>{p.name}</code>
+						{p.required && <span class="required">*</span>}
+					</td>
+					<td><code class="type">{p.type}</code></td>
+					<td>{p.default ? <code>{p.default}</code> : <span class="dim">—</span>}</td>
+					<td>{p.description}</td>
+				</tr>
+			))}
+		</tbody>
+	</table>
+</div>
+
+<style>
+	.props-table-wrap {
+		overflow-x: auto;
+		margin: 16px 0 24px;
+		border: 1px solid var(--color-border);
+		border-radius: 8px;
+	}
+
+	.props-table {
+		width: 100%;
+		border-collapse: collapse;
+		font-size: 13px;
+	}
+
+	.props-table th {
+		text-align: left;
+		padding: 10px 14px;
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.04em;
+		color: var(--color-text-muted);
+		background: var(--color-bg-elevated);
+		border-bottom: 1px solid var(--color-border);
+	}
+
+	.props-table td {
+		padding: 10px 14px;
+		border-bottom: 1px solid var(--color-border);
+		color: var(--color-text-secondary);
+		vertical-align: top;
+	}
+
+	.props-table tr:last-child td {
+		border-bottom: none;
+	}
+
+	.props-table code {
+		font-family: var(--font-mono);
+		font-size: 12px;
+		padding: 2px 5px;
+		border-radius: 4px;
+		background: var(--color-bg-surface);
+		color: var(--color-text);
+	}
+
+	.props-table .type {
+		color: var(--color-accent);
+		background: var(--color-accent-muted);
+	}
+
+	.required {
+		color: #ef4444;
+		margin-left: 2px;
+		font-weight: 600;
+	}
+
+	.dim {
+		color: var(--color-text-muted);
+	}
+</style>

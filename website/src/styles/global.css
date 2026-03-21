@@ -4,20 +4,28 @@
 	--font-sans: "Inter", system-ui, -apple-system, sans-serif;
 	--font-mono: "JetBrains Mono", monospace;
 
-	--color-bg: #09090b;
-	--color-bg-elevated: #18181b;
-	--color-bg-surface: #27272a;
-	--color-bg-hover: #3f3f46;
+	--color-bg: #0a0a0a;
+	--color-bg-subtle: #0e0e10;
+	--color-bg-elevated: #141416;
+	--color-bg-surface: #1a1a1e;
+	--color-bg-hover: #222226;
 
 	--color-text: #fafafa;
 	--color-text-secondary: #a1a1aa;
 	--color-text-muted: #71717a;
+	--color-text-dim: #52525b;
 
-	--color-border: rgb(255 255 255 / 0.1);
-	--color-border-hover: rgb(255 255 255 / 0.15);
+	--color-border: rgb(255 255 255 / 0.06);
+	--color-border-hover: rgb(255 255 255 / 0.12);
 
-	--color-accent: #6366f1;
-	--color-accent-hover: #818cf8;
+	--color-accent: #8B2FC9;
+	--color-accent-hover: #AB51E3;
+	--color-accent-dim: #6818A5;
+	--color-accent-muted: rgba(139, 47, 201, 0.1);
+
+	--color-code-bg: #0c0c0e;
+	--color-code-text: #e4e4e7;
+	--color-code-border: rgb(255 255 255 / 0.08);
 }
 
 html {
@@ -31,4 +39,110 @@ html {
 ::selection {
 	background-color: var(--color-accent);
 	color: white;
+}
+
+html.light {
+	--color-bg: #fafafa;
+	--color-bg-subtle: #f4f4f5;
+	--color-bg-elevated: #ffffff;
+	--color-bg-surface: #f0f0f2;
+	--color-bg-hover: #e4e4e7;
+
+	--color-text: #09090b;
+	--color-text-secondary: #52525b;
+	--color-text-muted: #71717a;
+	--color-text-dim: #a1a1aa;
+
+	--color-border: rgb(0 0 0 / 0.08);
+	--color-border-hover: rgb(0 0 0 / 0.15);
+
+	--color-accent: #6818A5;
+	--color-accent-hover: #5A108F;
+	--color-accent-dim: #8B2FC9;
+	--color-accent-muted: rgba(104, 24, 165, 0.08);
+
+	--color-code-bg: #f4f4f5;
+	--color-code-text: #1a1a2e;
+	--color-code-border: rgb(0 0 0 / 0.08);
+}
+
+html.theme-transitioning,
+html.theme-transitioning *,
+html.theme-transitioning *::before,
+html.theme-transitioning *::after {
+	transition: background-color 400ms ease, color 400ms ease, border-color 400ms ease, box-shadow 400ms ease, fill 400ms ease, stroke 400ms ease !important;
+}
+
+:focus-visible {
+	outline: 2px solid var(--color-accent);
+	outline-offset: 2px;
+}
+
+@keyframes enter {
+	from { opacity: 0; transform: translateY(8px); }
+}
+
+.animate-enter {
+	animation: enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes scroll-reveal-kf {
+	from { opacity: 0; transform: translateY(12px); }
+	to { opacity: 1; transform: translateY(0); }
+}
+
+.scroll-reveal {
+	animation: scroll-reveal-kf linear both;
+	animation-timeline: view();
+	animation-range: entry 0% entry 30%;
+}
+
+@keyframes pulse-dot {
+	0%, 100% { opacity: 1; }
+	50% { opacity: 0.5; }
+}
+
+@keyframes bg-drift {
+	0%, 100% { transform: translate(-50%, 0%) scale(1); opacity: 0.8; }
+	50% { transform: translate(-50%, 2%) scale(1.05); opacity: 1; }
+}
+
+::view-transition-old(root) {
+	animation: 150ms ease both vt-fade-out;
+}
+
+::view-transition-new(root) {
+	animation: 150ms ease both vt-fade-in;
+}
+
+@keyframes vt-fade-out {
+	to { opacity: 0; }
+}
+
+@keyframes vt-fade-in {
+	from { opacity: 0; }
+}
+
+::view-transition-old(nav),
+::view-transition-new(nav) {
+	animation: none;
+	mix-blend-mode: normal;
+}
+
+::view-transition-group(nav) {
+	animation: none;
+	z-index: 100;
+}
+
+::view-transition-image-pair(nav) {
+	isolation: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	*, *::before, *::after {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		transition-duration: 0.01ms !important;
+		scroll-behavior: auto !important;
+	}
 }

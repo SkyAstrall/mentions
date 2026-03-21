@@ -1,0 +1,94 @@
+---
+import { docsNav } from "../data/docs-nav";
+
+const currentPath = Astro.url.pathname.replace(/\/$/, "") || "/docs";
+---
+
+<aside class="docs-sidebar">
+	<nav aria-label="Documentation">
+		{docsNav.map((section) => (
+			<div class="sidebar-section">
+				<h4 class="sidebar-title">{section.title}</h4>
+				<ul class="sidebar-list">
+					{section.items.map((item) => {
+						const isActive = currentPath === item.href || currentPath === item.href + "/";
+						return (
+							<li>
+								<a
+									href={item.href}
+									class:list={["sidebar-link", { active: isActive }]}
+									aria-current={isActive ? "page" : undefined}
+								>
+									{item.label}
+								</a>
+							</li>
+						);
+					})}
+				</ul>
+			</div>
+		))}
+	</nav>
+</aside>
+
+<style>
+	.docs-sidebar {
+		width: 220px;
+		flex-shrink: 0;
+		position: sticky;
+		top: 80px;
+		height: fit-content;
+		max-height: calc(100vh - 100px);
+		overflow-y: auto;
+		padding-bottom: 40px;
+	}
+
+	.sidebar-section {
+		margin-bottom: 24px;
+	}
+
+	.sidebar-title {
+		font-size: 11px;
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+		color: var(--color-text-muted);
+		margin: 0 0 8px;
+		padding: 0 8px;
+	}
+
+	.sidebar-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+		display: flex;
+		flex-direction: column;
+		gap: 1px;
+	}
+
+	.sidebar-link {
+		display: block;
+		padding: 6px 8px;
+		border-radius: 6px;
+		font-size: 13px;
+		color: var(--color-text-secondary);
+		text-decoration: none;
+		transition: color 0.15s, background-color 0.15s;
+	}
+
+	.sidebar-link:hover {
+		color: var(--color-text);
+		background: var(--color-bg-hover);
+	}
+
+	.sidebar-link.active {
+		color: var(--color-text);
+		background: var(--color-accent-muted);
+		font-weight: 500;
+	}
+
+	@media (max-width: 768px) {
+		.docs-sidebar {
+			display: none;
+		}
+	}
+</style>

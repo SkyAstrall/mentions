@@ -1,0 +1,53 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Async Data">
+	<p class="lead">Fetch suggestions from an API. Debouncing, aborting, and loading states are built in.</p>
+
+	<h2>Basic Async Fetcher</h2>
+	<p>Pass a function instead of an array to <code>data</code>.</p>
+	<Code code={`const triggers = [{
+  char: "@",
+  data: async (query) => {
+    const res = await fetch(\`/api/users?q=\${encodeURIComponent(query)}\`);
+    return res.json();
+  },
+  debounce: 300,
+}];`} />
+
+	<h2>Using Context</h2>
+	<p>The fetcher receives a <code>MentionContext</code> with editor state for smarter suggestions.</p>
+	<Code code={`const triggers = [{
+  char: "@",
+  data: async (query, context) => {
+    // Don't suggest users already mentioned
+    const exclude = context.activeMentions.map(m => m.id);
+    const res = await fetch(\`/api/users?q=\${query}&exclude=\${exclude.join(",")}\`);
+    return res.json();
+  },
+}];`} />
+
+	<h2>Debounce</h2>
+	<p>Set <code>debounce</code> to control how long to wait after typing stops before fetching. Default is 200ms.</p>
+	<Code code={`{ char: "@", data: fetchUsers, debounce: 500 }`} />
+
+	<h2>Minimum Characters</h2>
+	<p>Require a minimum query length before fetching.</p>
+	<Code code={`{ char: "@", data: fetchUsers, minChars: 2 }`} />
+
+	<h2>Loading State</h2>
+	<p>The component shows a loading indicator automatically. Customize it with compound components:</p>
+	<Code code={`<Mentions.Loading>
+  <Spinner /> Searching...
+</Mentions.Loading>`} />
+
+	<h2>Error Handling</h2>
+	<p>Fetch errors are caught and reported via <code>onError</code>.</p>
+	<Code code={`<Mentions
+  triggers={triggers}
+  onError={(error) => toast.error(error.message)}
+/>`} />
+	<p>If a fetch fails, the dropdown closes and the user can retry by typing more.</p>
+</DocsLayout>

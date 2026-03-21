@@ -1,0 +1,85 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import PropsTable from "../../../components/PropsTable.astro";
+import Code from "../../../components/Code.astro";
+
+const returnProps = [
+	{ name: "editorRef", type: "RefObject<HTMLDivElement>", description: "Attach to your contenteditable div" },
+	{ name: "inputProps", type: "object", description: "ARIA + event handlers for the editor" },
+	{ name: "listProps", type: "object", description: "ARIA attributes for the suggestion list" },
+	{ name: "getItemProps", type: "(index) => object", description: "ARIA + handlers for each item" },
+	{ name: "isOpen", type: "boolean", description: "Whether the dropdown is visible" },
+	{ name: "isLoading", type: "boolean", description: "Whether an async fetch is in progress" },
+	{ name: "items", type: "MentionItem[]", description: "Current suggestion items" },
+	{ name: "highlightedIndex", type: "number", description: "Highlighted item (-1 = none)" },
+	{ name: "activeTrigger", type: "string | null", description: "Active trigger character" },
+	{ name: "caretPosition", type: "CaretPosition | null", description: "Caret viewport coordinates" },
+	{ name: "markup", type: "string", description: "Current markup string" },
+	{ name: "plainText", type: "string", description: "Current plain text" },
+	{ name: "mentions", type: "MentionItem[]", description: "All active mentions" },
+	{ name: "handleInput", type: "() => void", description: "Call from editor's onInput" },
+	{ name: "clear", type: "() => void", description: "Clears all content" },
+	{ name: "focus", type: "() => void", description: "Focuses the editor" },
+	{ name: "insertTrigger", type: "(trigger) => void", description: "Inserts trigger and opens dropdown" },
+];
+---
+
+<DocsLayout title="useMentions Hook">
+	<p class="lead">The headless hook. Full control over rendering.</p>
+
+	<h2>Import</h2>
+	<Code code={`import { useMentions } from "@skyastrall/mentions-react";`} />
+
+	<h2>Return Value</h2>
+	<PropsTable props={returnProps} />
+
+	<h2>Usage</h2>
+	<Code code={`function CustomEditor() {
+  const {
+    editorRef, inputProps, listProps, getItemProps,
+    isOpen, items, highlightedIndex, caretPosition, handleInput,
+  } = useMentions({
+    triggers: [{ char: "@", data: users }],
+    onChange: (markup, plainText) => console.log(markup),
+  });
+
+  return (
+    <div data-mentions="" style={{ position: "relative" }}>
+      <div
+        ref={editorRef}
+        contentEditable="plaintext-only"
+        onInput={handleInput}
+        data-mentions-editor=""
+        {...inputProps}
+        style={{ outline: "none", whiteSpace: "pre-wrap", padding: 12 }}
+      />
+      {isOpen && items.length > 0 && (
+        <ul
+          {...listProps}
+          style={{
+            position: "fixed",
+            top: (caretPosition?.top ?? 0) + (caretPosition?.height ?? 0) + 4,
+            left: caretPosition?.left ?? 0,
+          }}
+        >
+          {items.map((item, i) => (
+            <li
+              key={item.id}
+              {...getItemProps(i)}
+              style={{
+                padding: "8px 12px",
+                background: i === highlightedIndex ? "#f1f5f9" : "white",
+                cursor: "pointer",
+              }}
+            >
+              {item.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}`} />
+
+	<blockquote><p>The editor needs <code>data-mentions=""</code> on a parent and <code>data-mentions-editor=""</code> on itself for blur handling and placeholder CSS to work correctly.</p></blockquote>
+</DocsLayout>

@@ -1,0 +1,78 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Headless Hook">
+	<p class="lead">Full control over rendering. You own the DOM, the library owns the logic.</p>
+
+	<h2>When to Use</h2>
+	<ul>
+		<li>You need a custom editor element (not the default contenteditable div)</li>
+		<li>You want to integrate mentions into an existing editor</li>
+		<li>You need complete control over the dropdown positioning and rendering</li>
+	</ul>
+
+	<h2>Minimal Example</h2>
+	<Code code={`import { useMentions } from "@skyastrall/mentions-react";
+
+const users = [
+  { id: "1", label: "Alice" },
+  { id: "2", label: "Bob" },
+];
+
+function Editor() {
+  const {
+    editorRef, inputProps, listProps, getItemProps,
+    isOpen, items, highlightedIndex, caretPosition, handleInput,
+  } = useMentions({
+    triggers: [{ char: "@", data: users }],
+  });
+
+  return (
+    <div data-mentions="" style={{ position: "relative" }}>
+      <div
+        ref={editorRef}
+        contentEditable="plaintext-only"
+        onInput={handleInput}
+        data-mentions-editor=""
+        {...inputProps}
+      />
+      {isOpen && (
+        <ul {...listProps} style={{
+          position: "fixed",
+          top: (caretPosition?.top ?? 0) + (caretPosition?.height ?? 0) + 4,
+          left: caretPosition?.left ?? 0,
+        }}>
+          {items.map((item, i) => (
+            <li key={item.id} {...getItemProps(i)}>
+              {item.label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}`} />
+
+	<h2>Important Attributes</h2>
+	<ul>
+		<li><code>data-mentions=""</code> on a wrapper div — needed for blur detection</li>
+		<li><code>data-mentions-editor=""</code> on the editor — needed for placeholder CSS</li>
+		<li><code>onInput={'{handleInput}'}</code> — triggers state derivation from DOM</li>
+	</ul>
+
+	<h2>Reading Values</h2>
+	<Code code={`const { markup, plainText, mentions } = useMentions({ triggers });
+
+// markup: "@[Alice](1) hello"
+// plainText: "@Alice hello"
+// mentions: [{ id: "1", label: "Alice" }]`} />
+
+	<h2>Programmatic Actions</h2>
+	<Code code={`const { focus, clear, insertTrigger } = useMentions({ triggers });
+
+focus();              // Focus the editor
+clear();              // Clear all content
+insertTrigger("@");   // Insert @ and open dropdown`} />
+</DocsLayout>

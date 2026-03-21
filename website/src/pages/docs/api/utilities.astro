@@ -1,0 +1,45 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Utilities">
+	<p class="lead">Standalone functions for parsing and extracting mention data. Work server-side.</p>
+
+	<h2>Import</h2>
+	<Code code={`// From React package (re-exported):
+import { extractMentions, markupToPlainText, parseMarkup } from "@skyastrall/mentions-react";
+
+// Or from core (no React dependency, works server-side):
+import { extractMentions, markupToPlainText, parseMarkup } from "@skyastrall/mentions-core";`} />
+
+	<h2>extractMentions</h2>
+	<p>Extract all mentions from a markup string.</p>
+	<Code code={`const mentions = extractMentions("@[Alice](1) said #[urgent](t1)", triggers);
+// [{ id: "1", label: "Alice" }, { id: "t1", label: "urgent" }]`} />
+
+	<h2>markupToPlainText</h2>
+	<p>Convert markup to plain text.</p>
+	<Code code={`const plain = markupToPlainText("@[Alice](1) hello #[bug](t2)", triggers);
+// "@Alice hello #bug"`} />
+
+	<h2>parseMarkup</h2>
+	<p>Parse into typed segments.</p>
+	<Code code={`const segments = parseMarkup("hello @[Alice](1) world", triggers);
+// [
+//   { type: "text", text: "hello ", markupStart: 0, markupEnd: 6 },
+//   { type: "mention", text: "@Alice", id: "1", trigger: "@", ... },
+//   { type: "text", text: " world", markupStart: 22, markupEnd: 28 },
+// ]`} />
+
+	<h2>Server-Side Usage</h2>
+	<p>Import from <code>@skyastrall/mentions-core</code> for server-side usage. Zero dependencies, no DOM.</p>
+	<Code code={`// Next.js API route or server action:
+import { extractMentions } from "@skyastrall/mentions-core";
+
+export async function processMessage(markup: string) {
+  const triggers = [{ char: "@", data: [] }];
+  const mentions = extractMentions(markup, triggers);
+  // Notify mentioned users...
+}`} />
+</DocsLayout>

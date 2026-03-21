@@ -98,12 +98,12 @@ export function Mentions({
 	useImperativeHandle(
 		ref,
 		() => ({
-			focus: () => api.focus(),
-			clear: () => api.clear(),
+			focus: api.focus,
+			clear: api.clear,
 			getValue: () => ({ markup: api.markup, plainText: api.plainText }),
-			insertTrigger: (trigger: string) => api.insertTrigger(trigger),
+			insertTrigger: api.insertTrigger,
 		}),
-		[api],
+		[api.focus, api.clear, api.markup, api.plainText, api.insertTrigger],
 	);
 
 	const ctx: MentionsContextValue = { ...api, triggers, singleLine };
@@ -162,6 +162,21 @@ export namespace Mentions {
 		singleLine?: boolean;
 	};
 
+	const SUPPORTS_PLAINTEXT_ONLY = typeof document !== "undefined" && (() => {
+		const div = document.createElement("div");
+		div.contentEditable = "plaintext-only";
+		return div.contentEditable === "plaintext-only";
+	})();
+
+	function injectStyles(): void {
+		if (typeof document === "undefined") return;
+		if (document.getElementById("mentions-editor-styles")) return;
+		const style = document.createElement("style");
+		style.id = "mentions-editor-styles";
+		style.textContent = `[data-mentions-editor][data-empty]::before{content:attr(data-placeholder);color:var(--mention-placeholder,var(--color-text-dim,#9ca3af));pointer-events:none;float:left;height:0}[data-mentions-editor][data-singleline] br{display:none}`;
+		document.head.appendChild(style);
+	}
+
 	export function Editor({
 		className,
 		style,
@@ -174,20 +189,11 @@ export namespace Mentions {
 		const ctx = useMentionsContext();
 		const isSingleLine = singleLineProp ?? ctx.singleLine;
 
-		const updateEmpty = () => {
-			const el = ctx.editorRef.current;
-			if (!el) return;
-			const hasContent = (el.textContent ?? "").replace(/\u200B/g, "").trim() !== "";
-			if (hasContent) {
-				el.removeAttribute("data-empty");
-			} else {
-				el.setAttribute("data-empty", "");
-			}
-		};
+		const isEmpty = !ctx.state.markup;
 
 		useEffect(() => {
-			updateEmpty();
-		});
+			injectStyles();
+		}, []);
 
 		useEffect(() => {
 			if (!isSingleLine) return;
@@ -212,11 +218,21 @@ export namespace Mentions {
 			}
 		};
 
-		const handlePaste = isSingleLine ? (e: React.ClipboardEvent<HTMLDivElement>) => {
-			e.preventDefault();
-			const text = e.clipboardData.getData("text/plain").replace(/[\n\r]/g, " ");
-			document.execCommand("insertText", false, text);
-		} : undefined;
+		const handlePaste = (e: React.ClipboardEvent<HTMLDivElement>) => {
+			if (isSingleLine) {
+				e.preventDefault();
+				const text = e.clipboardData.getData("text/plain").replace(/[\n\r]/g, " ");
+				document.execCommand("insertText", false, text);
+			} else if (!SUPPORTS_PLAINTEXT_ONLY) {
+				e.preventDefault();
+				const text = e.clipboardData.getData("text/plain");
+				document.execCommand("insertText", false, text);
+			}
+		};
+
+		useEffect(() => {
+			if (autoFocus) ctx.editorRef.current?.focus();
+		}, []);
 
 		const handleDrop = isSingleLine ? (e: React.DragEvent<HTMLDivElement>) => {
 			e.preventDefault();
@@ -224,52 +240,55 @@ export namespace Mentions {
 			document.execCommand("insertText", false, text);
 		} : undefined;
 
+		const editableValue = disabled || readOnly
+			? false
+			: SUPPORTS_PLAINTEXT_ONLY
+				? ("plaintext-only" as unknown as boolean)
+				: true;
+
 		return (
-			<>
-				<style>{`[data-mentions-editor][data-empty]::before{content:attr(data-placeholder);color:var(--mention-placeholder,#9ca3af);pointer-events:none;float:left;height:0}[data-mentions-editor][data-singleline] br{display:none}`}</style>
-				<div
-					ref={ctx.editorRef}
-					className={className}
-					contentEditable={disabled ? false : (readOnly ? false : ("plaintext-only" as unknown as boolean))}
-					suppressContentEditableWarning
-					data-mentions-editor=""
-					data-placeholder={placeholder}
-					data-empty=""
-					{...(isSingleLine ? { "data-singleline": "" } : {})}
-					role="textbox"
-					aria-multiline={!isSingleLine}
-					// biome-ignore lint/a11y/noNoninteractiveTabindex: contenteditable needs tabindex
-					tabIndex={disabled ? -1 : 0}
-					autoFocus={autoFocus}
-					onInput={() => {
+			<div
+				ref={ctx.editorRef}
+				className={className}
+				contentEditable={editableValue}
+				suppressContentEditableWarning
+				data-mentions-editor=""
+				data-placeholder={placeholder}
+				{...(isEmpty ? { "data-empty": "" } : {})}
+				data-gramm="false"
+				data-gramm_editor="false"
+				data-enable-grammarly="false"
+				{...(isSingleLine ? { "data-singleline": "" } : {})}
+				role="textbox"
+				aria-multiline={!isSingleLine}
+				// biome-ignore lint/a11y/noNoninteractiveTabindex: contenteditable needs tabindex
+				tabIndex={disabled ? -1 : 0}
+				onInput={() => {
+					ctx.handleInput();
+				}}
+				onKeyDown={handleKeyDown}
+				onPaste={handlePaste}
+				onDrop={handleDrop}
+				onCompositionStart={onCompositionStart as React.CompositionEventHandler<HTMLDivElement>}
+				onCompositionEnd={(e) => {
+					(onCompositionEnd as React.CompositionEventHandler<HTMLDivElement>)?.(e);
+					requestAnimationFrame(() => {
 						ctx.handleInput();
-						updateEmpty();
-					}}
-					onKeyDown={handleKeyDown}
-					onPaste={handlePaste}
-					onDrop={handleDrop}
-					onCompositionStart={(e) => {
-						(onCompositionStart as React.CompositionEventHandler<HTMLDivElement>)?.(e);
-					}}
-					onCompositionEnd={(e) => {
-						(onCompositionEnd as React.CompositionEventHandler<HTMLDivElement>)?.(e);
-						ctx.handleInput();
-						updateEmpty();
-					}}
-					onBlur={onBlur as React.FocusEventHandler<HTMLDivElement>}
-					style={{
-						outline: "none",
-						whiteSpace: isSingleLine ? "nowrap" : "pre-wrap",
-						overflowWrap: isSingleLine ? undefined : "break-word",
-						wordWrap: isSingleLine ? undefined : "break-word",
-						minHeight: isSingleLine ? undefined : "1.5em",
-						overflow: isSingleLine ? "hidden" : undefined,
-						overflowX: isSingleLine ? "auto" : undefined,
-						...style,
-					}}
-					{...(ariaProps as React.HTMLAttributes<HTMLDivElement>)}
-				/>
-			</>
+					});
+				}}
+				onBlur={onBlur as React.FocusEventHandler<HTMLDivElement>}
+				style={{
+					outline: "none",
+					whiteSpace: isSingleLine ? "nowrap" : "pre-wrap",
+					overflowWrap: isSingleLine ? undefined : "break-word",
+					wordWrap: isSingleLine ? undefined : "break-word",
+					minHeight: isSingleLine ? undefined : "1.5em",
+					overflow: isSingleLine ? "hidden" : undefined,
+					overflowX: isSingleLine ? "auto" : undefined,
+					...style,
+				}}
+				{...(ariaProps as React.HTMLAttributes<HTMLDivElement>)}
+			/>
 		);
 	}
 

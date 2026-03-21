@@ -35,6 +35,9 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
 		<ClientRouter />
+		<script is:inline>
+			(function(){var t=localStorage.getItem('theme');if(t==='light'||(t!=='dark'&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')})();
+		</script>
 	</head>
 	<body class="min-h-screen bg-bg text-text">
 		<slot />

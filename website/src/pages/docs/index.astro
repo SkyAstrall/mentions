@@ -1,0 +1,59 @@
+---
+import DocsLayout from "../../layouts/DocsLayout.astro";
+import Code from "../../components/Code.astro";
+---
+
+<DocsLayout title="Introduction">
+	<p class="lead">A multi-trigger inline mentions component for React. Built on contenteditable with a framework-agnostic core.</p>
+
+	<h2>What is @skyastrall/mentions?</h2>
+	<p>A production-grade mentions input that supports <code>@users</code>, <code>#tags</code>, <code>/commands</code>, and custom triggers — each with its own data source, color, and configuration.</p>
+
+	<p>It ships as two packages:</p>
+	<ul>
+		<li><code>@skyastrall/mentions-core</code> — Framework-agnostic state machine, markup parser, trigger detection. Zero dependencies.</li>
+		<li><code>@skyastrall/mentions-react</code> — React adapter with a drop-in component, compound components, and a headless hook.</li>
+	</ul>
+
+	<h2>Three API Layers</h2>
+	<p>Pick the level of control you need:</p>
+
+	<h3>1. Drop-in Component</h3>
+	<p>One import, one component, works out of the box with default styling.</p>
+	<Code code={`<Mentions
+  triggers={[{ char: "@", data: users }]}
+  onChange={(markup, plainText) => {}}
+/>`} />
+
+	<h3>2. Compound Components</h3>
+	<p>Control the layout. The library handles state, ARIA, and keyboard navigation.</p>
+	<Code code={`<Mentions triggers={triggers}>
+  <Mentions.Editor placeholder="Type @..." />
+  <Mentions.Portal>
+    <Mentions.List>
+      <Mentions.Item render={({ item }) => <UserCard user={item} />} />
+    </Mentions.List>
+  </Mentions.Portal>
+</Mentions>`} />
+
+	<h3>3. Headless Hook</h3>
+	<p>Full control. You get props, state, and helpers — render whatever you want.</p>
+	<Code code={`const { inputProps, listProps, getItemProps, editorRef, isOpen, items } =
+  useMentions({ triggers });`} />
+
+	<h2>Key Features</h2>
+	<ul>
+		<li>Multi-trigger support with per-trigger colors and data sources</li>
+		<li>Contenteditable with DOM-first architecture</li>
+		<li>Ghost text for AI inline completions (Tab to accept)</li>
+		<li>Async data with debounce, abort, and loading states</li>
+		<li>Single-line mode with Enter/paste/drop prevention</li>
+		<li>WAI-ARIA combobox pattern with keyboard navigation</li>
+		<li>Grammarly/extension defense</li>
+		<li>Controlled and uncontrolled modes</li>
+		<li>~8KB gzipped, zero runtime dependencies in core</li>
+	</ul>
+
+	<h2>Next Steps</h2>
+	<p><a href="/docs/installation">Installation</a> or <a href="/docs/quick-start">Quick Start</a>.</p>
+</DocsLayout>
