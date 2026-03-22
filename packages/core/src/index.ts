@@ -9,6 +9,7 @@ export {
 	getPlainTextFromDOM,
 	insertTextAtCursor,
 	isExtensionNode,
+	performMentionInsertion,
 } from "./dom.ts";
 export { filterItems } from "./filter.ts";
 export { createInitialState, mentionReducer } from "./machine.ts";

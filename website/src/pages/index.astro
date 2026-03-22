@@ -1,13 +1,13 @@
 ---
 import BaseLayout from "../layouts/BaseLayout.astro";
 import Nav from "../components/Nav.astro";
-import CopyInstall from "../components/CopyInstall.astro";
 import CodeSnippet from "../components/CodeSnippet.astro";
 import FeatureCard from "../components/FeatureCard.astro";
 import HeroDemo from "../components/react/HeroDemo";
+import { frameworks, heroExamples } from "../data/code-examples";
 ---
 
-<BaseLayout title="@skyastrall/mentions — Multi-trigger inline suggestions for React">
+<BaseLayout title="@skyastrall/mentions — Inline mentions for every framework">
 	<a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-[200] focus:px-4 focus:py-2 focus:bg-accent focus:text-white focus:rounded-lg">Skip to content</a>
 
 	<div class="relative overflow-hidden">
@@ -17,34 +17,62 @@ import HeroDemo from "../components/react/HeroDemo";
 
 		<Nav />
 
-		<section id="main" class="relative z-10 max-w-5xl mx-auto px-6 pt-24 sm:pt-32 pb-20 text-center" aria-labelledby="hero-heading">
-			<div class="animate-enter" style="animation-delay: 0ms;">
-				<span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border text-xs font-medium text-text-secondary">
-					<span class="w-1.5 h-1.5 rounded-full" style="background: #AB51E3; animation: pulse-dot 2s ease-in-out infinite; box-shadow: 0 0 8px rgba(171,81,227,0.5);" aria-hidden="true"></span>
-					<a href="/docs/migration/v0-2-to-v0-3" class="hover:text-text transition-colors">v0.3.0 — Headless Architecture</a>
-				</span>
-			</div>
-
-			<h1 id="hero-heading" class="animate-enter mt-8 mx-auto max-w-[680px]" style="animation-delay: 60ms; font-size: clamp(48px, 5.5vw, 72px); font-weight: 700; letter-spacing: -0.045em; line-height: 1.08;">
+		<section id="main" class="relative z-10 max-w-5xl mx-auto px-6 pt-24 sm:pt-32 pb-16 text-center" aria-labelledby="hero-heading">
+			<h1 id="hero-heading" class="animate-enter mx-auto max-w-[680px]" style="animation-delay: 0ms; font-size: clamp(3rem, 5vw + 1rem, 4.5rem); font-weight: 700; letter-spacing: -0.05em; line-height: 1.04;">
 				Mentions that<br />
-				<span class="hero-gradient">just work</span>
+				<span class="hero-gradient">just work.</span>
 			</h1>
 
-			<p class="animate-enter mt-6 mx-auto max-w-[540px] text-lg leading-relaxed text-text-secondary" style="animation-delay: 120ms; letter-spacing: -0.011em;">
-				A headless React hook for inline suggestions.<br class="hidden sm:block" />
-				@mentions, #tags, /commands — from one tiny primitive.
+			<p class="animate-enter mt-6 mx-auto max-w-[480px] text-text-secondary" style="animation-delay: 80ms; font-size: clamp(1rem, 0.5vw + 0.875rem, 1.125rem); letter-spacing: -0.011em; line-height: 1.6;">
+				@users, #tags, /commands — one tiny core,<br class="hidden sm:block" />
+				every framework.
 			</p>
 
-			<div class="animate-enter mt-8 flex justify-center" style="animation-delay: 200ms;">
-				<CopyInstall />
+			<!-- Framework selector -->
+			<div class="animate-enter mt-8" style="animation-delay: 160ms;">
+				<div class="fw-selector" id="fw-selector" role="tablist" aria-label="Select framework">
+					{frameworks.map((fw, i) => (
+						<button
+							type="button"
+							role="tab"
+							class:list={["fw-tab", { active: i === 0, soon: fw.soon }]}
+							data-fw={fw.id}
+							data-pkg={fw.pkg}
+							data-index={i}
+							aria-selected={i === 0 ? "true" : "false"}
+							style={`--fw-color: ${fw.color}`}
+						>
+							{fw.label}
+							{fw.soon && <span class="fw-soon">soon</span>}
+						</button>
+					))}
+					<div class="fw-indicator" id="fw-indicator" aria-hidden="true"></div>
+				</div>
 			</div>
 
-			<div class="animate-enter mt-10" style="animation-delay: 280ms;">
-				<HeroDemo client:load />
+			<!-- Install command -->
+			<div class="animate-enter mt-6 flex justify-center" style="animation-delay: 240ms;">
+				<button class="install-bar" id="install-bar" data-copy="npm install @skyastrall/mentions-react" type="button" aria-label="Copy: npm install @skyastrall/mentions-react">
+					<span class="install-dollar" aria-hidden="true">$</span>
+					<span class="install-text" id="install-text">npm install @skyastrall/mentions-react</span>
+					<span class="install-icon" aria-hidden="true">
+						<svg class="icon-copy" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+							<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+						</svg>
+						<svg class="icon-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="20 6 9 17 4 12"></polyline>
+						</svg>
+					</span>
+				</button>
 			</div>
 
-			<div class="animate-enter mt-10 flex flex-wrap items-center justify-center gap-3" style="animation-delay: 340ms;">
-				<a href="/docs" class="cta-primary">Get Started</a>
+			<div class="animate-enter mt-10" style="animation-delay: 320ms;">
+				<HeroDemo client:idle />
+			</div>
+
+			<div class="animate-enter mt-10 flex flex-wrap items-center justify-center gap-3" style="animation-delay: 400ms;">
+				<a href="/docs" class="cta-primary" id="cta-docs">Get Started</a>
 				<a href="https://github.com/SkyAstrall/mentions" target="_blank" rel="noopener" class="cta-ghost">
 					View on GitHub
 					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline ml-1 -mt-0.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
@@ -52,24 +80,73 @@ import HeroDemo from "../components/react/HeroDemo";
 			</div>
 		</section>
 
-		<section class="relative z-10 max-w-3xl mx-auto px-6 pt-8 pb-24" aria-label="Code example">
-			<CodeSnippet label="5 lines to get started" code={`import { Mentions } from "@skyastrall/mentions-react"
-
-<Mentions
-  triggers={[{ char: "@", data: users }]}
-  onChange={(markup, plainText) => save(markup)}
-/>`} />
+		<section class="relative z-10 max-w-3xl mx-auto px-6 pt-4 pb-20" aria-label="Code example">
+			<div id="code-snippet-container">
+				<CodeSnippet label="5 lines to get started" code={heroExamples.react} />
+			</div>
 		</section>
 
-		<section class="relative z-10 max-w-[960px] mx-auto px-6 py-24" aria-label="Features">
-			<span class="block text-[13px] font-medium uppercase tracking-[0.04em] text-text-dim mb-8">Features</span>
+		<!-- Architecture trust signal -->
+		<section class="relative z-10 max-w-[720px] mx-auto px-6 pb-20" aria-label="Architecture">
+			<div class="arch-row scroll-reveal">
+				<div class="arch-bar arch-core">
+					<span class="arch-name">@skyastrall/mentions-core</span>
+					<span class="arch-size">~9KB</span>
+				</div>
+				<div class="arch-adapters">
+					<div class="arch-bar arch-adapter">
+						<span class="arch-name">mentions-react</span>
+						<span class="arch-size">~5KB</span>
+					</div>
+					<div class="arch-bar arch-adapter">
+						<span class="arch-name">mentions-vue</span>
+						<span class="arch-size">~4KB</span>
+					</div>
+					<div class="arch-bar arch-adapter arch-coming">
+						<span class="arch-name">mentions-svelte</span>
+						<span class="arch-size">soon</span>
+					</div>
+				</div>
+			</div>
+			<p class="arch-caption scroll-reveal">One framework-agnostic core. Thin adapters. Switch without rewriting.</p>
+		</section>
+
+		<section class="relative z-10 max-w-[960px] mx-auto px-6 py-20" aria-label="Features">
+			<span class="block text-[11px] font-medium uppercase tracking-[0.08em] text-text-dim mb-10">Features</span>
 			<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 				<FeatureCard number="01" title="Multi-trigger" description="@ for users, # for tags, / for commands — each with its own data source, color, and config." />
 				<FeatureCard number="02" title="Three API layers" description="Drop-in component, compound components, or headless hook. Pick your level of control." />
 				<FeatureCard number="03" title="Ghost text" description="Dimmed inline AI completions. Tab to accept. Wire up any LLM in 5 lines of code." />
-				<FeatureCard number="04" title="~14KB total gzipped" description="Core is ~8KB, React adapter is ~5KB. Zero runtime dependencies. No bloat." />
+				<FeatureCard number="04" title="~14KB total gzipped" description="Core is ~9KB, React adapter is ~5KB. Zero runtime dependencies. No bloat." />
 				<FeatureCard number="05" title="AI-ready" description="Async data with context — textBefore, textAfter, activeMentions. Built for LLM suggestions." />
 				<FeatureCard number="06" title="Accessible" description="WAI-ARIA combobox pattern. Full keyboard navigation. Screen reader support." />
+			</div>
+		</section>
+
+		<!-- Bottom CTA -->
+		<section class="relative z-10 max-w-[520px] mx-auto px-6 py-24 text-center" aria-label="Get started">
+			<h2 class="scroll-reveal text-2xl font-semibold tracking-tight">Ready?</h2>
+			<div class="scroll-reveal mt-6 flex justify-center">
+				<button class="install-bar install-bar-bottom" id="install-bar-bottom" data-copy="npm install @skyastrall/mentions-react" type="button" aria-label="Copy install command">
+					<span class="install-dollar" aria-hidden="true">$</span>
+					<span class="install-text" id="install-text-bottom">npm install @skyastrall/mentions-react</span>
+					<span class="install-icon" aria-hidden="true">
+						<svg class="icon-copy" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+							<rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+							<path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+						</svg>
+						<svg class="icon-check" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+							<polyline points="20 6 9 17 4 12"></polyline>
+						</svg>
+					</span>
+				</button>
+			</div>
+			<div class="scroll-reveal mt-6 flex flex-wrap items-center justify-center gap-3">
+				<a href="/docs" class="cta-primary" id="cta-docs-bottom">Read the docs</a>
+				<a href="https://github.com/SkyAstrall/mentions" target="_blank" rel="noopener" class="cta-ghost">
+					GitHub
+					<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="inline ml-1 -mt-0.5"><path d="M7 17l9.2-9.2M17 17V7H7"/></svg>
+				</a>
 			</div>
 		</section>
 
@@ -79,14 +156,302 @@ import HeroDemo from "../components/react/HeroDemo";
 				<div class="flex items-center gap-6">
 					<span class="text-text-muted">v0.3.0</span>
 					<a href="https://github.com/SkyAstrall/mentions" target="_blank" rel="noopener" class="hover:text-text-secondary transition-colors">GitHub</a>
-					<a href="https://www.npmjs.com/package/@skyastrall/mentions-react" target="_blank" rel="noopener" class="hover:text-text-secondary transition-colors">npm</a>
+					<a href="https://www.npmjs.com/package/@skyastrall/mentions-core" target="_blank" rel="noopener" class="hover:text-text-secondary transition-colors">npm</a>
 				</div>
 			</div>
 		</footer>
 	</div>
 </BaseLayout>
 
+<script>
+import { heroExamples } from "../data/code-examples";
+import { getFramework, setFramework, dispatchFwChange, onFwChange, updateSlidingIndicator } from "../scripts/fw-sync";
+import { initCopyButtons } from "../scripts/copy";
+
+function initHomepage() {
+	const selector = document.getElementById("fw-selector");
+	const indicator = document.getElementById("fw-indicator");
+	const codeContainer = document.getElementById("code-snippet-container");
+	if (!selector || !indicator) return;
+
+	const tabs = selector.querySelectorAll<HTMLButtonElement>(".fw-tab");
+	let activeIndex = 0;
+	let syncing = false;
+
+	const saved = getFramework();
+	tabs.forEach((tab, i) => {
+		if (tab.dataset.fw === saved && !tab.classList.contains("soon")) activeIndex = i;
+	});
+
+	function refreshIndicator() {
+		const tab = tabs[activeIndex];
+		if (tab) updateSlidingIndicator(selector!, tab, indicator!);
+	}
+
+	function switchTo(index: number) {
+		const tab = tabs[index];
+		if (!tab || tab.classList.contains("soon")) return;
+
+		tabs.forEach((t, i) => {
+			t.classList.toggle("active", i === index);
+			t.setAttribute("aria-selected", i === index ? "true" : "false");
+		});
+		activeIndex = index;
+		refreshIndicator();
+
+		const fw = tab.dataset.fw!;
+		const pkg = tab.dataset.pkg!;
+		const cmd = `npm install ${pkg}`;
+
+		document.querySelectorAll<HTMLElement>(".install-text").forEach((el) => { el.textContent = cmd; });
+		document.querySelectorAll<HTMLButtonElement>(".install-bar").forEach((el) => {
+			el.dataset.copy = cmd;
+			el.setAttribute("aria-label", `Copy: ${cmd}`);
+		});
+
+		if (codeContainer && heroExamples[fw]) {
+			codeContainer.style.opacity = "0";
+			codeContainer.style.transform = "translateY(4px)";
+			setTimeout(() => {
+				const pre = codeContainer.querySelector("code");
+				if (pre) pre.textContent = heroExamples[fw];
+				codeContainer.style.opacity = "1";
+				codeContainer.style.transform = "translateY(0)";
+			}, 150);
+		}
+
+		setFramework(fw as "react" | "vue");
+		if (!syncing) dispatchFwChange(fw);
+	}
+
+	tabs.forEach((tab, i) => tab.addEventListener("click", () => switchTo(i)));
+
+	onFwChange((fw) => {
+		for (let i = 0; i < tabs.length; i++) {
+			if (tabs[i].dataset.fw === fw && !tabs[i].classList.contains("soon") && i !== activeIndex) {
+				syncing = true;
+				switchTo(i);
+				syncing = false;
+				return;
+			}
+		}
+	});
+
+	if (activeIndex !== 0) switchTo(activeIndex);
+	requestAnimationFrame(refreshIndicator);
+	window.addEventListener("resize", refreshIndicator);
+
+	initCopyButtons(".install-bar");
+}
+
+initHomepage();
+document.addEventListener("astro:page-load", initHomepage);
+</script>
+
 <style>
+	/* --- Framework selector --- */
+	.fw-selector {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		gap: 0;
+		padding: 3px;
+		background: var(--color-bg-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 10px;
+	}
+
+	.fw-tab {
+		position: relative;
+		z-index: 1;
+		padding: 7px 16px;
+		font-size: 13px;
+		font-weight: 400;
+		letter-spacing: 0.01em;
+		color: var(--color-text-dim);
+		background: none;
+		border: none;
+		border-radius: 7px;
+		cursor: pointer;
+		transition: color 180ms ease;
+		white-space: nowrap;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+	}
+
+	.fw-tab:hover:not(.active):not(.soon) {
+		color: var(--color-text-secondary);
+	}
+
+	.fw-tab.active {
+		font-weight: 500;
+		color: var(--color-text);
+	}
+
+	.fw-tab.soon {
+		opacity: 0.35;
+		cursor: default;
+	}
+
+	.fw-soon {
+		font-size: 9px;
+		font-weight: 500;
+		text-transform: uppercase;
+		letter-spacing: 0.06em;
+		color: var(--color-text-dim);
+		padding: 1px 5px;
+		border-radius: 4px;
+		background: var(--color-bg-hover);
+	}
+
+	.fw-tab:active:not(.soon) {
+		transform: scale(0.96);
+		transition-duration: 80ms;
+	}
+
+	.fw-indicator {
+		position: absolute;
+		top: 3px;
+		left: 3px;
+		height: calc(100% - 6px);
+		background: var(--color-bg-elevated);
+		border-radius: 7px;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--color-border);
+		transition: transform 400ms var(--spring-bounce), width 400ms var(--spring-bounce);
+		pointer-events: none;
+	}
+
+	/* --- Install bar --- */
+	.install-bar {
+		display: inline-flex;
+		align-items: center;
+		gap: 10px;
+		padding: 10px 18px;
+		font-family: var(--font-mono);
+		font-size: 13px;
+		letter-spacing: 0.01em;
+		color: var(--color-text-secondary);
+		background: var(--color-bg-elevated);
+		border: 1px solid var(--color-border);
+		border-radius: 9999px;
+		cursor: pointer;
+		transition: transform 200ms var(--spring-snappy), border-color 150ms ease, color 150ms ease, box-shadow 200ms ease;
+	}
+
+	.install-bar:hover {
+		border-color: var(--color-border-hover);
+		color: var(--color-text);
+		transform: translateY(-1px);
+		box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+	}
+
+	.install-bar:active {
+		transform: translateY(0);
+		transition-duration: 80ms;
+	}
+
+	.install-dollar {
+		color: var(--color-text-dim);
+		user-select: none;
+	}
+
+	.install-icon {
+		position: relative;
+		width: 16px;
+		height: 16px;
+		flex-shrink: 0;
+	}
+
+	.icon-copy, .icon-check {
+		position: absolute;
+		inset: 0;
+		transition: transform 200ms var(--spring-bounce), opacity 100ms ease;
+	}
+
+	.icon-check {
+		opacity: 0;
+		transform: scale(0.8);
+		color: #34d399;
+	}
+
+	.install-bar.copied {
+		border-color: rgba(52, 211, 153, 0.3);
+	}
+
+	.install-bar.copied .icon-copy {
+		opacity: 0;
+		transform: scale(0.8);
+	}
+
+	.install-bar.copied .icon-check {
+		opacity: 1;
+		transform: scale(1);
+	}
+
+	/* Code container crossfade */
+	#code-snippet-container {
+		transition: opacity 150ms ease, transform 150ms ease;
+	}
+
+	/* --- Architecture diagram --- */
+	.arch-row {
+		display: flex;
+		flex-direction: column;
+		gap: 6px;
+	}
+
+	.arch-bar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		padding: 10px 16px;
+		border-radius: 8px;
+		font-size: 13px;
+	}
+
+	.arch-core {
+		background: var(--color-accent-muted);
+		border: 1px solid rgba(139, 47, 201, 0.15);
+	}
+
+	.arch-adapters {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+		gap: 6px;
+		padding-left: 20px;
+	}
+
+	.arch-adapter {
+		background: var(--color-bg-elevated);
+		border: 1px solid var(--color-border);
+	}
+
+	.arch-coming {
+		opacity: 0.4;
+	}
+
+	.arch-name {
+		font-family: var(--font-mono);
+		font-size: 12px;
+		color: var(--color-text-secondary);
+	}
+
+	.arch-size {
+		font-family: var(--font-mono);
+		font-size: 11px;
+		color: var(--color-text-dim);
+	}
+
+	.arch-caption {
+		margin-top: 16px;
+		font-size: 14px;
+		color: var(--color-text-dim);
+		text-align: center;
+		letter-spacing: -0.006em;
+	}
+
+	/* --- CTAs --- */
 	.cta-primary {
 		display: inline-flex;
 		align-items: center;
@@ -98,18 +463,19 @@ import HeroDemo from "../components/react/HeroDemo";
 		background: var(--color-text);
 		color: var(--color-bg);
 		text-decoration: none;
-		transition: transform 200ms cubic-bezier(0.16, 1, 0.3, 1), filter 200ms ease;
+		transition: transform 200ms var(--spring-snappy), filter 200ms ease, box-shadow 200ms ease;
 	}
 
 	.cta-primary:hover {
 		transform: translateY(-1px);
 		filter: brightness(0.9);
+		box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 	}
 
 	.cta-primary:active {
-		transform: translateY(0);
+		transform: translateY(0) scale(0.97);
 		filter: brightness(0.85);
-		transition-duration: 100ms;
+		transition-duration: 80ms;
 	}
 
 	.cta-ghost {
@@ -132,8 +498,13 @@ import HeroDemo from "../components/react/HeroDemo";
 		background: rgb(255 255 255 / 0.04);
 	}
 
+	.cta-ghost:active {
+		transform: scale(0.98);
+		transition-duration: 80ms;
+	}
+
 	.cta-ghost svg {
-		transition: transform 150ms ease;
+		transition: transform 200ms var(--spring-bounce);
 	}
 
 	.cta-ghost:hover svg {
@@ -141,14 +512,14 @@ import HeroDemo from "../components/react/HeroDemo";
 	}
 
 	.hero-gradient {
-		background: linear-gradient(to right, #AB51E3, #DC97FF);
+		background: linear-gradient(135deg, #9B3FD9, #C471F5);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
 	}
 
 	:global(html.light) .hero-gradient {
-		background: linear-gradient(to right, #5A108F, #8B2FC9);
+		background: linear-gradient(135deg, #5A108F, #8B2FC9);
 		-webkit-background-clip: text;
 		-webkit-text-fill-color: transparent;
 		background-clip: text;
@@ -157,5 +528,25 @@ import HeroDemo from "../components/react/HeroDemo";
 	:global(html.light) .cta-ghost:hover {
 		border-color: var(--color-border-hover);
 		background: var(--color-bg-hover);
+	}
+
+	@media (max-width: 640px) {
+		.fw-selector {
+			flex-wrap: wrap;
+			justify-content: center;
+		}
+
+		.fw-indicator {
+			display: none;
+		}
+
+		.fw-tab.active {
+			background: var(--color-bg-elevated);
+			box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--color-border);
+		}
+
+		.arch-adapters {
+			padding-left: 0;
+		}
 	}
 </style>

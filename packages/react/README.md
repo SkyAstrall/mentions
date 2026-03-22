@@ -39,7 +39,7 @@ import { Mentions } from "@skyastrall/mentions-react";
 - Single-line mode
 - Full ARIA keyboard navigation
 - Controlled and uncontrolled modes
-- ~5KB gzipped (~8KB core)
+- ~5KB gzipped (~9KB core)
 
 ## API Layers
 

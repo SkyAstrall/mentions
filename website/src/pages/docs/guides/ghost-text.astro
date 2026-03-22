@@ -1,5 +1,6 @@
 ---
 import DocsLayout from "../../../layouts/DocsLayout.astro";
+import CodeTabs from "../../../components/CodeTabs.astro";
 import Code from "../../../components/Code.astro";
 ---
 
@@ -7,7 +8,8 @@ import Code from "../../../components/Code.astro";
 	<p class="lead">Show dimmed inline completions. Tab to accept. Wire up any LLM or autocomplete backend.</p>
 
 	<h2>Basic Usage</h2>
-	<Code code={`import { useState } from "react";
+	<CodeTabs
+		react={`import { useState } from "react";
 import { Mentions } from "@skyastrall/mentions-react";
 
 function AIEditor() {
@@ -25,7 +27,27 @@ function AIEditor() {
       onAcceptGhostText={() => setGhost("")}
     />
   );
-}`} />
+}`}
+		vue={`<script setup>
+import { ref } from "vue";
+import { Mentions } from "@skyastrall/mentions-vue";
+
+const ghost = ref("");
+
+function handleChange(markup: string) {
+  fetchCompletion(markup).then((c) => { ghost.value = c; });
+}
+</script>
+
+<template>
+  <Mentions
+    :triggers="[{ char: '@', data: users }]"
+    :ghost-text="ghost"
+    @update:model-value="handleChange"
+    @accept-ghost-text="ghost = ''"
+  />
+</template>`}
+	/>
 
 	<h2>How It Works</h2>
 	<ul>

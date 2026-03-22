@@ -11,12 +11,12 @@
 	--color-bg-hover: #222226;
 
 	--color-text: #fafafa;
-	--color-text-secondary: #a1a1aa;
-	--color-text-muted: #71717a;
-	--color-text-dim: #52525b;
+	--color-text-secondary: #d4d4d8;
+	--color-text-muted: #a1a1aa;
+	--color-text-dim: #71717a;
 
-	--color-border: rgb(255 255 255 / 0.06);
-	--color-border-hover: rgb(255 255 255 / 0.12);
+	--color-border: rgb(255 255 255 / 0.1);
+	--color-border-hover: rgb(255 255 255 / 0.18);
 
 	--color-accent: #8B2FC9;
 	--color-accent-hover: #AB51E3;
@@ -25,7 +25,7 @@
 
 	--color-code-bg: #0c0c0e;
 	--color-code-text: #e4e4e7;
-	--color-code-border: rgb(255 255 255 / 0.08);
+	--color-code-border: rgb(255 255 255 / 0.1);
 }
 
 html {
@@ -34,6 +34,16 @@ html {
 	font-family: var(--font-sans);
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	--spring-bounce: linear(
+		0, 0.006, 0.025 2.8%, 0.101 6.1%, 0.539 18.9%, 0.721 25.3%,
+		0.849 31.5%, 0.937 38.1%, 0.968 41.8%, 0.991 45.7%,
+		1.006 50.1%, 1.015 55%, 1.017 63.9%, 1.001 85.1%, 1
+	);
+	--spring-snappy: linear(
+		0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 16.1%,
+		0.938 23.9%, 0.988 28.1%, 1.017 34%, 1.017 45.1%,
+		1.006 60.1%, 1.001 78.1%, 1
+	);
 }
 
 ::selection {
@@ -49,9 +59,9 @@ html.light {
 	--color-bg-hover: #e4e4e7;
 
 	--color-text: #09090b;
-	--color-text-secondary: #52525b;
-	--color-text-muted: #71717a;
-	--color-text-dim: #a1a1aa;
+	--color-text-secondary: #3f3f46;
+	--color-text-muted: #52525b;
+	--color-text-dim: #71717a;
 
 	--color-border: rgb(0 0 0 / 0.08);
 	--color-border-hover: rgb(0 0 0 / 0.15);
@@ -66,11 +76,11 @@ html.light {
 	--color-code-border: rgb(0 0 0 / 0.08);
 }
 
+/* Theme transition — scoped to key surfaces only, not wildcarded */
 html.theme-transitioning,
-html.theme-transitioning *,
-html.theme-transitioning *::before,
-html.theme-transitioning *::after {
-	transition: background-color 400ms ease, color 400ms ease, border-color 400ms ease, box-shadow 400ms ease, fill 400ms ease, stroke 400ms ease !important;
+html.theme-transitioning body,
+html.theme-transitioning .nav-outer {
+	transition: background-color 300ms ease, color 300ms ease, border-color 300ms ease !important;
 }
 
 :focus-visible {
@@ -83,18 +93,18 @@ html.theme-transitioning *::after {
 }
 
 .animate-enter {
-	animation: enter 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+	animation: enter 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @keyframes scroll-reveal-kf {
-	from { opacity: 0; transform: translateY(12px); }
+	from { opacity: 0; transform: translateY(16px); }
 	to { opacity: 1; transform: translateY(0); }
 }
 
 .scroll-reveal {
 	animation: scroll-reveal-kf linear both;
 	animation-timeline: view();
-	animation-range: entry 0% entry 30%;
+	animation-range: entry 0% entry 25%;
 }
 
 @keyframes pulse-dot {

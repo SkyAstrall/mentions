@@ -1,6 +1,7 @@
 ---
 import DocsLayout from "../../layouts/DocsLayout.astro";
-import Code from "../../components/Code.astro";
+import CodeTabs from "../../components/CodeTabs.astro";
+
 ---
 
 <DocsLayout title="Quick Start">
@@ -8,7 +9,8 @@ import Code from "../../components/Code.astro";
 
 	<h2>Basic Usage</h2>
 	<p>Import <code>Mentions</code>, define your data, render the component.</p>
-	<Code code={`import { Mentions } from "@skyastrall/mentions-react";
+	<CodeTabs
+		react={`import { Mentions } from "@skyastrall/mentions-react";
 
 const users = [
   { id: "1", label: "Alice Johnson" },
@@ -27,33 +29,71 @@ function App() {
       }}
     />
   );
-}`} />
+}`}
+		vue={`<script setup>
+import { ref } from "vue";
+import { Mentions } from "@skyastrall/mentions-vue";
+
+const users = [
+  { id: "1", label: "Alice Johnson" },
+  { id: "2", label: "Bob Smith" },
+  { id: "3", label: "Charlie Brown" },
+];
+
+const markup = ref("");
+</script>
+
+<template>
+  <Mentions
+    :triggers="[{ char: '@', data: users }]"
+    placeholder="Type @ to mention someone..."
+    v-model="markup"
+  />
+</template>`}
+	/>
 	<p>Type <code>@</code> in the editor. A dropdown appears. Select a user — it becomes a highlighted mention.</p>
 
 	<h2>Multiple Triggers</h2>
-	<Code code={`<Mentions
+	<CodeTabs
+		react={`<Mentions
   triggers={[
     { char: "@", data: users, color: "oklch(0.75 0.15 250)" },
     { char: "#", data: tags, color: "oklch(0.75 0.12 300)" },
     { char: "/", data: commands, color: "oklch(0.80 0.12 80)" },
   ]}
   onChange={(markup, plainText) => {}}
-/>`} />
+/>`}
+		vue={`<Mentions
+  :triggers="[
+    { char: '@', data: users, color: 'oklch(0.75 0.15 250)' },
+    { char: '#', data: tags, color: 'oklch(0.75 0.12 300)' },
+    { char: '/', data: commands, color: 'oklch(0.80 0.12 80)' },
+  ]"
+  v-model="markup"
+/>`}
+	/>
 
 	<h2>Understanding the Markup</h2>
-	<p>The <code>onChange</code> callback receives two values:</p>
+	<p>The component emits two values on change:</p>
 	<ul>
 		<li><code>markup</code> — Serialized string: <code>@[Alice Johnson](1) hello #[urgent](t1)</code></li>
 		<li><code>plainText</code> — Display string: <code>@Alice Johnson hello #urgent</code></li>
 	</ul>
 	<p>Store the markup. Display the plain text. Parse mentions when needed:</p>
-	<Code code={`import { extractMentions } from "@skyastrall/mentions-react";
+	<CodeTabs
+		react={`import { extractMentions } from "@skyastrall/mentions-react";
 
 const mentions = extractMentions(markup, triggers);
-// [{ id: "1", label: "Alice Johnson" }, { id: "t1", label: "urgent" }]`} />
+// [{ id: "1", label: "Alice Johnson" }, { id: "t1", label: "urgent" }]`}
+		vue={`import { extractMentions } from "@skyastrall/mentions-vue";
+
+const mentions = extractMentions(markup.value, triggers);
+// [{ id: "1", label: "Alice Johnson" }, { id: "t1", label: "urgent" }]`}
+	/>
 
 	<h2>Imperative Handle</h2>
-	<Code code={`import { useRef } from "react";
+	<CodeTabs
+		react={`import { useRef } from "react";
 import { Mentions, type MentionsHandle } from "@skyastrall/mentions-react";
 
 function Editor() {
@@ -67,7 +107,22 @@ function Editor() {
       <button onClick={() => ref.current?.insertTrigger("@")}>Insert @</button>
     </>
   );
-}`} />
+}`}
+		vue={`<script setup>
+import { ref } from "vue";
+import { Mentions } from "@skyastrall/mentions-vue";
+import type { MentionsInstance } from "@skyastrall/mentions-vue";
+
+const mentionsRef = ref<MentionsInstance | null>(null);
+</script>
+
+<template>
+  <Mentions ref="mentionsRef" :triggers="triggers" />
+  <button @click="mentionsRef?.focus()">Focus</button>
+  <button @click="mentionsRef?.clear()">Clear</button>
+  <button @mousedown.prevent="mentionsRef?.insertTrigger('@')">Insert @</button>
+</template>`}
+	/>
 
 	<h2>Next</h2>
 	<p><a href="/docs/guides/compound-components">Compound Components</a> for custom layouts, or <a href="/docs/api/mentions">API Reference</a> for full details.</p>

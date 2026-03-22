@@ -12,6 +12,7 @@ import {
 	MentionController,
 	type MentionItem,
 	type MentionState,
+	performMentionInsertion,
 	type TriggerConfig,
 } from "@skyastrall/mentions-core";
 import {
@@ -156,8 +157,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 
 	const performDOMInsertion = useCallback(
 		(item: MentionItem) => {
-			const activeTrigger = stateRef.current.activeTrigger;
-			const query = stateRef.current.query;
+			const { activeTrigger, query } = stateRef.current;
 			const trigs = triggersRef.current;
 			const triggerConfig = trigs.find((t) => t.char === activeTrigger);
 
@@ -167,77 +167,11 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			const el = editorRef.current;
 			if (!el) return;
 
-			const sel = window.getSelection();
-			if (!sel || sel.rangeCount === 0) return;
+			const result = performMentionInsertion(el, item, activeTrigger, query, triggerConfig, trigs);
+			if (!result) return;
 
-			const range = sel.getRangeAt(0);
-			let container: Node = range.startContainer;
-			let offset = range.startOffset;
-
-			if (container.nodeType === Node.ELEMENT_NODE) {
-				if (offset > 0 && container.childNodes[offset - 1]?.nodeType === Node.TEXT_NODE) {
-					container = container.childNodes[offset - 1];
-					offset = container.textContent?.length ?? 0;
-				} else if (
-					offset < container.childNodes.length &&
-					container.childNodes[offset]?.nodeType === Node.TEXT_NODE
-				) {
-					container = container.childNodes[offset];
-					offset = 0;
-				} else {
-					return;
-				}
-			}
-
-			if (container.nodeType !== Node.TEXT_NODE) return;
-
-			const triggerQueryLen = activeTrigger.length + query.length;
-			if (offset < triggerQueryLen) return;
-
-			const startRawOffset = offset - triggerQueryLen;
-			const expectedText = activeTrigger + query;
-			const fullText = container.textContent ?? "";
-			const actualText = fullText.slice(startRawOffset, offset);
-
-			if (actualText !== expectedText) return;
-
-			const parent = container.parentNode;
-			if (!parent || !el.contains(parent)) return;
-
-			const mark = document.createElement("mark");
-			mark.setAttribute("data-mention", activeTrigger);
-			mark.setAttribute("data-id", item.id);
-			mark.contentEditable = "false";
-			const bg = triggerConfig.color ?? "var(--mention-bg, oklch(0.93 0.03 250))";
-			mark.style.cssText = `background-color:${bg};border-radius:var(--mention-radius, 3px);padding:0 2px`;
-			mark.textContent = activeTrigger + item.label;
-
-			const before = fullText.slice(0, startRawOffset);
-			const after = fullText.slice(offset);
-
-			const frag = document.createDocumentFragment();
-			if (before) frag.appendChild(document.createTextNode(before));
-			frag.appendChild(mark);
-
-			const spacer = document.createTextNode("\u200B ");
-			frag.appendChild(spacer);
-
-			if (after) frag.appendChild(document.createTextNode(after));
-
-			parent.replaceChild(frag, container);
-
-			const newRange = document.createRange();
-			newRange.setStart(spacer, spacer.length);
-			newRange.collapse(true);
-			sel.removeAllRanges();
-			sel.addRange(newRange);
-
-			const newPlainText = getPlainTextFromDOM(el);
-			const newMarkup = getMarkupFromDOM(el, trigs);
-			const newCursor = getCursorOffset(el);
-
-			lastReportedMarkupRef.current = newMarkup;
-			controller.handleInsertComplete(newMarkup, newPlainText, newCursor, item);
+			lastReportedMarkupRef.current = result.markup;
+			controller.handleInsertComplete(result.markup, result.plainText, result.cursor, item);
 		},
 		[controller],
 	);
@@ -276,7 +210,17 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		el.focus();
 
 		const sel = window.getSelection();
-		if (!sel || sel.rangeCount === 0) return;
+		if (!sel) return;
+
+		// After focus(), the browser may not have a selection range yet
+		// (e.g., after blur, clear, or programmatic focus from a button click).
+		// Create a collapsed range at the end of the element content.
+		if (sel.rangeCount === 0) {
+			const range = document.createRange();
+			range.selectNodeContents(el);
+			range.collapse(false);
+			sel.addRange(range);
+		}
 
 		const cursorOffset = getCursorOffset(el);
 		const currentPlain = getPlainTextFromDOM(el);

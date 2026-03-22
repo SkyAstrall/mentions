@@ -149,6 +149,90 @@ export function insertTextAtCursor(text: string): void {
 	}
 }
 
+/**
+ * Insert a mention into the contenteditable DOM, replacing the trigger+query text with a styled <mark>.
+ *
+ * Pure DOM — no framework types. Returns the new DOM state (markup, plainText, cursor)
+ * or null if insertion could not be performed (bail-out conditions).
+ */
+export function performMentionInsertion(
+	el: HTMLElement,
+	item: { id: string; label: string },
+	activeTrigger: string,
+	query: string,
+	triggerConfig: TriggerConfig,
+	triggers: TriggerConfig[],
+): { markup: string; plainText: string; cursor: number } | null {
+	const sel = window.getSelection();
+	if (!sel || sel.rangeCount === 0) return null;
+
+	const range = sel.getRangeAt(0);
+	let container: Node = range.startContainer;
+	let offset = range.startOffset;
+
+	if (container.nodeType === Node.ELEMENT_NODE) {
+		if (offset > 0 && container.childNodes[offset - 1]?.nodeType === Node.TEXT_NODE) {
+			container = container.childNodes[offset - 1];
+			offset = container.textContent?.length ?? 0;
+		} else if (
+			offset < container.childNodes.length &&
+			container.childNodes[offset]?.nodeType === Node.TEXT_NODE
+		) {
+			container = container.childNodes[offset];
+			offset = 0;
+		} else {
+			return null;
+		}
+	}
+
+	if (container.nodeType !== Node.TEXT_NODE) return null;
+
+	const triggerQueryLen = activeTrigger.length + query.length;
+	if (offset < triggerQueryLen) return null;
+
+	const startRawOffset = offset - triggerQueryLen;
+	const expectedText = activeTrigger + query;
+	const fullText = container.textContent ?? "";
+	if (fullText.slice(startRawOffset, offset) !== expectedText) return null;
+
+	const parent = container.parentNode;
+	if (!parent || !el.contains(parent)) return null;
+
+	const mark = document.createElement("mark");
+	mark.setAttribute("data-mention", activeTrigger);
+	mark.setAttribute("data-id", item.id);
+	mark.contentEditable = "false";
+	const bg = triggerConfig.color ?? "var(--mention-bg, oklch(0.93 0.03 250))";
+	mark.style.cssText = `background-color:${bg};color:var(--mention-color, inherit);border-radius:var(--mention-radius, 3px);padding:0 2px`;
+	mark.textContent = activeTrigger + item.label;
+
+	const before = fullText.slice(0, startRawOffset);
+	const after = fullText.slice(offset);
+
+	const frag = document.createDocumentFragment();
+	if (before) frag.appendChild(document.createTextNode(before));
+	frag.appendChild(mark);
+
+	const spacer = document.createTextNode("\u200B ");
+	frag.appendChild(spacer);
+
+	if (after) frag.appendChild(document.createTextNode(after));
+
+	parent.replaceChild(frag, container);
+
+	const newRange = document.createRange();
+	newRange.setStart(spacer, spacer.length);
+	newRange.collapse(true);
+	sel.removeAllRanges();
+	sel.addRange(newRange);
+
+	return {
+		markup: getMarkupFromDOM(el, triggers),
+		plainText: getPlainTextFromDOM(el),
+		cursor: getCursorOffset(el),
+	};
+}
+
 /** Convert a markup string to HTML for rendering in a contenteditable element. */
 export function buildMentionHTML(markup: string, triggers: TriggerConfig[]): string {
 	const segments = parseMarkup(markup, triggers);
@@ -158,7 +242,7 @@ export function buildMentionHTML(markup: string, triggers: TriggerConfig[]): str
 				const cfg = triggers.find((t) => t.char === seg.trigger);
 				const bg = cfg?.color ?? "var(--mention-bg, oklch(0.93 0.03 250))";
 				const radius = "var(--mention-radius, 3px)";
-				return `<mark data-mention="${escapeHTML(seg.trigger)}" data-id="${escapeHTML(seg.id)}" contenteditable="false" style="background-color:${bg};border-radius:${radius};padding:0 2px">${escapeHTML(seg.text)}</mark>\u200B`;
+				return `<mark data-mention="${escapeHTML(seg.trigger)}" data-id="${escapeHTML(seg.id)}" contenteditable="false" style="background-color:${bg};color:var(--mention-color, inherit);border-radius:${radius};padding:0 2px">${escapeHTML(seg.text)}</mark>\u200B`;
 			}
 			return escapeHTML(seg.text);
 		})

@@ -1,0 +1,204 @@
+---
+interface Props {
+	react: string;
+	vue: string;
+	label?: string;
+}
+
+const { react, vue, label } = Astro.props;
+const reactTrimmed = react.replace(/^\n/, "").replace(/\n$/, "");
+const vueTrimmed = vue.replace(/^\n/, "").replace(/\n$/, "");
+---
+
+<div class="code-tabs" data-code-tabs>
+	{label && <div class="ct-label">{label}</div>}
+	<div class="ct-header">
+		<button type="button" class="ct-tab active" data-ct-fw="react" aria-selected="true">React</button>
+		<button type="button" class="ct-tab" data-ct-fw="vue" aria-selected="false">Vue</button>
+		<div class="ct-indicator" aria-hidden="true"></div>
+		<button type="button" class="ct-copy" data-ct-copy aria-label="Copy code">Copy</button>
+	</div>
+	<div class="ct-panel active" data-ct-panel="react">
+		<pre><code set:text={reactTrimmed} /></pre>
+	</div>
+	<div class="ct-panel" data-ct-panel="vue">
+		<pre><code set:text={vueTrimmed} /></pre>
+	</div>
+</div>
+
+<style>
+	.code-tabs {
+		border-radius: 8px;
+		border: 1px solid var(--color-code-border);
+		background: var(--color-code-bg);
+		overflow: hidden;
+		margin: 16px 0 24px;
+	}
+
+	.ct-label {
+		padding: 8px 16px;
+		font-size: 12px;
+		color: var(--color-text-dim);
+		border-bottom: 1px solid var(--color-code-border);
+	}
+
+	.ct-header {
+		position: relative;
+		display: flex;
+		align-items: center;
+		padding: 0 12px;
+		border-bottom: 1px solid var(--color-code-border);
+		gap: 0;
+	}
+
+	.ct-tab {
+		position: relative;
+		z-index: 1;
+		padding: 8px 14px;
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--color-text-dim);
+		background: none;
+		border: none;
+		cursor: pointer;
+		transition: color 150ms ease;
+	}
+
+	.ct-tab:hover:not(.active) {
+		color: var(--color-text-muted);
+	}
+
+	.ct-tab.active {
+		font-weight: 500;
+		color: var(--color-text-secondary);
+	}
+
+	.ct-tab:active {
+		transform: scale(0.96);
+		transition-duration: 60ms;
+	}
+
+	.ct-indicator {
+		position: absolute;
+		bottom: 0;
+		left: 12px;
+		height: 1px;
+		background: var(--color-text-secondary);
+		transition: transform 300ms var(--spring-bounce), width 300ms var(--spring-bounce);
+		pointer-events: none;
+	}
+
+	.ct-copy {
+		margin-left: auto;
+		padding: 4px 10px;
+		font-size: 11px;
+		color: var(--color-text-dim);
+		background: none;
+		border: 1px solid var(--color-border);
+		border-radius: 4px;
+		cursor: pointer;
+		transition: color 150ms ease, border-color 150ms ease;
+	}
+
+	.ct-copy:hover {
+		color: var(--color-text-muted);
+		border-color: var(--color-border-hover);
+	}
+
+	.ct-copy:active {
+		transform: scale(0.95);
+		transition-duration: 60ms;
+	}
+
+	.ct-copy.copied {
+		color: #34d399;
+		border-color: rgba(52, 211, 153, 0.3);
+	}
+
+	.ct-panel {
+		display: none;
+	}
+
+	.ct-panel.active {
+		display: block;
+	}
+
+	.ct-panel pre {
+		margin: 0;
+		padding: 16px 20px;
+		overflow-x: auto;
+		font-family: var(--font-mono);
+		font-size: 13px;
+		line-height: 1.65;
+		color: var(--color-code-text);
+	}
+</style>
+
+<script>
+	import { copyToClipboard } from "../scripts/copy";
+	import { getFramework, setFramework, dispatchFwChange, onFwChange, updateSlidingIndicator } from "../scripts/fw-sync";
+
+	const FEEDBACK_MS = 2000;
+
+	function initCodeTabs() {
+		document.querySelectorAll<HTMLElement>("[data-code-tabs]").forEach((block) => {
+			if (block.dataset.ctInit) return;
+			block.dataset.ctInit = "1";
+
+			const tabs = block.querySelectorAll<HTMLButtonElement>(".ct-tab");
+			const panels = block.querySelectorAll<HTMLElement>(".ct-panel");
+			const indicator = block.querySelector<HTMLElement>(".ct-indicator");
+			const copyBtn = block.querySelector<HTMLButtonElement>("[data-ct-copy]");
+			const header = block.querySelector<HTMLElement>(".ct-header");
+
+			function refreshIndicator() {
+				const active = block.querySelector<HTMLButtonElement>(".ct-tab.active");
+				if (active && indicator && header) {
+					updateSlidingIndicator(header, active, indicator, 12);
+				}
+			}
+
+			function switchTab(fw: string) {
+				tabs.forEach((t) => {
+					const isActive = t.dataset.ctFw === fw;
+					t.classList.toggle("active", isActive);
+					t.setAttribute("aria-selected", isActive ? "true" : "false");
+				});
+				panels.forEach((p) => p.classList.toggle("active", p.dataset.ctPanel === fw));
+				refreshIndicator();
+			}
+
+			tabs.forEach((tab) => {
+				tab.addEventListener("click", () => {
+					const fw = tab.dataset.ctFw!;
+					switchTab(fw);
+					setFramework(fw as "react" | "vue");
+					dispatchFwChange(fw);
+				});
+			});
+
+			copyBtn?.addEventListener("click", () => {
+				const code = block.querySelector<HTMLElement>(".ct-panel.active code")?.textContent ?? "";
+				copyToClipboard(code);
+				copyBtn.textContent = "Copied!";
+				copyBtn.classList.add("copied");
+				setTimeout(() => {
+					copyBtn.textContent = "Copy";
+					copyBtn.classList.remove("copied");
+				}, FEEDBACK_MS);
+			});
+
+			const saved = getFramework();
+			switchTab(saved);
+
+			onFwChange((fw) => {
+				if (fw === "react" || fw === "vue") switchTab(fw);
+			});
+
+			requestAnimationFrame(refreshIndicator);
+		});
+	}
+
+	initCodeTabs();
+	document.addEventListener("astro:page-load", initCodeTabs);
+</script>

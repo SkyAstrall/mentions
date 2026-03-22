@@ -21,7 +21,7 @@ export const docsNav: NavSection[] = [
 		title: "Guides",
 		items: [
 			{ label: "Compound Components", href: "/docs/guides/compound-components" },
-			{ label: "Headless Hook", href: "/docs/guides/headless-hook" },
+			{ label: "Headless Usage", href: "/docs/guides/headless-hook" },
 			{ label: "Async Data", href: "/docs/guides/async-data" },
 			{ label: "Single Line", href: "/docs/guides/single-line" },
 			{ label: "Ghost Text / AI", href: "/docs/guides/ghost-text" },
@@ -32,7 +32,7 @@ export const docsNav: NavSection[] = [
 		title: "API Reference",
 		items: [
 			{ label: "Mentions Component", href: "/docs/api/mentions" },
-			{ label: "useMentions Hook", href: "/docs/api/use-mentions" },
+			{ label: "useMentions", href: "/docs/api/use-mentions" },
 			{ label: "Trigger Config", href: "/docs/api/trigger-config" },
 			{ label: "Utilities", href: "/docs/api/utilities" },
 		],

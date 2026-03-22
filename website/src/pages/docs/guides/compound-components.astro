@@ -1,13 +1,15 @@
 ---
 import DocsLayout from "../../../layouts/DocsLayout.astro";
-import Code from "../../../components/Code.astro";
+import CodeTabs from "../../../components/CodeTabs.astro";
+
 ---
 
 <DocsLayout title="Compound Components">
 	<p class="lead">Control layout while the library handles state, ARIA, and keyboard navigation.</p>
 
 	<h2>Basic Structure</h2>
-	<Code code={`import { Mentions } from "@skyastrall/mentions-react";
+	<CodeTabs
+		react={`import { Mentions } from "@skyastrall/mentions-react";
 
 <Mentions triggers={triggers}>
   <Mentions.Editor placeholder="Type @..." className="my-editor" />
@@ -16,11 +18,29 @@ import Code from "../../../components/Code.astro";
       <Mentions.Item />
     </Mentions.List>
   </Mentions.Portal>
-</Mentions>`} />
+</Mentions>`}
+		vue={`<script setup>
+import {
+  Mentions, MentionsEditor, MentionsPortal,
+  MentionsList, MentionsItem,
+} from "@skyastrall/mentions-vue";
+</script>
+
+<template>
+  <Mentions :triggers="triggers">
+    <MentionsEditor placeholder="Type @..." class="my-editor" />
+    <MentionsPortal>
+      <MentionsList>
+        <MentionsItem />
+      </MentionsList>
+    </MentionsPortal>
+  </Mentions>
+</template>`}
+	/>
 
 	<h2>Custom Item Rendering</h2>
-	<p>Use the <code>render</code> prop for full control over how items display.</p>
-	<Code code={`<Mentions.Item render={({ item, highlighted }) => (
+	<CodeTabs
+		react={`<Mentions.Item render={({ item, highlighted }) => (
   <div style={{
     display: "flex",
     alignItems: "center",
@@ -33,25 +53,26 @@ import Code from "../../../components/Code.astro";
       <div style={{ fontSize: 12, opacity: 0.6 }}>{item.role}</div>
     </div>
   </div>
-)} />`} />
-
-	<h2>Manual Item Mapping</h2>
-	<p>For full control over item iteration, pass <code>index</code> explicitly.</p>
-	<Code code={`<Mentions triggers={triggers}>
-  <Mentions.Editor />
-  <Mentions.Portal>
-    <Mentions.List>
-      {items.map((item, i) => (
-        <Mentions.Item key={item.id} index={i}>
-          {item.label}
-        </Mentions.Item>
-      ))}
-    </Mentions.List>
-  </Mentions.Portal>
-</Mentions>`} />
+)} />`}
+		vue={`<MentionsItem v-slot="{ item, highlighted }">
+  <div :style="{
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    fontWeight: highlighted ? 600 : 400,
+  }">
+    <img :src="item.avatar" width="24" height="24" style="border-radius: 50%" />
+    <div>
+      <div>{{ item.label }}</div>
+      <div style="font-size: 12px; opacity: 0.6">{{ item.role }}</div>
+    </div>
+  </div>
+</MentionsItem>`}
+	/>
 
 	<h2>Loading and Empty States</h2>
-	<Code code={`<Mentions.List>
+	<CodeTabs
+		react={`<Mentions.List>
   <Mentions.Loading>
     <Spinner /> Searching...
   </Mentions.Loading>
@@ -59,11 +80,26 @@ import Code from "../../../components/Code.astro";
     No results found
   </Mentions.Empty>
   <Mentions.Item render={({ item }) => item.label} />
-</Mentions.List>`} />
+</Mentions.List>`}
+		vue={`<MentionsList>
+  <MentionsLoading>
+    <Spinner /> Searching...
+  </MentionsLoading>
+  <MentionsEmpty>
+    No results found
+  </MentionsEmpty>
+  <MentionsItem />
+</MentionsList>`}
+	/>
 
 	<h2>Portal Container</h2>
 	<p>By default, the dropdown renders inline inside the component. To portal elsewhere:</p>
-	<Code code={`<Mentions.Portal container={document.body}>
+	<CodeTabs
+		react={`<Mentions.Portal container={document.body}>
   <Mentions.List>...</Mentions.List>
-</Mentions.Portal>`} />
+</Mentions.Portal>`}
+		vue={`<MentionsPortal to="body">
+  <MentionsList>...</MentionsList>
+</MentionsPortal>`}
+	/>
 </DocsLayout>

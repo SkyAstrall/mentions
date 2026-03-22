@@ -7,7 +7,7 @@ interface Props {
 	description?: string;
 }
 
-const { title, description = "Multi-trigger inline suggestions for React. @mentions, #hashtags, /commands, ghost text, headless hook." } = Astro.props;
+const { title, description = "Multi-trigger inline suggestions for React, Vue, and every framework. @mentions, #hashtags, /commands — from one tiny core." } = Astro.props;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 ---
 
@@ -33,7 +33,7 @@ const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
+		<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet" />
 		<ClientRouter />
 		<script is:inline>
 			(function(){var t=localStorage.getItem('theme');if(t==='light'||(t!=='dark'&&window.matchMedia('(prefers-color-scheme:light)').matches))document.documentElement.classList.add('light')})();

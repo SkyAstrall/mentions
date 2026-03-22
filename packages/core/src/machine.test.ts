@@ -276,8 +276,6 @@ describe("mentionReducer", () => {
 		expect(state.caretPosition).toEqual({ top: 42, left: 156, height: 20 });
 	});
 
-	// ---- State-scoped transition guards --------------------------------
-
 	it("FETCH_COMPLETE is no-op in idle (prevents ghost popup after Escape)", () => {
 		const state = mentionReducer(initial, {
 			type: "FETCH_COMPLETE",

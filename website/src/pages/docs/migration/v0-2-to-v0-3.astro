@@ -37,9 +37,9 @@ const { handleInput, buildHTML, ... } = useMentions(opts);
 <div onInput={handleInput} ... />
 
 // After (v0.3):
-const { _handleInput, _buildHTML, ... } = useMentions(opts);
-<div onInput={_handleInput} ... />`} />
-	<p>The underscore prefix signals these are internal plumbing. For most custom editors, you only need <code>editorRef</code>, <code>inputProps</code>, <code>listProps</code>, <code>getItemProps</code>, and the state accessors.</p>
+const { handleInput, _buildHTML, ... } = useMentions(opts);
+<div onInput={handleInput} ... />`} />
+	<p><code>handleInput</code> is public API. <code>_buildHTML</code> has an underscore prefix signaling it's internal plumbing. For most custom editors, you only need <code>editorRef</code>, <code>inputProps</code>, <code>listProps</code>, <code>getItemProps</code>, and the state accessors.</p>
 
 	<h2>Using MentionController Directly</h2>
 	<p>v0.3 exposes the core controller for building adapters in other frameworks:</p>

@@ -1,17 +1,25 @@
 ---
 import DocsLayout from "../../../layouts/DocsLayout.astro";
 import Code from "../../../components/Code.astro";
+import CodeTabs from "../../../components/CodeTabs.astro";
 ---
 
 <DocsLayout title="Utilities">
 	<p class="lead">Standalone functions for parsing and extracting mention data. Work server-side.</p>
 
 	<h2>Import</h2>
-	<Code code={`// From React package (re-exported):
+	<CodeTabs
+		react={`// From React adapter (re-exported):
 import { extractMentions, markupToPlainText, parseMarkup } from "@skyastrall/mentions-react";
 
-// Or from core (no React dependency, works server-side):
-import { extractMentions, markupToPlainText, parseMarkup } from "@skyastrall/mentions-core";`} />
+// Or from core (works server-side, no framework dependency):
+import { extractMentions, markupToPlainText, parseMarkup } from "@skyastrall/mentions-core";`}
+		vue={`// From Vue adapter (re-exported):
+import { extractMentions, markupToPlainText, parseMarkup } from "@skyastrall/mentions-vue";
+
+// Or from core (works server-side, no framework dependency):
+import { extractMentions, markupToPlainText, parseMarkup } from "@skyastrall/mentions-core";`}
+	/>
 
 	<h2>extractMentions</h2>
 	<p>Extract all mentions from a markup string.</p>

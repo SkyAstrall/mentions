@@ -1,31 +1,64 @@
 ---
 import DocsLayout from "../../layouts/DocsLayout.astro";
-import Code from "../../components/Code.astro";
+import CodeTabs from "../../components/CodeTabs.astro";
+
 ---
 
 <DocsLayout title="Installation">
-	<p class="lead">Install the React adapter. The core package is included automatically.</p>
+	<p class="lead">Install the adapter for your framework. The core package is included automatically.</p>
 
 	<h2>Package Manager</h2>
-	<Code lang="bash" code="npm install @skyastrall/mentions-react" />
-	<Code lang="bash" code="pnpm add @skyastrall/mentions-react" />
-	<Code lang="bash" code="yarn add @skyastrall/mentions-react" />
+	<CodeTabs
+		react="npm install @skyastrall/mentions-react"
+		vue="npm install @skyastrall/mentions-vue"
+	/>
+	<p>Or with pnpm / yarn:</p>
+	<CodeTabs
+		react="pnpm add @skyastrall/mentions-react"
+		vue="pnpm add @skyastrall/mentions-vue"
+	/>
 
 	<h2>Requirements</h2>
-	<ul>
-		<li>React 18 or 19</li>
-		<li>ReactDOM 18 or 19</li>
-	</ul>
-	<p>Works with Next.js, Remix, Vite, Astro, and any React project.</p>
+	<div class="fw-req" data-fw-content="react">
+		<ul>
+			<li>React 18 or 19</li>
+			<li>ReactDOM 18 or 19</li>
+		</ul>
+		<p>Works with Next.js, Remix, Vite, Astro, and any React project.</p>
+	</div>
+	<div class="fw-req" data-fw-content="vue" style="display:none">
+		<ul>
+			<li>Vue 3.4 or later</li>
+		</ul>
+		<p>Works with Nuxt, Vite, Astro, and any Vue 3 project.</p>
+	</div>
 
 	<h2>What Gets Installed</h2>
-	<p><code>@skyastrall/mentions-react</code> depends on <code>@skyastrall/mentions-core</code>, which is installed automatically. You only need core separately for non-React adapters or server-side usage.</p>
+	<p>Your framework adapter depends on <code>@skyastrall/mentions-core</code>, which is installed automatically. You only need core separately for server-side usage or building a custom adapter.</p>
 
 	<h2>TypeScript</h2>
-	<p>Both packages ship with full TypeScript declarations. No <code>@types/*</code> packages needed.</p>
+	<p>All packages ship with full TypeScript declarations. No <code>@types/*</code> packages needed.</p>
 
 	<h2>Optional: CSS Effects</h2>
 	<p>For animated borders, glow, and dropdown animations:</p>
-	<Code code={`import "@skyastrall/mentions-react/effects.css";`} />
+	<CodeTabs
+		react={`import "@skyastrall/mentions-react/effects.css";`}
+		vue={`// CSS effects coming soon for Vue adapter`}
+	/>
 	<p>Entirely optional. The component works without it.</p>
 </DocsLayout>
+
+<script>
+	function initFwContent() {
+		function update(fw: string) {
+			document.querySelectorAll<HTMLElement>('[data-fw-content]').forEach((el) => {
+				el.style.display = el.dataset.fwContent === fw ? '' : 'none';
+			});
+		}
+		const saved = localStorage.getItem('fw-preference') || 'react';
+		update(saved);
+		window.addEventListener('fw-change', ((e: CustomEvent) => update(e.detail)) as EventListener);
+	}
+	initFwContent();
+	document.addEventListener('astro:page-load', initFwContent);
+</script>

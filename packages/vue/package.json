@@ -1,0 +1,66 @@
+{
+	"name": "@skyastrall/mentions-vue",
+	"version": "0.3.0",
+	"type": "module",
+	"description": "Vue 3 composable and compound components for @mentions, #tags, /commands. Powered by @skyastrall/mentions-core.",
+	"license": "MIT",
+	"author": "SkyAstrall",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"sideEffects": false,
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"import": "./dist/index.js"
+		}
+	},
+	"files": [
+		"dist"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/SkyAstrall/mentions.git",
+		"directory": "packages/vue"
+	},
+	"homepage": "https://mentions.skyastrall.com",
+	"bugs": {
+		"url": "https://github.com/SkyAstrall/mentions/issues"
+	},
+	"engines": {
+		"node": ">=18"
+	},
+	"scripts": {
+		"build": "tsdown && npx publint"
+	},
+	"dependencies": {
+		"@skyastrall/mentions-core": "workspace:^"
+	},
+	"peerDependencies": {
+		"vue": "^3.4.0"
+	},
+	"devDependencies": {
+		"vue": "^3.5.0"
+	},
+	"keywords": [
+		"vue",
+		"vue3",
+		"vue-component",
+		"mentions",
+		"mention",
+		"vue-mentions",
+		"autocomplete",
+		"autosuggest",
+		"typeahead",
+		"combobox",
+		"trigger",
+		"at-mention",
+		"hashtag",
+		"slash-commands",
+		"headless",
+		"composable",
+		"vue-composable"
+	]
+}

@@ -9,7 +9,7 @@ const navLinks = [
 	{ href: "/docs", label: "Docs", isActive: isDocsActive },
 	{ href: "/playground", label: "Playground", isActive: isPlaygroundActive },
 	{ href: "https://github.com/SkyAstrall/mentions", label: "GitHub", external: true },
-	{ href: "https://www.npmjs.com/package/@skyastrall/mentions-react", label: "npm", external: true },
+	{ href: "https://www.npmjs.com/package/@skyastrall/mentions-core", label: "npm", external: true },
 ];
 ---
 
@@ -42,6 +42,10 @@ const navLinks = [
 					)}
 				</a>
 			))}
+			<div class="nav-fw-selector" id="nav-fw-selector" aria-label="Framework">
+				<button type="button" class="nav-fw-tab active" data-nav-fw="react">React</button>
+				<button type="button" class="nav-fw-tab" data-nav-fw="vue">Vue</button>
+			</div>
 			<ThemeToggle />
 		</div>
 
@@ -271,6 +275,45 @@ const navLinks = [
 	}
 
 
+	/* Framework selector in nav */
+	.nav-fw-selector {
+		display: inline-flex;
+		align-items: center;
+		padding: 2px;
+		background: var(--color-bg-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 7px;
+		gap: 1px;
+	}
+
+	.nav-fw-tab {
+		padding: 4px 10px;
+		font-size: 12px;
+		font-weight: 400;
+		color: var(--color-text-dim);
+		background: none;
+		border: none;
+		border-radius: 5px;
+		cursor: pointer;
+		transition: color 150ms ease, background 150ms ease;
+	}
+
+	.nav-fw-tab:hover:not(.active) {
+		color: var(--color-text-muted);
+	}
+
+	.nav-fw-tab.active {
+		font-weight: 500;
+		color: var(--color-text);
+		background: var(--color-bg-elevated);
+		box-shadow: 0 1px 2px rgba(0,0,0,0.06), 0 0 0 1px var(--color-border);
+	}
+
+	.nav-fw-tab:active {
+		transform: scale(0.95);
+		transition-duration: 60ms;
+	}
+
 	@media (max-width: 640px) {
 		.nav-links-desktop {
 			display: none;
@@ -358,6 +401,33 @@ const navLinks = [
 		updateActiveLinks();
 	}
 
+	function initNavFwSelector() {
+		const selector = document.getElementById('nav-fw-selector');
+		if (!selector || selector.dataset.fwInit === '1') return;
+		selector.dataset.fwInit = '1';
+
+		const tabs = selector.querySelectorAll<HTMLButtonElement>('.nav-fw-tab');
+
+		function updateTabs(fw: string) {
+			tabs.forEach((t) => t.classList.toggle('active', t.dataset.navFw === fw));
+		}
+
+		tabs.forEach((tab) => {
+			tab.addEventListener('click', () => {
+				const fw = tab.dataset.navFw!;
+				updateTabs(fw);
+				localStorage.setItem('fw-preference', fw);
+				window.dispatchEvent(new CustomEvent('fw-change', { detail: fw }));
+			});
+		});
+
+		const saved = localStorage.getItem('fw-preference');
+		if (saved === 'vue') updateTabs('vue');
+
+		window.addEventListener('fw-change', ((e: CustomEvent) => updateTabs(e.detail)) as EventListener);
+	}
+
 	initNav();
-	document.addEventListener('astro:page-load', initNav);
+	initNavFwSelector();
+	document.addEventListener('astro:page-load', () => { initNav(); initNavFwSelector(); });
 </script>

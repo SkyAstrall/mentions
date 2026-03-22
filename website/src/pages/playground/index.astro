@@ -2,6 +2,7 @@
 import BaseLayout from "../../layouts/BaseLayout.astro";
 import Nav from "../../components/Nav.astro";
 import Playground from "../../components/react/Playground";
+import VuePlayground from "../../components/vue/VuePlayground.vue";
 ---
 
 <BaseLayout title="Playground — @skyastrall/mentions">
@@ -13,12 +14,148 @@ import Playground from "../../components/react/Playground";
 		<Nav />
 
 		<section class="relative z-10 max-w-6xl mx-auto px-6 pt-12 pb-24">
-			<div class="mb-10">
+			<div class="mb-8">
 				<h1 class="text-3xl font-bold tracking-tight mb-2">Playground</h1>
-				<p class="text-text-secondary">Customize triggers, presets, and options. Copy the generated code.</p>
+				<p class="text-text-secondary mb-5">Customize triggers, presets, and options. Copy the generated code.</p>
+
+				<div class="pg-tabs" id="framework-tabs">
+					<button type="button" class="pg-tab active" data-framework="react" aria-selected="true" role="tab">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="2.5"/><ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="currentColor" stroke-width="1.5"/><ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="currentColor" stroke-width="1.5" transform="rotate(60 12 12)"/><ellipse cx="12" cy="12" rx="10" ry="4" fill="none" stroke="currentColor" stroke-width="1.5" transform="rotate(120 12 12)"/></svg>
+						React
+					</button>
+					<button type="button" class="pg-tab" data-framework="vue" aria-selected="false" role="tab">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 3h3.5L12 14.5 18.5 3H22L12 21 2 3z M7 3l5 8.5L17 3h-3l-2 3.5L10 3H7z"/></svg>
+						Vue
+					</button>
+					<div class="pg-indicator" id="pg-indicator" aria-hidden="true"></div>
+				</div>
 			</div>
 
-			<Playground client:load />
+			<div id="playground-react">
+				<Playground client:load />
+			</div>
+
+			<div id="playground-vue" style="display: none;">
+				<VuePlayground client:idle />
+			</div>
 		</section>
 	</div>
 </BaseLayout>
+
+<script>
+import { getFramework, setFramework, dispatchFwChange, onFwChange, updateSlidingIndicator } from "../../scripts/fw-sync";
+
+function initPlaygroundTabs() {
+	const container = document.getElementById("framework-tabs");
+	const indicator = document.getElementById("pg-indicator");
+	if (!container || !indicator) return;
+
+	const tabs = container.querySelectorAll<HTMLButtonElement>(".pg-tab");
+
+	function refreshIndicator() {
+		const active = container!.querySelector<HTMLButtonElement>(".pg-tab.active");
+		if (active) updateSlidingIndicator(container!, active, indicator!);
+	}
+
+	function switchTo(fw: string) {
+		document.getElementById("playground-react")!.style.display = fw === "react" ? "block" : "none";
+		document.getElementById("playground-vue")!.style.display = fw === "vue" ? "block" : "none";
+		tabs.forEach((btn) => {
+			const isActive = btn.dataset.framework === fw;
+			btn.classList.toggle("active", isActive);
+			btn.setAttribute("aria-selected", isActive ? "true" : "false");
+		});
+		refreshIndicator();
+		history.replaceState(null, "", fw === "react" ? "/playground/" : "/playground/?fw=vue");
+	}
+
+	tabs.forEach((tab) => {
+		tab.addEventListener("click", () => {
+			const fw = tab.dataset.framework!;
+			switchTo(fw);
+			setFramework(fw as "react" | "vue");
+			dispatchFwChange(fw);
+		});
+	});
+
+	onFwChange((fw) => {
+		if (fw === "react" || fw === "vue") {
+			const current = container!.querySelector<HTMLButtonElement>(".pg-tab.active");
+			if (current?.dataset.framework !== fw) switchTo(fw);
+		}
+	});
+
+	const params = new URLSearchParams(window.location.search);
+	const savedFw = params.get("fw") || getFramework();
+	if (savedFw === "vue") switchTo("vue");
+
+	requestAnimationFrame(refreshIndicator);
+	window.addEventListener("resize", refreshIndicator);
+}
+
+initPlaygroundTabs();
+</script>
+
+<style>
+	.pg-tabs {
+		position: relative;
+		display: inline-flex;
+		gap: 2px;
+		padding: 3px;
+		background: var(--color-bg-surface);
+		border: 1px solid var(--color-border);
+		border-radius: 10px;
+	}
+
+	.pg-tab {
+		position: relative;
+		z-index: 1;
+		display: inline-flex;
+		align-items: center;
+		gap: 6px;
+		padding: 7px 16px;
+		font-size: 13px;
+		font-weight: 500;
+		color: var(--color-text-muted);
+		background: transparent;
+		border: none;
+		border-radius: 7px;
+		cursor: pointer;
+		transition: color 150ms ease;
+		letter-spacing: -0.01em;
+	}
+
+	.pg-tab:hover:not(.active) {
+		color: var(--color-text-secondary);
+	}
+
+	.pg-tab.active {
+		color: var(--color-text);
+	}
+
+	.pg-tab:active {
+		transform: scale(0.96);
+		transition-duration: 80ms;
+	}
+
+	.pg-tab svg {
+		opacity: 0.7;
+		transition: opacity 150ms ease;
+	}
+
+	.pg-tab.active svg {
+		opacity: 1;
+	}
+
+	.pg-indicator {
+		position: absolute;
+		top: 3px;
+		left: 3px;
+		height: calc(100% - 6px);
+		background: var(--color-bg-elevated);
+		border-radius: 7px;
+		box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--color-border);
+		transition: transform 400ms var(--spring-bounce), width 400ms var(--spring-bounce);
+		pointer-events: none;
+	}
+</style>

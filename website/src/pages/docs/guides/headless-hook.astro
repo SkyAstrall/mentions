@@ -1,9 +1,10 @@
 ---
 import DocsLayout from "../../../layouts/DocsLayout.astro";
-import Code from "../../../components/Code.astro";
+import CodeTabs from "../../../components/CodeTabs.astro";
+
 ---
 
-<DocsLayout title="Headless Hook">
+<DocsLayout title="Headless Usage">
 	<p class="lead">Full control over rendering. You own the DOM, the library owns the logic.</p>
 
 	<h2>When to Use</h2>
@@ -13,10 +14,11 @@ import Code from "../../../components/Code.astro";
 		<li>You need complete control over item rendering</li>
 	</ul>
 
-	<p>For most headless use cases, the <a href="/docs/guides/compound-components">compound component API</a> gives you layout control while the library handles the editor internals. Use the raw hook only when you need to control the contenteditable element itself.</p>
+	<p>For most headless use cases, the <a href="/docs/guides/compound-components">compound component API</a> gives you layout control while the library handles the editor internals. Use the raw hook/composable only when you need to control the contenteditable element itself.</p>
 
 	<h2>Compound Components (Recommended)</h2>
-	<Code code={`import { Mentions } from "@skyastrall/mentions-react";
+	<CodeTabs
+		react={`import { Mentions } from "@skyastrall/mentions-react";
 
 const users = [
   { id: "1", label: "Alice" },
@@ -38,11 +40,39 @@ function Editor() {
       </Mentions.Portal>
     </Mentions>
   );
-}`} />
+}`}
+		vue={`<script setup>
+import {
+  Mentions, MentionsEditor, MentionsPortal,
+  MentionsList, MentionsItem,
+} from "@skyastrall/mentions-vue";
 
-	<h2>Raw Hook (Full Control)</h2>
+const users = [
+  { id: "1", label: "Alice" },
+  { id: "2", label: "Bob" },
+];
+</script>
+
+<template>
+  <Mentions :triggers="[{ char: '@', data: users }]">
+    <MentionsEditor placeholder="Type @..." />
+    <MentionsPortal>
+      <MentionsList>
+        <MentionsItem v-slot="{ item, highlighted }">
+          <div :style="{ fontWeight: highlighted ? 600 : 400 }">
+            {{ item.label }}
+          </div>
+        </MentionsItem>
+      </MentionsList>
+    </MentionsPortal>
+  </Mentions>
+</template>`}
+	/>
+
+	<h2>Raw Hook / Composable (Full Control)</h2>
 	<p>When you need to render the contenteditable div yourself:</p>
-	<Code code={`import { useMentions } from "@skyastrall/mentions-react";
+	<CodeTabs
+		react={`import { useMentions } from "@skyastrall/mentions-react";
 
 function CustomEditor() {
   const {
@@ -77,26 +107,89 @@ function CustomEditor() {
       )}
     </div>
   );
-}`} />
+}`}
+		vue={`<script setup>
+import { useMentions } from "@skyastrall/mentions-vue";
+
+const users = [
+  { id: "1", label: "Alice" },
+  { id: "2", label: "Bob" },
+];
+
+const {
+  editorRef, state, aria, isOpen, items,
+  highlightedIndex, caretPosition,
+  handleInput, handleKeyDown, handleBlur,
+  handleCompositionStart, handleCompositionEnd,
+  performInsertion,
+} = useMentions({
+  triggers: [{ char: "@", data: users }],
+});
+</script>
+
+<template>
+  <div data-mentions="" style="position: relative">
+    <div
+      ref="editorRef"
+      contenteditable="plaintext-only"
+      data-mentions-editor=""
+      v-bind="aria.inputProps"
+      @input="handleInput"
+      @keydown="handleKeyDown"
+      @blur="handleBlur"
+      @compositionstart="handleCompositionStart"
+      @compositionend="handleCompositionEnd"
+    />
+    <ul v-if="isOpen" v-bind="aria.listProps" :style="{
+      position: 'fixed',
+      top: (caretPosition?.top ?? 0) + (caretPosition?.height ?? 0) + 4 + 'px',
+      left: (caretPosition?.left ?? 0) + 'px',
+    }">
+      <li
+        v-for="(item, i) in items"
+        :key="item.id"
+        v-bind="aria.getItemProps(i)"
+        @click="performInsertion(item)"
+      >
+        {{ item.label }}
+      </li>
+    </ul>
+  </div>
+</template>`}
+	/>
 
 	<h2>Important Attributes</h2>
 	<ul>
 		<li><code>data-mentions=""</code> on a wrapper div — needed for blur detection</li>
 		<li><code>data-mentions-editor=""</code> on the editor — needed for placeholder CSS</li>
-		<li><code>inputProps</code> includes <code>role="combobox"</code> and all ARIA attributes — always spread it</li>
+		<li><code>inputProps</code> / <code>aria.inputProps</code> includes <code>role="combobox"</code> and all ARIA attributes — always spread it</li>
 	</ul>
 
 	<h2>Reading Values</h2>
-	<Code code={`const { markup, plainText, mentions } = useMentions({ triggers });
+	<CodeTabs
+		react={`const { markup, plainText, mentions } = useMentions({ triggers });
 
 // markup: "@[Alice](1) hello"
 // plainText: "@Alice hello"
-// mentions: [{ id: "1", label: "Alice" }]`} />
+// mentions: [{ id: "1", label: "Alice" }]`}
+		vue={`const { markup, plainText, mentions } = useMentions({ triggers });
+
+// markup.value: "@[Alice](1) hello"
+// plainText.value: "@Alice hello"
+// mentions.value: [{ id: "1", label: "Alice" }]`}
+	/>
 
 	<h2>Programmatic Actions</h2>
-	<Code code={`const { focus, clear, insertTrigger } = useMentions({ triggers });
+	<CodeTabs
+		react={`const { focus, clear, insertTrigger } = useMentions({ triggers });
 
 focus();              // Focus the editor
 clear();              // Clear all content
-insertTrigger("@");   // Insert @ and open dropdown`} />
+insertTrigger("@");   // Insert @ and open dropdown`}
+		vue={`const { focus, clear, insertTrigger } = useMentions({ triggers });
+
+focus();              // Focus the editor
+clear();              // Clear all content
+insertTrigger("@");   // Insert @ and open dropdown`}
+	/>
 </DocsLayout>

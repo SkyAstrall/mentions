@@ -1,0 +1,12 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"noEmit": true,
+		"rootDir": "src",
+		"isolatedDeclarations": false,
+		"jsx": "preserve",
+		"jsxImportSource": "vue",
+		"types": []
+	},
+	"include": ["src"]
+}
