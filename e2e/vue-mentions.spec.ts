@@ -369,3 +369,70 @@ test.describe("vue: edge cases", () => {
 		await expect(dropdown(page)).not.toBeVisible();
 	});
 });
+
+// -- Bug fix regression tests --
+
+test.describe("vue: bug fixes", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto(PLAYGROUND);
+		await page.waitForSelector("#playground-vue [data-mentions-editor]", { state: "visible" });
+		await clearEditor(page);
+	});
+
+	test("dropdown repositions on scroll", async ({ page }) => {
+		await editor(page).click();
+		await page.keyboard.type("@");
+		await expect(dropdown(page)).toBeVisible();
+
+		const initialTop = await dropdown(page).evaluate((el) => {
+			const rect = el.closest("[data-mentions-portal]")?.getBoundingClientRect();
+			return rect?.top ?? 0;
+		});
+
+		await page.evaluate(() => window.scrollBy(0, 100));
+		await page.waitForTimeout(100);
+
+		const afterScrollTop = await dropdown(page).evaluate((el) => {
+			const rect = el.closest("[data-mentions-portal]")?.getBoundingClientRect();
+			return rect?.top ?? 0;
+		});
+
+		expect(Math.abs(initialTop - afterScrollTop - 100)).toBeLessThan(20);
+	});
+});
+
+test.describe("vue: single-line toggle", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto(PLAYGROUND);
+		await page.waitForSelector("#playground-vue [data-mentions-editor]", { state: "visible" });
+		await clearEditor(page);
+	});
+
+	test("toggling single-line prevents Enter", async ({ page }) => {
+		await editor(page).click();
+		await page.keyboard.type("line one");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("line two");
+
+		// Toggle single-line
+		const checkbox = page.locator('#playground-vue label:has-text("Single line") input');
+		await checkbox.check();
+		await page.waitForTimeout(200);
+
+		// Check single-line attributes applied
+		const hasSingleLine = await editor(page).getAttribute("data-singleline");
+		console.log("data-singleline:", hasSingleLine);
+
+		const whiteSpace = await editor(page).evaluate((el) => getComputedStyle(el).whiteSpace);
+		console.log("white-space:", whiteSpace);
+
+		// Enter should be blocked
+		await editor(page).click();
+		await page.keyboard.press("End");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("x");
+
+		const html = await editor(page).innerHTML();
+		console.log("HTML after Enter:", html);
+	});
+});

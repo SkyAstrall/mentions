@@ -25,7 +25,8 @@ npm install @skyastrall/mentions-core
 - **Markup parser** — `parseMarkup()`, `extractMentions()`, `markupToPlainText()`
 - **Trigger detection** — O(n) backward scan, no regex backtracking
 - **ARIA props** — `connect()` generates combobox/listbox attributes
-- **DOM utilities** — `buildMentionHTML()`, `performMentionInsertion()`, `getCaretRect()`
+- **DOM utilities** — `buildMentionHTML()`, `performMentionInsertion()`, `getCaretRect()`, `restoreCursor()`
+- **CSS variables** — `--mention-bg`, `--mention-color`, `--mention-radius` for theming
 - ~9KB gzipped, zero dependencies
 
 ## Server-Side Usage

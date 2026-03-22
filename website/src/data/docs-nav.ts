@@ -40,6 +40,7 @@ export const docsNav: NavSection[] = [
 	{
 		title: "More",
 		items: [
+			{ label: "Migration v0.3.0 → v0.3.1", href: "/docs/migration/v0-3-0-to-v0-3-1" },
 			{ label: "Migration v0.2 → v0.3", href: "/docs/migration/v0-2-to-v0-3" },
 			{ label: "Migration v0.1 → v0.2", href: "/docs/migration/v0-1-to-v0-2" },
 		],

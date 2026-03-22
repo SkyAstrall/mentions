@@ -25,7 +25,6 @@ const { number, title, description, class: className = "" } = Astro.props;
 		transition: transform 200ms var(--spring-snappy), border-color 200ms ease;
 	}
 
-	/* Compositor-only shadow via pseudo-element */
 	.feature-card::after {
 		content: '';
 		position: absolute;

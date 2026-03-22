@@ -92,6 +92,42 @@ export function getCursorOffset(el: HTMLElement): number {
 	return getPlainTextFromDOM(temp).length;
 }
 
+/** Restore cursor to a plain-text character offset after innerHTML replacement. */
+export function restoreCursor(el: HTMLElement, offset: number): void {
+	const sel = window.getSelection();
+	if (!sel) return;
+
+	const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+	let remaining = offset;
+
+	// biome-ignore lint/suspicious/noAssignInExpressions: standard TreeWalker iteration pattern
+	for (let node: Node | null = null; (node = walker.nextNode()); ) {
+		const text = node.textContent ?? "";
+		const clean = text.replace(/\u200B/g, "");
+		if (remaining <= clean.length) {
+			const range = document.createRange();
+			let actualOffset = 0;
+			let counted = 0;
+			for (let i = 0; i < text.length && counted < remaining; i++) {
+				if (text[i] !== "\u200B") counted++;
+				actualOffset = i + 1;
+			}
+			range.setStart(node, actualOffset);
+			range.collapse(true);
+			sel.removeAllRanges();
+			sel.addRange(range);
+			return;
+		}
+		remaining -= clean.length;
+	}
+
+	const range = document.createRange();
+	range.selectNodeContents(el);
+	range.collapse(false);
+	sel.removeAllRanges();
+	sel.addRange(range);
+}
+
 /** Get the caret's bounding rect for dropdown positioning. */
 export function getCaretRect(el: HTMLElement): CaretPosition {
 	const sel = window.getSelection();

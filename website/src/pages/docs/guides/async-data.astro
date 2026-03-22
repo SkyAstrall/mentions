@@ -1,5 +1,6 @@
 ---
 import DocsLayout from "../../../layouts/DocsLayout.astro";
+import CodeTabs from "../../../components/CodeTabs.astro";
 import Code from "../../../components/Code.astro";
 ---
 
@@ -22,7 +23,6 @@ import Code from "../../../components/Code.astro";
 	<Code code={`const triggers = [{
   char: "@",
   data: async (query, context) => {
-    // Don't suggest users already mentioned
     const exclude = context.activeMentions.map(m => m.id);
     const res = await fetch(\`/api/users?q=\${query}&exclude=\${exclude.join(",")}\`);
     return res.json();
@@ -39,15 +39,26 @@ import Code from "../../../components/Code.astro";
 
 	<h2>Loading State</h2>
 	<p>The component shows a loading indicator automatically. Customize it with compound components:</p>
-	<Code code={`<Mentions.Loading>
+	<CodeTabs
+		react={`<Mentions.Loading>
   <Spinner /> Searching...
-</Mentions.Loading>`} />
+</Mentions.Loading>`}
+		vue={`<MentionsLoading>
+  <Spinner /> Searching...
+</MentionsLoading>`}
+	/>
 
 	<h2>Error Handling</h2>
-	<p>Fetch errors are caught and reported via <code>onError</code>.</p>
-	<Code code={`<Mentions
+	<p>Fetch errors are caught and reported via the error callback.</p>
+	<CodeTabs
+		react={`<Mentions
   triggers={triggers}
   onError={(error) => toast.error(error.message)}
-/>`} />
+/>`}
+		vue={`<Mentions
+  :triggers="triggers"
+  @error="(error) => toast.error(error.message)"
+/>`}
+	/>
 	<p>If a fetch fails, the dropdown closes and the user can retry by typing more.</p>
 </DocsLayout>

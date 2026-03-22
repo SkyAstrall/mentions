@@ -13,6 +13,7 @@ import {
 	type MentionItem,
 	type MentionState,
 	performMentionInsertion,
+	restoreCursor,
 	type TriggerConfig,
 } from "@skyastrall/mentions-core";
 import {
@@ -139,13 +140,37 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		if (!el) return;
 		const html = buildHTML(stateRef.current.markup);
 		if (el.innerHTML !== html) {
+			const cursor = getCursorOffset(el);
 			el.innerHTML = html;
+			restoreCursor(el, cursor);
 		}
 	}, [buildHTML]);
 
 	useEffect(() => {
 		syncEditor();
 	}, [syncEditor]);
+
+	// Re-sync editor HTML when triggers change (e.g., color picker)
+	const prevTriggersRef = useRef(triggers);
+	useEffect(() => {
+		if (prevTriggersRef.current !== triggers) {
+			prevTriggersRef.current = triggers;
+			syncEditor();
+		}
+	}, [triggers, syncEditor]);
+
+	// Update caret position on scroll when dropdown is open
+	useEffect(() => {
+		const handleScroll = () => {
+			const s = stateRef.current;
+			if (s.status !== "suggesting" && s.status !== "navigating" && s.status !== "loading") return;
+			const el = editorRef.current;
+			if (!el) return;
+			controller.updateCaretPosition(getCaretRect(el));
+		};
+		window.addEventListener("scroll", handleScroll, true);
+		return () => window.removeEventListener("scroll", handleScroll, true);
+	}, [controller]);
 
 	useEffect(() => {
 		if (!isControlled || value === undefined) return;

@@ -2,6 +2,7 @@
 import DocsLayout from "../../../layouts/DocsLayout.astro";
 import PropsTable from "../../../components/PropsTable.astro";
 import Code from "../../../components/Code.astro";
+import CodeTabs from "../../../components/CodeTabs.astro";
 
 const mentionsProps = [
 	{ name: "triggers", type: "TriggerConfig[]", description: "Trigger configurations", required: true },
@@ -38,7 +39,10 @@ const handleMethods = [
 	<p class="lead">The main component. Renders a complete mentions editor with dropdown.</p>
 
 	<h2>Import</h2>
-	<Code code={`import { Mentions } from "@skyastrall/mentions-react";`} />
+	<CodeTabs
+		react={`import { Mentions } from "@skyastrall/mentions-react";`}
+		vue={`import { Mentions } from "@skyastrall/mentions-vue";`}
+	/>
 
 	<h2>Props</h2>
 	<PropsTable props={mentionsProps} />
@@ -61,11 +65,18 @@ const handleMethods = [
 
 	<h3>Mentions.Item</h3>
 	<p>A suggestion item. Use <code>render</code> for custom rendering, or pass children.</p>
-	<Code code={`<Mentions.Item render={({ item, highlighted }) => (
+	<CodeTabs
+		react={`<Mentions.Item render={({ item, highlighted }) => (
   <div style={{ fontWeight: highlighted ? 600 : 400 }}>
     {item.label}
   </div>
-)} />`} />
+)} />`}
+		vue={`<MentionsItem v-slot="{ item, highlighted }">
+  <div :style="{ fontWeight: highlighted ? 600 : 400 }">
+    {{ item.label }}
+  </div>
+</MentionsItem>`}
+	/>
 
 	<h3>Mentions.Empty</h3>
 	<p>Shown when there are no matching suggestions.</p>

@@ -4,6 +4,7 @@ import {
 	defineComponent,
 	h,
 	onMounted,
+	onScopeDispose,
 	type PropType,
 	provide,
 	ref,
@@ -109,6 +110,7 @@ export const Mentions = defineComponent({
 			handleBlur: api.handleBlur,
 			handleCompositionStart: api.handleCompositionStart,
 			handleCompositionEnd: api.handleCompositionEnd,
+			handleScroll: api.handleScroll,
 			buildHTML: api.buildHTML,
 			performInsertion: api.performInsertion,
 			clear: api.clear,
@@ -181,27 +183,79 @@ export const MentionsEditor = defineComponent({
 	},
 	setup(props) {
 		const ctx = useMentionsContext();
-		const isSingleLine = props.singleLine ?? ctx.singleLine;
+		const getSingleLine = () => props.singleLine ?? ctx.singleLine;
+
+		let beforeInputHandler: ((e: Event) => void) | null = null;
+		let scrollHandler: (() => void) | null = null;
+
+		function attachSingleLineGuard(el: HTMLElement) {
+			if (beforeInputHandler) el.removeEventListener("beforeinput", beforeInputHandler);
+			beforeInputHandler = (e: Event) => {
+				const ie = e as InputEvent;
+				if (ie.inputType === "insertParagraph" || ie.inputType === "insertLineBreak") {
+					e.preventDefault();
+				}
+			};
+			el.addEventListener("beforeinput", beforeInputHandler);
+		}
+
+		function detachSingleLineGuard(el: HTMLElement) {
+			if (beforeInputHandler) {
+				el.removeEventListener("beforeinput", beforeInputHandler);
+				beforeInputHandler = null;
+			}
+		}
+
+		function stripNewlines(el: HTMLElement) {
+			for (const br of el.querySelectorAll("br")) {
+				br.replaceWith(document.createTextNode(" "));
+			}
+			for (const div of el.querySelectorAll("div:not([data-mention])")) {
+				const parent = div.parentNode;
+				if (!parent) continue;
+				parent.insertBefore(document.createTextNode(" "), div);
+				while (div.firstChild) parent.insertBefore(div.firstChild, div);
+				parent.removeChild(div);
+			}
+			const html = ctx.buildHTML(ctx.state.value.markup.replace(/\n/g, " "));
+			if (el.innerHTML !== html) el.innerHTML = html;
+			ctx.handleInput();
+		}
 
 		onMounted(() => {
 			injectStyles();
 			if (props.autoFocus) ctx.editorRef.value?.focus();
 
-			if (isSingleLine && ctx.editorRef.value) {
-				ctx.editorRef.value.addEventListener("beforeinput", (e: Event) => {
-					const ie = e as InputEvent;
-					if (ie.inputType === "insertParagraph" || ie.inputType === "insertLineBreak") {
-						e.preventDefault();
-					}
-				});
-			}
-
-			// Initial sync
 			const el = ctx.editorRef.value;
-			if (el) {
-				const html = ctx.buildHTML(ctx.state.value.markup);
-				if (el.innerHTML !== html) el.innerHTML = html;
-			}
+			if (!el) return;
+
+			if (getSingleLine()) attachSingleLineGuard(el);
+
+			scrollHandler = () => ctx.handleScroll();
+			window.addEventListener("scroll", scrollHandler, true);
+
+			const html = ctx.buildHTML(ctx.state.value.markup);
+			if (el.innerHTML !== html) el.innerHTML = html;
+		});
+
+		watch(
+			() => props.singleLine,
+			(isSingle) => {
+				const el = ctx.editorRef.value;
+				if (!el) return;
+				if (isSingle) {
+					attachSingleLineGuard(el);
+					stripNewlines(el);
+				} else {
+					detachSingleLineGuard(el);
+				}
+			},
+		);
+
+		onScopeDispose(() => {
+			const el = ctx.editorRef.value;
+			if (el && beforeInputHandler) el.removeEventListener("beforeinput", beforeInputHandler);
+			if (scrollHandler) window.removeEventListener("scroll", scrollHandler, true);
 		});
 
 		const editableValue = (): string => {
@@ -211,6 +265,7 @@ export const MentionsEditor = defineComponent({
 
 		return () => {
 			const isEmpty = !ctx.state.value.markup;
+			const isSingleLine = getSingleLine();
 
 			return h("div", {
 				ref: ctx.editorRef,

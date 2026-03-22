@@ -13,6 +13,7 @@ import {
 	type MentionItem,
 	type MentionState,
 	performMentionInsertion,
+	restoreCursor,
 	type TriggerConfig,
 } from "@skyastrall/mentions-core";
 import {
@@ -53,6 +54,7 @@ export interface MentionsContext {
 	handleBlur: (e: FocusEvent) => void;
 	handleCompositionStart: () => void;
 	handleCompositionEnd: () => void;
+	handleScroll: () => void;
 	buildHTML: (markup: string) => string;
 	performInsertion: (item: MentionItem) => void;
 	clear: () => void;
@@ -89,6 +91,7 @@ export interface UseMentionsReturn {
 	handleBlur: (e: FocusEvent) => void;
 	handleCompositionStart: () => void;
 	handleCompositionEnd: () => void;
+	handleScroll: () => void;
 	buildHTML: (markup: string) => string;
 	performInsertion: (item: MentionItem) => void;
 	clear: () => void;
@@ -252,6 +255,14 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		requestAnimationFrame(() => handleInput());
 	}
 
+	function handleScroll(): void {
+		const s = state.value;
+		if (s.status !== "suggesting" && s.status !== "navigating" && s.status !== "loading") return;
+		const el = editorRef.value;
+		if (!el) return;
+		controller.updateCaretPosition(getCaretRect(el));
+	}
+
 	function clear(): void {
 		const el = editorRef.value;
 		if (el) el.innerHTML = "";
@@ -287,6 +298,23 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		insertTextAtCursor((needsSpace ? " " : "") + trigger);
 	}
 
+	function syncEditorHTML(): void {
+		const el = editorRef.value;
+		if (!el) return;
+		const html = buildHTML(state.value.markup);
+		if (el.innerHTML !== html) {
+			const cursor = getCursorOffset(el);
+			el.innerHTML = html;
+			restoreCursor(el, cursor);
+		}
+	}
+
+	watch(
+		() => options.triggers,
+		() => syncEditorHTML(),
+		{ deep: true },
+	);
+
 	if (typeof requestAnimationFrame !== "undefined") {
 		requestAnimationFrame(() => {
 			const el = editorRef.value;
@@ -315,6 +343,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		handleBlur,
 		handleCompositionStart,
 		handleCompositionEnd,
+		handleScroll,
 		buildHTML,
 		performInsertion,
 		clear,

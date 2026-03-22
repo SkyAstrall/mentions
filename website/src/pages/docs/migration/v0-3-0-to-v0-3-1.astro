@@ -1,0 +1,38 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Migration v0.3.0 → v0.3.1">
+	<p class="lead">Patch release. No breaking changes. Bug fixes for mention styling, dropdown positioning, and single-line mode.</p>
+
+	<h2>Mention Text Color</h2>
+	<p>Mention <code>&lt;mark&gt;</code> elements now include <code>color: var(--mention-color, inherit)</code>. Previously, mention text was browser-default black, making it unreadable on dark backgrounds.</p>
+	<p>No action needed — <code>inherit</code> means mention text automatically matches your editor's text color. To customize:</p>
+	<Code code={`[data-mentions-editor] {
+  --mention-color: #1a1a2e;
+}`} />
+
+	<h2>Trigger Color Reactivity</h2>
+	<p>Changing trigger colors at runtime (e.g., via a color picker) now updates existing mentions in the editor. Previously, only new mentions used the updated color.</p>
+
+	<h2>Dropdown Scroll Positioning</h2>
+	<p>The suggestion dropdown now repositions when the page scrolls. Previously, the dropdown stayed at its original viewport position, appearing detached from the editor after scrolling.</p>
+
+	<h2>Single-Line Toggle</h2>
+	<p>Toggling <code>singleLine</code> at runtime now properly strips existing newlines while preserving mention highlights. Previously, switching to single-line mode could destroy mention <code>&lt;mark&gt;</code> elements.</p>
+
+	<h2>Vue: Scoped Slot Data</h2>
+	<p><code>MentionsItem</code> scoped slot now correctly passes <code>{'{ item, highlighted }'}</code>:</p>
+	<Code code={`<MentionsItem v-slot="{ item, highlighted }">
+  <div :style="{ fontWeight: highlighted ? 600 : 400 }">
+    {{ item.label }}
+  </div>
+</MentionsItem>`} />
+
+	<h2>Vue: Reactive Single-Line</h2>
+	<p>The <code>singleLine</code> / <code>single-line</code> prop is now fully reactive. Toggling it at runtime correctly adds/removes the <code>beforeinput</code> guard, strips existing newlines, and updates CSS.</p>
+
+	<h2>New Core Export</h2>
+	<p><code>restoreCursor(el, offset)</code> — restores cursor to a plain-text character offset after <code>innerHTML</code> replacement. Useful for building custom adapters.</p>
+</DocsLayout>

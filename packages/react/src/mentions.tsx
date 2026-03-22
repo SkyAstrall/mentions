@@ -199,9 +199,22 @@ export namespace Mentions {
 
 		// biome-ignore lint/correctness/useExhaustiveDependencies: ctx.editorRef is a stable ref
 		useEffect(() => {
-			if (!isSingleLine) return;
 			const el = ctx.editorRef.current;
 			if (!el) return;
+			if (!isSingleLine) return;
+
+			for (const br of el.querySelectorAll("br")) {
+				br.replaceWith(document.createTextNode(" "));
+			}
+			for (const div of el.querySelectorAll("div:not([data-mention])")) {
+				const parent = div.parentNode;
+				if (!parent) continue;
+				parent.insertBefore(document.createTextNode(" "), div);
+				while (div.firstChild) parent.insertBefore(div.firstChild, div);
+				parent.removeChild(div);
+			}
+			ctx.handleInput();
+
 			const handler = (e: Event) => {
 				const inputEvent = e as InputEvent;
 				if (

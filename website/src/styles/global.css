@@ -76,7 +76,6 @@ html.light {
 	--color-code-border: rgb(0 0 0 / 0.08);
 }
 
-/* Theme transition — scoped to key surfaces only, not wildcarded */
 html.theme-transitioning,
 html.theme-transitioning body,
 html.theme-transitioning .nav-outer {

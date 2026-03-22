@@ -322,3 +322,74 @@ test.describe("edge cases", () => {
 		await expect(dropdown(page)).not.toBeVisible();
 	});
 });
+
+// -- Bug fix regression tests --
+
+test.describe("bug fixes", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto(PLAYGROUND);
+		await clearEditor(page);
+	});
+
+	test("dropdown repositions on scroll", async ({ page }) => {
+		await editor(page).click();
+		await page.keyboard.type("@");
+		await expect(dropdown(page)).toBeVisible();
+
+		// Capture initial dropdown position
+		const initialTop = await dropdown(page).evaluate((el) => {
+			const rect = el.closest("[data-mentions-portal]")?.getBoundingClientRect();
+			return rect?.top ?? 0;
+		});
+
+		// Scroll down
+		await page.evaluate(() => window.scrollBy(0, 100));
+		await page.waitForTimeout(100);
+
+		// Dropdown should have moved (position updated)
+		const afterScrollTop = await dropdown(page).evaluate((el) => {
+			const rect = el.closest("[data-mentions-portal]")?.getBoundingClientRect();
+			return rect?.top ?? 0;
+		});
+
+		// The dropdown should have moved roughly by the scroll amount
+		expect(Math.abs(initialTop - afterScrollTop - 100)).toBeLessThan(20);
+	});
+});
+
+test.describe("single-line toggle", () => {
+	test.beforeEach(async ({ page }) => {
+		await page.goto(PLAYGROUND);
+		await clearEditor(page);
+	});
+
+	test("toggling single-line prevents Enter from creating newlines", async ({ page }) => {
+		// Type multiline content first
+		await editor(page).click();
+		await page.keyboard.type("line one");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("line two");
+
+		// Verify we have multiline content
+		const beforeHTML = await editor(page).innerHTML();
+		expect(beforeHTML).toContain("line one");
+		expect(beforeHTML).toContain("line two");
+
+		// Toggle single-line on
+		const checkbox = page.locator('#playground-react label:has-text("Single line") input');
+		await checkbox.check();
+		await page.waitForTimeout(200);
+
+		// Try pressing Enter — should NOT create a new line
+		await editor(page).click();
+		await page.keyboard.press("End");
+		await page.keyboard.type(" more");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("blocked");
+
+		// "blocked" should be on the same line (no <br> or newline)
+		const afterHTML = await editor(page).innerHTML();
+		expect(afterHTML).not.toContain("<br>");
+		expect(afterHTML).not.toMatch(/<div>/);
+	});
+});

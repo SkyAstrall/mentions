@@ -2,6 +2,7 @@
 import DocsLayout from "../../../layouts/DocsLayout.astro";
 import PropsTable from "../../../components/PropsTable.astro";
 import Code from "../../../components/Code.astro";
+import CodeTabs from "../../../components/CodeTabs.astro";
 
 const optionProps = [
 	{ name: "triggers", type: "TriggerConfig[]", description: "Trigger configurations (required)" },
@@ -46,7 +47,10 @@ const returnProps = [
 	<p class="lead">The headless hook. Full control over rendering.</p>
 
 	<h2>Import</h2>
-	<Code code={`import { useMentions } from "@skyastrall/mentions-react";`} />
+	<CodeTabs
+		react={`import { useMentions } from "@skyastrall/mentions-react";`}
+		vue={`import { useMentions } from "@skyastrall/mentions-vue";`}
+	/>
 
 	<h2>Options</h2>
 	<PropsTable props={optionProps} />

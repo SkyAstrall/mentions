@@ -28,8 +28,7 @@ import { frameworks, heroExamples } from "../data/code-examples";
 				every framework.
 			</p>
 
-			<!-- Framework selector -->
-			<div class="animate-enter mt-8" style="animation-delay: 160ms;">
+				<div class="animate-enter mt-8" style="animation-delay: 160ms;">
 				<div class="fw-selector" id="fw-selector" role="tablist" aria-label="Select framework">
 					{frameworks.map((fw, i) => (
 						<button
@@ -50,8 +49,7 @@ import { frameworks, heroExamples } from "../data/code-examples";
 				</div>
 			</div>
 
-			<!-- Install command -->
-			<div class="animate-enter mt-6 flex justify-center" style="animation-delay: 240ms;">
+				<div class="animate-enter mt-6 flex justify-center" style="animation-delay: 240ms;">
 				<button class="install-bar" id="install-bar" data-copy="npm install @skyastrall/mentions-react" type="button" aria-label="Copy: npm install @skyastrall/mentions-react">
 					<span class="install-dollar" aria-hidden="true">$</span>
 					<span class="install-text" id="install-text">npm install @skyastrall/mentions-react</span>
@@ -82,11 +80,10 @@ import { frameworks, heroExamples } from "../data/code-examples";
 
 		<section class="relative z-10 max-w-3xl mx-auto px-6 pt-4 pb-20" aria-label="Code example">
 			<div id="code-snippet-container">
-				<CodeSnippet label="5 lines to get started" code={heroExamples.react} />
+				<CodeSnippet label="Quick start" code={heroExamples.react} />
 			</div>
 		</section>
 
-		<!-- Architecture trust signal -->
 		<section class="relative z-10 max-w-[720px] mx-auto px-6 pb-20" aria-label="Architecture">
 			<div class="arch-row scroll-reveal">
 				<div class="arch-bar arch-core">
@@ -100,7 +97,7 @@ import { frameworks, heroExamples } from "../data/code-examples";
 					</div>
 					<div class="arch-bar arch-adapter">
 						<span class="arch-name">mentions-vue</span>
-						<span class="arch-size">~4KB</span>
+						<span class="arch-size">~5KB</span>
 					</div>
 					<div class="arch-bar arch-adapter arch-coming">
 						<span class="arch-name">mentions-svelte</span>
@@ -123,7 +120,6 @@ import { frameworks, heroExamples } from "../data/code-examples";
 			</div>
 		</section>
 
-		<!-- Bottom CTA -->
 		<section class="relative z-10 max-w-[520px] mx-auto px-6 py-24 text-center" aria-label="Get started">
 			<h2 class="scroll-reveal text-2xl font-semibold tracking-tight">Ready?</h2>
 			<div class="scroll-reveal mt-6 flex justify-center">
@@ -154,7 +150,7 @@ import { frameworks, heroExamples } from "../data/code-examples";
 			<div class="flex items-center justify-between text-[13px] text-text-dim">
 				<span>Built by <a href="https://skyastrall.com" class="text-text-muted hover:text-text-secondary transition-colors">SkyAstrall</a></span>
 				<div class="flex items-center gap-6">
-					<span class="text-text-muted">v0.3.0</span>
+					<span class="text-text-muted">v0.3.1</span>
 					<a href="https://github.com/SkyAstrall/mentions" target="_blank" rel="noopener" class="hover:text-text-secondary transition-colors">GitHub</a>
 					<a href="https://www.npmjs.com/package/@skyastrall/mentions-core" target="_blank" rel="noopener" class="hover:text-text-secondary transition-colors">npm</a>
 				</div>
@@ -317,7 +313,7 @@ document.addEventListener("astro:page-load", initHomepage);
 		height: calc(100% - 6px);
 		background: var(--color-bg-elevated);
 		border-radius: 7px;
-		box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--color-border);
+		box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 		transition: transform 400ms var(--spring-bounce), width 400ms var(--spring-bounce);
 		pointer-events: none;
 	}
@@ -542,7 +538,7 @@ document.addEventListener("astro:page-load", initHomepage);
 
 		.fw-tab.active {
 			background: var(--color-bg-elevated);
-			box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 0 0 1px var(--color-border);
+			box-shadow: 0 1px 2px rgba(0,0,0,0.06);
 		}
 
 		.arch-adapters {

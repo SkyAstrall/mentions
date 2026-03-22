@@ -95,12 +95,7 @@ const trimmed = code.replace(/^\n/, "").replace(/\n$/, "");
 </style>
 
 <script>
-	document.querySelectorAll<HTMLButtonElement>('.snippet-copy').forEach((btn) => {
-		btn.addEventListener('click', () => {
-			const code = btn.dataset.code ?? '';
-			navigator.clipboard.writeText(code).catch(() => {});
-			btn.classList.add('copied');
-			setTimeout(() => btn.classList.remove('copied'), 2000);
-		});
-	});
+	import { initCopyButtons } from "../scripts/copy";
+	initCopyButtons(".snippet-copy");
+	document.addEventListener("astro:page-load", () => initCopyButtons(".snippet-copy"));
 </script>

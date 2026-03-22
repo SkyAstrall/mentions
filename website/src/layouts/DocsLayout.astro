@@ -23,32 +23,36 @@ const { title, description } = Astro.props;
 	</div>
 
 	<script>
-		document.querySelectorAll('.docs-content pre').forEach((pre) => {
-			const wrapper = document.createElement('div');
-			wrapper.className = 'code-block';
+		import { copyToClipboard } from "../scripts/copy";
 
-			const btn = document.createElement('button');
-			btn.className = 'code-copy';
-			btn.textContent = 'Copy';
-			btn.type = 'button';
-			btn.addEventListener('click', () => {
-				const code = pre.querySelector('code')?.textContent ?? '';
-				navigator.clipboard.writeText(code).catch(() => {
-					const ta = document.createElement('textarea');
-					ta.value = code;
-					document.body.appendChild(ta);
-					ta.select();
-					document.execCommand('copy');
-					document.body.removeChild(ta);
+		const FEEDBACK_MS = 2000;
+
+		function initDocsCopyButtons() {
+			document.querySelectorAll<HTMLPreElement>(".docs-content pre").forEach((pre) => {
+				if (pre.parentElement?.classList.contains("code-block")) return;
+
+				const wrapper = document.createElement("div");
+				wrapper.className = "code-block";
+
+				const btn = document.createElement("button");
+				btn.className = "code-copy";
+				btn.textContent = "Copy";
+				btn.type = "button";
+				btn.addEventListener("click", () => {
+					const code = pre.querySelector("code")?.textContent ?? "";
+					copyToClipboard(code);
+					btn.textContent = "Copied!";
+					setTimeout(() => { btn.textContent = "Copy"; }, FEEDBACK_MS);
 				});
-				btn.textContent = 'Copied!';
-				setTimeout(() => { btn.textContent = 'Copy'; }, 2000);
-			});
 
-			pre.parentNode?.insertBefore(wrapper, pre);
-			wrapper.appendChild(btn);
-			wrapper.appendChild(pre);
-		});
+				pre.parentNode?.insertBefore(wrapper, pre);
+				wrapper.appendChild(btn);
+				wrapper.appendChild(pre);
+			});
+		}
+
+		initDocsCopyButtons();
+		document.addEventListener("astro:page-load", initDocsCopyButtons);
 	</script>
 </BaseLayout>
 

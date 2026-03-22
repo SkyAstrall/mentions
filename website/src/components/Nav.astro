@@ -275,7 +275,6 @@ const navLinks = [
 	}
 
 
-	/* Framework selector in nav */
 	.nav-fw-selector {
 		display: inline-flex;
 		align-items: center;
@@ -430,4 +429,15 @@ const navLinks = [
 	initNav();
 	initNavFwSelector();
 	document.addEventListener('astro:page-load', () => { initNav(); initNavFwSelector(); });
+
+	// Sync nav fw selector before paint on page navigation
+	document.addEventListener('astro:after-swap', () => {
+		const saved = localStorage.getItem('fw-preference');
+		if (!saved) return;
+		document.querySelectorAll<HTMLButtonElement>('.nav-fw-tab').forEach((t) => {
+			t.classList.toggle('active', t.dataset.navFw === saved);
+		});
+		// Dispatch so new page's components pick up the preference
+		window.dispatchEvent(new CustomEvent('fw-change', { detail: saved }));
+	});
 </script>
