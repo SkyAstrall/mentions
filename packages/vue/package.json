@@ -1,6 +1,6 @@
 {
 	"name": "@skyastrall/mentions-vue",
-	"version": "0.3.1",
+	"version": "0.3.2",
 	"type": "module",
 	"description": "Vue 3 composable and compound components for @mentions, #tags, /commands. Powered by @skyastrall/mentions-core.",
 	"license": "MIT",
