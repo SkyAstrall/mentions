@@ -8,7 +8,7 @@ import type { ConnectReturn, ItemAriaProps, MentionState } from "./types.ts";
  * ARIA follows WAI-ARIA Combobox Pattern:
  * - `aria-activedescendant` on input identifies the highlighted option
  * - `aria-busy` on listbox indicates loading state
- * - Options use `role="option"` without `aria-selected` (highlighting != selection)
+ * - Options use `role="option"` with `aria-selected` on the highlighted item (required by VoiceOver+Chrome)
  */
 export function connect(state: MentionState, id: string): ConnectReturn {
 	const listboxId = `mentions-listbox-${id}`;
@@ -36,6 +36,7 @@ export function connect(state: MentionState, id: string): ConnectReturn {
 		getItemProps: (index: number): ItemAriaProps => ({
 			id: itemId(index),
 			role: "option",
+			"aria-selected": index === state.highlightedIndex,
 		}),
 		isOpen,
 		query: state.query,

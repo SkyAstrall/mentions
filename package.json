@@ -17,6 +17,7 @@
 		"@biomejs/biome": "^2.0.0",
 		"@changesets/cli": "^2.29.0",
 		"@playwright/test": "^1.58.2",
+		"jsdom": "^29.0.1",
 		"publint": "^0.3.18",
 		"tsdown": "^0.9.0",
 		"typescript": "^5.8.0",

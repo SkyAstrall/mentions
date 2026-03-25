@@ -1,10 +1,15 @@
-import type { MentionItem, TriggerConfig } from "@skyastrall/mentions-core";
+import {
+	insertTextAtCursor,
+	type MentionItem,
+	type TriggerConfig,
+} from "@skyastrall/mentions-core";
 import {
 	createContext,
 	type ReactNode,
 	useContext,
 	useEffect,
 	useImperativeHandle,
+	useMemo,
 	useRef,
 } from "react";
 import { createPortal } from "react-dom";
@@ -106,7 +111,30 @@ export function Mentions({
 		[api.focus, api.clear, api.markup, api.plainText, api.insertTrigger],
 	);
 
-	const ctx: MentionsContextValue = { ...api, triggers, singleLine };
+	// Individual deps instead of `api` object (which has a new identity every render).
+	// Stable useCallback functions (clear, focus, etc.) don't need to be listed — they
+	// only change if `controller` changes, which is once. The deps that actually change
+	// are state-derived values: markup, items, highlighting, open state, caret position.
+	// biome-ignore lint/correctness/useExhaustiveDependencies: api is spread but we list individual state-derived props as deps — api object has a new identity every render
+	const ctx = useMemo<MentionsContextValue>(
+		() => ({ ...api, triggers, singleLine }),
+		[
+			api.state,
+			api.isOpen,
+			api.isLoading,
+			api.items,
+			api.query,
+			api.highlightedIndex,
+			api.activeTrigger,
+			api.caretPosition,
+			api.markup,
+			api.plainText,
+			api.mentions,
+			api.ghostText,
+			triggers,
+			singleLine,
+		],
+	);
 
 	if (!children) {
 		return (
@@ -242,11 +270,11 @@ export namespace Mentions {
 			if (isSingleLine) {
 				e.preventDefault();
 				const text = e.clipboardData.getData("text/plain").replace(/[\n\r]/g, " ");
-				document.execCommand("insertText", false, text);
+				insertTextAtCursor(text);
 			} else if (!SUPPORTS_PLAINTEXT_ONLY) {
 				e.preventDefault();
 				const text = e.clipboardData.getData("text/plain");
-				document.execCommand("insertText", false, text);
+				insertTextAtCursor(text);
 			}
 		};
 
@@ -259,16 +287,12 @@ export namespace Mentions {
 			? (e: React.DragEvent<HTMLDivElement>) => {
 					e.preventDefault();
 					const text = e.dataTransfer.getData("text/plain").replace(/[\n\r]/g, " ");
-					document.execCommand("insertText", false, text);
+					insertTextAtCursor(text);
 				}
 			: undefined;
 
 		const editableValue =
-			disabled || readOnly
-				? false
-				: SUPPORTS_PLAINTEXT_ONLY
-					? ("plaintext-only" as unknown as boolean)
-					: true;
+			disabled || readOnly ? false : SUPPORTS_PLAINTEXT_ONLY ? "plaintext-only" : true;
 
 		return (
 			// biome-ignore lint/a11y/noStaticElementInteractions: contentEditable div with role="combobox" from inputProps spread

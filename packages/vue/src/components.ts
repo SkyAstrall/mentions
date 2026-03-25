@@ -1,4 +1,8 @@
-import type { MentionItem, TriggerConfig } from "@skyastrall/mentions-core";
+import {
+	insertTextAtCursor,
+	type MentionItem,
+	type TriggerConfig,
+} from "@skyastrall/mentions-core";
 import {
 	type CSSProperties,
 	defineComponent,
@@ -295,11 +299,11 @@ export const MentionsEditor = defineComponent({
 					if (isSingleLine) {
 						e.preventDefault();
 						const text = e.clipboardData?.getData("text/plain").replace(/[\n\r]/g, " ") ?? "";
-						document.execCommand("insertText", false, text);
+						insertTextAtCursor(text);
 					} else if (!SUPPORTS_PLAINTEXT_ONLY) {
 						e.preventDefault();
 						const text = e.clipboardData?.getData("text/plain") ?? "";
-						document.execCommand("insertText", false, text);
+						insertTextAtCursor(text);
 					}
 				},
 				...(isSingleLine
@@ -307,7 +311,7 @@ export const MentionsEditor = defineComponent({
 							onDrop: (e: DragEvent) => {
 								e.preventDefault();
 								const text = e.dataTransfer?.getData("text/plain").replace(/[\n\r]/g, " ") ?? "";
-								document.execCommand("insertText", false, text);
+								insertTextAtCursor(text);
 							},
 						}
 					: {}),

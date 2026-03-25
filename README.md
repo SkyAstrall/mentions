@@ -74,7 +74,7 @@ const { editorRef, inputProps, isOpen, items, getItemProps } =
 - WAI-ARIA combobox with full keyboard navigation
 - Grammarly/extension defense
 - Controlled and uncontrolled modes
-- ~5KB core + ~7KB React adapter gzipped, zero runtime dependencies in core
+- ~9KB core + ~5KB adapter gzipped, zero runtime dependencies in core
 - React 18 and React 19
 
 ## Packages

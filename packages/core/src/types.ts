@@ -126,6 +126,7 @@ export type ListAriaProps = {
 export type ItemAriaProps = {
 	id: string;
 	role: "option";
+	"aria-selected": boolean;
 };
 
 /** Return value of the `connect()` function with ARIA props and derived state. */

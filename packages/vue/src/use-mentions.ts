@@ -24,8 +24,8 @@ import {
 	type Ref,
 	type ShallowRef,
 	shallowRef,
+	useId,
 	watch,
-	watchEffect,
 } from "vue";
 
 export interface UseMentionsOptions {
@@ -99,12 +99,12 @@ export interface UseMentionsReturn {
 	insertTrigger: (trigger: string) => void;
 }
 
-let instanceCounter = 0;
-
 export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
-	const instanceId = `mentions-${++instanceCounter}`;
+	const instanceId = useId();
 	const editorRef = shallowRef<HTMLDivElement | null>(null);
 	let isComposing = false;
+	let compositionRAFId: number | null = null;
+	let initRAFId: number | null = null;
 
 	const initialMarkup = options.modelValue ?? options.defaultValue ?? "";
 
@@ -129,24 +129,31 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	});
 
 	onScopeDispose(() => {
+		if (compositionRAFId !== null) cancelAnimationFrame(compositionRAFId);
+		if (initRAFId !== null) cancelAnimationFrame(initRAFId);
 		unsubscribe();
 		controller.destroy();
 	});
 
-	watchEffect(() => {
-		controller.setOptions({
-			triggers: options.triggers,
-			callbacks: {
-				onChange: options.onChange,
-				onSelect: options.onSelect,
-				onRemove: options.onRemove,
-				onQueryChange: options.onQueryChange,
-				onOpen: options.onOpen,
-				onClose: options.onClose,
-				onError: options.onError,
-			},
-		});
-	});
+	watch(
+		() => options.triggers,
+		(triggers) => {
+			controller.setOptions({
+				triggers,
+				callbacks: {
+					onChange: options.onChange,
+					onSelect: options.onSelect,
+					onRemove: options.onRemove,
+					onQueryChange: options.onQueryChange,
+					onOpen: options.onOpen,
+					onClose: options.onClose,
+					onError: options.onError,
+				},
+			});
+			syncEditorHTML();
+		},
+		{ deep: true },
+	);
 
 	watch(
 		() => options.modelValue,
@@ -196,7 +203,14 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			triggerConfig,
 			options.triggers,
 		);
-		if (!result) return;
+		if (!result) {
+			options.onError?.(
+				new Error(
+					`Mention insertion failed: could not insert "${item.label}" at current cursor position`,
+				),
+			);
+			return;
+		}
 
 		controller.handleInsertComplete(result.markup, result.plainText, result.cursor, item);
 	}
@@ -252,7 +266,10 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	function handleCompositionEnd(): void {
 		isComposing = false;
 		controller.handleCompositionEnd();
-		requestAnimationFrame(() => handleInput());
+		compositionRAFId = requestAnimationFrame(() => {
+			compositionRAFId = null;
+			handleInput();
+		});
 	}
 
 	function handleScroll(): void {
@@ -309,14 +326,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		}
 	}
 
-	watch(
-		() => options.triggers,
-		() => syncEditorHTML(),
-		{ deep: true },
-	);
-
 	if (typeof requestAnimationFrame !== "undefined") {
-		requestAnimationFrame(() => {
+		initRAFId = requestAnimationFrame(() => {
+			initRAFId = null;
 			const el = editorRef.value;
 			if (!el) return;
 			const html = buildHTML(state.value.markup);

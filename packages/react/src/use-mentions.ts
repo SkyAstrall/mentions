@@ -96,8 +96,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const ghostTextRef = useRef(ghostText);
 	ghostTextRef.current = ghostText;
 
-	const callbacksRef = useRef({ onAcceptGhostText });
-	callbacksRef.current = { onAcceptGhostText };
+	const callbacksRef = useRef({ onAcceptGhostText, onError });
+	callbacksRef.current = { onAcceptGhostText, onError };
 
 	const controllerRef = useRef<MentionController | null>(null);
 	if (!controllerRef.current) {
@@ -193,7 +193,14 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			if (!el) return;
 
 			const result = performMentionInsertion(el, item, activeTrigger, query, triggerConfig, trigs);
-			if (!result) return;
+			if (!result) {
+				callbacksRef.current.onError?.(
+					new Error(
+						`Mention insertion failed: could not insert "${item.label}" at current cursor position`,
+					),
+				);
+				return;
+			}
 
 			lastReportedMarkupRef.current = result.markup;
 			controller.handleInsertComplete(result.markup, result.plainText, result.cursor, item);
