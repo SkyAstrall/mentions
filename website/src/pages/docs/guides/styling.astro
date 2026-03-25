@@ -57,6 +57,12 @@ const cssVars = [
   { char: "/", data: commands, color: "#dcfce7" },
 ]}`} />
 
+	<h2>Dropdown Z-Index</h2>
+	<p>The dropdown renders with <code>z-index: 9999</code> by default. Override it via CSS if it conflicts with other layers in your app:</p>
+	<Code lang="css" code={`[data-mentions-portal] {
+  z-index: 50; /* or whatever your stack requires */
+}`} />
+
 	<h2>Data Attributes</h2>
 	<ul>
 		<li><code>[data-mentions]</code> — root wrapper</li>

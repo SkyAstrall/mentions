@@ -1,0 +1,50 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+---
+
+<DocsLayout title="Migration v0.3.1 → v0.3.2">
+	<p class="lead">Patch release. No breaking changes. ARIA compliance, reliability fixes, new tests, and CI E2E pipeline.</p>
+
+	<h2>ARIA: <code>aria-selected</code> on Highlighted Options</h2>
+	<p>The <code>connect()</code> function now returns <code>aria-selected</code> on the highlighted option in <code>getItemProps()</code>. This is required by VoiceOver on Chrome — without it, screen readers don't announce which suggestion is highlighted.</p>
+	<p>No action needed if you use the built-in components. If you use the headless hook, ensure you spread <code>getItemProps(index)</code> onto your list items:</p>
+	<Code code={`<li {...getItemProps(index)}>
+  {item.label}
+</li>`} />
+
+	<h2>Insertion Failure Now Surfaces via <code>onError</code></h2>
+	<p>Previously, if a mention insertion failed (e.g., cursor moved between selection and DOM insertion), the failure was silent — the user saw nothing happen with no feedback.</p>
+	<p>Now, when <code>performMentionInsertion</code> fails, the <code>onError</code> callback fires with a descriptive error message. Handle it to show a toast or retry:</p>
+	<Code code={`<Mentions
+  triggers={triggers}
+  onError={(error) => {
+    console.warn(error.message);
+    // "Mention insertion failed: could not insert "Alice" at current cursor position"
+  }}
+/>`} />
+
+	<h2>React: Removed <code>contentEditable</code> Type Cast</h2>
+	<p>The <code>as unknown as boolean</code> workaround for <code>contentEditable="plaintext-only"</code> has been removed. React's type definitions now include <code>"plaintext-only"</code> as a valid value (fixed in <code>@types/react</code> via DefinitelyTyped#67250).</p>
+	<p>No action needed — this only affects the library's internals.</p>
+
+	<h2>React: Context Value Memoized</h2>
+	<p>The <code>MentionsContext.Provider</code> value is now wrapped in <code>useMemo</code> with granular dependencies on individual state fields. This prevents unnecessary re-renders of compound components when unrelated state changes.</p>
+
+	<h2>Vue: <code>useId()</code> Replaces Global Counter</h2>
+	<p>Instance IDs now use Vue's built-in <code>useId()</code> (Vue 3.5+) instead of a module-scoped counter. This is SSR-safe and avoids hydration mismatches.</p>
+
+	<h2>Vue: RAF Cleanup on Unmount</h2>
+	<p>Pending <code>requestAnimationFrame</code> callbacks for composition handling and initial HTML sync are now properly cancelled in <code>onScopeDispose</code>. Previously, unmounting during an animation frame could trigger a stale callback.</p>
+
+	<h2>New Tests</h2>
+	<p>Added 90 new unit tests:</p>
+	<ul>
+		<li><code>connect.test.ts</code> — 39 tests covering ARIA props generation for all states</li>
+		<li><code>dom.test.ts</code> — 51 tests covering HTML escaping, DOM walking, mention HTML building</li>
+	</ul>
+	<p>Total unit test count: <strong>198 tests</strong> across 7 test files.</p>
+
+	<h2>CI: E2E Tests in Pipeline</h2>
+	<p>Playwright E2E tests (React + Vue) now run in GitHub Actions on every push and PR. The pipeline runs lint, build, and unit tests first, then E2E with Chromium.</p>
+</DocsLayout>
