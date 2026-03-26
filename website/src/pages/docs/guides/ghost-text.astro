@@ -47,6 +47,22 @@ function handleChange(markup: string) {
     @accept-ghost-text="ghost = ''"
   />
 </template>`}
+		svelte={`<script>
+import { Mentions } from "@skyastrall/mentions-svelte";
+
+let ghost = $state("");
+
+function handleChange(markup, plainText) {
+  fetchCompletion(plainText).then((c) => { ghost = c; });
+}
+</script>
+
+<Mentions
+  triggers={[{ char: "@", data: users }]}
+  ghostText={ghost}
+  onChange={handleChange}
+  onAcceptGhostText={() => { ghost = ""; }}
+/>`}
 	/>
 
 	<h2>How It Works</h2>

@@ -3,6 +3,7 @@ import BaseLayout from "../../layouts/BaseLayout.astro";
 import Nav from "../../components/Nav.astro";
 import Playground from "../../components/react/Playground";
 import VuePlayground from "../../components/vue/VuePlayground.vue";
+import SveltePlayground from "../../components/svelte/SveltePlayground.svelte";
 ---
 
 <BaseLayout title="Playground — @skyastrall/mentions">
@@ -27,6 +28,10 @@ import VuePlayground from "../../components/vue/VuePlayground.vue";
 						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M2 3h3.5L12 14.5 18.5 3H22L12 21 2 3z M7 3l5 8.5L17 3h-3l-2 3.5L10 3H7z"/></svg>
 						Vue
 					</button>
+					<button type="button" class="pg-tab" data-framework="svelte" aria-selected="false" role="tab">
+						<svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M19.1 2.4A7.4 7.4 0 0 0 9.7 4.1L5.3 7a5.8 5.8 0 0 0-2.6 3.9A6 6 0 0 0 3.4 14 5.7 5.7 0 0 0 2 17a6.1 6.1 0 0 0 1 3.4 7.4 7.4 0 0 0 9.4 1.7l4.4-2.9a5.8 5.8 0 0 0 2.6-3.9A6 6 0 0 0 18.7 12a5.7 5.7 0 0 0 1.4-3 6.1 6.1 0 0 0-1-3.6z"/></svg>
+						Svelte
+					</button>
 					<div class="pg-indicator" id="pg-indicator" aria-hidden="true"></div>
 				</div>
 			</div>
@@ -37,6 +42,10 @@ import VuePlayground from "../../components/vue/VuePlayground.vue";
 
 			<div id="playground-vue" style="display: none;">
 				<VuePlayground client:idle />
+			</div>
+
+			<div id="playground-svelte" style="display: none;">
+				<SveltePlayground client:idle />
 			</div>
 		</section>
 	</div>
@@ -60,13 +69,15 @@ function initPlaygroundTabs() {
 	function switchTo(fw: string) {
 		document.getElementById("playground-react")!.style.display = fw === "react" ? "block" : "none";
 		document.getElementById("playground-vue")!.style.display = fw === "vue" ? "block" : "none";
+		document.getElementById("playground-svelte")!.style.display = fw === "svelte" ? "block" : "none";
 		tabs.forEach((btn) => {
 			const isActive = btn.dataset.framework === fw;
 			btn.classList.toggle("active", isActive);
 			btn.setAttribute("aria-selected", isActive ? "true" : "false");
 		});
 		refreshIndicator();
-		history.replaceState(null, "", fw === "react" ? "/playground/" : "/playground/?fw=vue");
+		const qs = fw === "react" ? "" : `?fw=${fw}`;
+		history.replaceState(null, "", `/playground/${qs}`);
 	}
 
 	tabs.forEach((tab) => {
@@ -79,7 +90,7 @@ function initPlaygroundTabs() {
 	});
 
 	onFwChange((fw) => {
-		if (fw === "react" || fw === "vue") {
+		if (fw === "react" || fw === "vue" || fw === "svelte") {
 			const current = container!.querySelector<HTMLButtonElement>(".pg-tab.active");
 			if (current?.dataset.framework !== fw) switchTo(fw);
 		}
@@ -88,6 +99,7 @@ function initPlaygroundTabs() {
 	const params = new URLSearchParams(window.location.search);
 	const savedFw = params.get("fw") || getFramework();
 	if (savedFw === "vue") switchTo("vue");
+	if (savedFw === "svelte") switchTo("svelte");
 
 	requestAnimationFrame(() => requestAnimationFrame(refreshIndicator));
 	window.addEventListener("resize", refreshIndicator);

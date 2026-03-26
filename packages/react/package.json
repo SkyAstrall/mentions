@@ -28,7 +28,7 @@
 		"url": "git+https://github.com/SkyAstrall/mentions.git",
 		"directory": "packages/react"
 	},
-	"homepage": "https://github.com/SkyAstrall/mentions",
+	"homepage": "https://mentions.skyastrall.com",
 	"bugs": {
 		"url": "https://github.com/SkyAstrall/mentions/issues"
 	},

@@ -14,6 +14,7 @@ import CodeTabs from "../../components/CodeTabs.astro";
 		<li><code>@skyastrall/mentions-core</code> — Framework-agnostic state machine, markup parser, trigger detection. ~9KB gzipped.</li>
 		<li><code>@skyastrall/mentions-react</code> — React adapter with drop-in component, compound components, and headless hook. ~5KB.</li>
 		<li><code>@skyastrall/mentions-vue</code> — Vue 3 adapter with composable and compound components. ~5KB.</li>
+		<li><code>@skyastrall/mentions-svelte</code> — Svelte 5 adapter with composable and compound components. ~9KB.</li>
 	</ul>
 
 	<h2>Three API Layers</h2>
@@ -29,6 +30,10 @@ import CodeTabs from "../../components/CodeTabs.astro";
 		vue={`<Mentions
   :triggers="[{ char: '@', data: users }]"
   v-model="markup"
+/>`}
+		svelte={`<Mentions
+  triggers={[{ char: "@", data: users }]}
+  onChange={(markup, plainText) => {}}
 />`}
 	/>
 
@@ -53,6 +58,18 @@ import CodeTabs from "../../components/CodeTabs.astro";
     </MentionsList>
   </MentionsPortal>
 </Mentions>`}
+		svelte={`<Mentions {triggers}>
+  <MentionsEditor placeholder="Type @..." />
+  <MentionsPortal>
+    <MentionsList>
+      <MentionsItem>
+        {#snippet children({ item })}
+          <UserCard user={item} />
+        {/snippet}
+      </MentionsItem>
+    </MentionsList>
+  </MentionsPortal>
+</Mentions>`}
 	/>
 
 	<h3>3. Headless Hook / Composable</h3>
@@ -62,12 +79,14 @@ import CodeTabs from "../../components/CodeTabs.astro";
   useMentions({ triggers });`}
 		vue={`const { aria, editorRef, isOpen, items, handleInput, handleKeyDown } =
   useMentions({ triggers });`}
+		svelte={`const api = useMentions({ triggers });
+// api.isOpen, api.items, api.aria, api.handleInput, ...`}
 	/>
 
 	<h2>Key Features</h2>
 	<ul>
 		<li>Multi-trigger support with per-trigger colors and data sources</li>
-		<li>Framework-agnostic core — React and Vue adapters shipped, more coming</li>
+		<li>Framework-agnostic core — React, Vue, and Svelte adapters shipped, more coming</li>
 		<li>Contenteditable with DOM-first architecture</li>
 		<li>Ghost text for AI inline completions (Tab to accept)</li>
 		<li>Async data with debounce, abort, and loading states</li>

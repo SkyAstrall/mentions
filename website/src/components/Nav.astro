@@ -45,6 +45,7 @@ const navLinks = [
 			<div class="nav-fw-selector" id="nav-fw-selector" aria-label="Framework">
 				<button type="button" class="nav-fw-tab active" data-nav-fw="react">React</button>
 				<button type="button" class="nav-fw-tab" data-nav-fw="vue">Vue</button>
+				<button type="button" class="nav-fw-tab" data-nav-fw="svelte">Svelte</button>
 			</div>
 			<ThemeToggle />
 		</div>
@@ -421,7 +422,7 @@ const navLinks = [
 		});
 
 		const saved = localStorage.getItem('fw-preference');
-		if (saved === 'vue') updateTabs('vue');
+		if (saved && saved !== 'react') updateTabs(saved);
 
 		window.addEventListener('fw-change', ((e: CustomEvent) => updateTabs(e.detail)) as EventListener);
 	}

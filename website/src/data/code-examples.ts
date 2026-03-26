@@ -48,7 +48,7 @@ export type FrameworkInfo = {
 export const frameworks: FrameworkInfo[] = [
 	{ id: "react", label: "React", pkg: "@skyastrall/mentions-react", color: "#61DAFB" },
 	{ id: "vue", label: "Vue", pkg: "@skyastrall/mentions-vue", color: "#42B883" },
-	{ id: "svelte", label: "Svelte", pkg: "@skyastrall/mentions-svelte", color: "#FF3E00", soon: true },
+	{ id: "svelte", label: "Svelte", pkg: "@skyastrall/mentions-svelte", color: "#FF3E00" },
 	{ id: "solid", label: "Solid", pkg: "@skyastrall/mentions-solid", color: "#2C4F7C", soon: true },
 	{ id: "angular", label: "Angular", pkg: "@skyastrall/mentions-angular", color: "#DD0031", soon: true },
 ];

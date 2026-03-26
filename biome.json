@@ -1,7 +1,14 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.4.8/schema.json",
 	"files": {
-		"includes": ["packages/**", "e2e/**", "!**/dist", "!**/node_modules"]
+		"includes": [
+			"packages/**",
+			"e2e/**",
+			"!**/dist",
+			"!**/node_modules",
+			"!**/.svelte-kit",
+			"!**/*.svelte"
+		]
 	},
 	"formatter": {
 		"indentStyle": "tab",

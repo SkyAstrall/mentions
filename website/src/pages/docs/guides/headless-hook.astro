@@ -67,6 +67,32 @@ const users = [
     </MentionsPortal>
   </Mentions>
 </template>`}
+		svelte={`<script>
+import {
+  Mentions, MentionsEditor, MentionsPortal,
+  MentionsList, MentionsItem,
+} from "@skyastrall/mentions-svelte";
+
+const users = [
+  { id: "1", label: "Alice" },
+  { id: "2", label: "Bob" },
+];
+</script>
+
+<Mentions triggers={[{ char: "@", data: users }]}>
+  <MentionsEditor placeholder="Type @..." />
+  <MentionsPortal>
+    <MentionsList>
+      <MentionsItem>
+        {#snippet children({ item, highlighted })}
+          <div style:font-weight={highlighted ? 600 : 400}>
+            {item.label}
+          </div>
+        {/snippet}
+      </MentionsItem>
+    </MentionsList>
+  </MentionsPortal>
+</Mentions>`}
 	/>
 
 	<h2>Raw Hook / Composable (Full Control)</h2>
@@ -156,6 +182,56 @@ const {
     </ul>
   </div>
 </template>`}
+		svelte={`<script>
+import { useMentions } from "@skyastrall/mentions-svelte";
+
+const users = [
+  { id: "1", label: "Alice" },
+  { id: "2", label: "Bob" },
+];
+
+const api = useMentions({
+  triggers: [{ char: "@", data: users }],
+});
+</script>
+
+<div data-mentions="" style="position: relative">
+  <div
+    bind:this={api.editorRef}
+    contenteditable="plaintext-only"
+    data-mentions-editor=""
+    role={api.aria.inputProps.role}
+    aria-expanded={api.aria.inputProps["aria-expanded"]}
+    aria-autocomplete={api.aria.inputProps["aria-autocomplete"]}
+    aria-haspopup={api.aria.inputProps["aria-haspopup"]}
+    oninput={() => api.handleInput()}
+    onkeydown={api.handleKeyDown}
+    onblur={api.handleBlur}
+    oncompositionstart={api.handleCompositionStart}
+    oncompositionend={api.handleCompositionEnd}
+  ></div>
+  {#if api.isOpen}
+    <ul
+      id={api.aria.listProps.id}
+      role={api.aria.listProps.role}
+      aria-label={api.aria.listProps["aria-label"]}
+      style:position="fixed"
+      style:top="{(api.caretPosition?.top ?? 0) + (api.caretPosition?.height ?? 0) + 4}px"
+      style:left="{(api.caretPosition?.left ?? 0)}px"
+    >
+      {#each api.items as item, i (item.id)}
+        <li
+          id={api.aria.getItemProps(i).id}
+          role="option"
+          aria-selected={api.aria.getItemProps(i)["aria-selected"]}
+          onclick={() => api.performInsertion(item)}
+        >
+          {item.label}
+        </li>
+      {/each}
+    </ul>
+  {/if}
+</div>`}
 	/>
 
 	<h2>Important Attributes</h2>
@@ -177,6 +253,11 @@ const {
 // markup.value: "@[Alice](1) hello"
 // plainText.value: "@Alice hello"
 // mentions.value: [{ id: "1", label: "Alice" }]`}
+		svelte={`const api = useMentions({ triggers });
+
+// api.markup: "@[Alice](1) hello"
+// api.plainText: "@Alice hello"
+// api.mentions: [{ id: "1", label: "Alice" }]`}
 	/>
 
 	<h2>Programmatic Actions</h2>
@@ -191,5 +272,10 @@ insertTrigger("@");   // Insert @ and open dropdown`}
 focus();              // Focus the editor
 clear();              // Clear all content
 insertTrigger("@");   // Insert @ and open dropdown`}
+		svelte={`const api = useMentions({ triggers });
+
+api.focus();              // Focus the editor
+api.clear();              // Clear all content
+api.insertTrigger("@");   // Insert @ and open dropdown`}
 	/>
 </DocsLayout>

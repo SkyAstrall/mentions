@@ -13,17 +13,19 @@
 	},
 	"dependencies": {
 		"@astrojs/react": "^5.0.1",
+		"@astrojs/svelte": "^8.0.3",
 		"@astrojs/vue": "^6.0.1",
 		"@skyastrall/mentions-core": "workspace:^",
 		"@skyastrall/mentions-react": "workspace:^",
+		"@skyastrall/mentions-svelte": "workspace:^",
 		"@skyastrall/mentions-vue": "workspace:^",
 		"@tailwindcss/vite": "^4.2.2",
 		"@types/react": "^19.2.14",
 		"@types/react-dom": "^19.2.3",
 		"astro": "^6.0.7",
-
 		"react": "^19.2.4",
 		"react-dom": "^19.2.4",
+		"svelte": "^5.55.0",
 		"tailwindcss": "^4.2.2",
 		"vue": "^3.5.30"
 	}

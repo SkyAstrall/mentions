@@ -2,12 +2,14 @@
 interface Props {
 	react: string;
 	vue: string;
+	svelte?: string;
 	label?: string;
 }
 
-const { react, vue, label } = Astro.props;
+const { react, vue, svelte, label } = Astro.props;
 const reactTrimmed = react.replace(/^\n/, "").replace(/\n$/, "");
 const vueTrimmed = vue.replace(/^\n/, "").replace(/\n$/, "");
+const svelteTrimmed = svelte?.replace(/^\n/, "").replace(/\n$/, "");
 ---
 
 <div class="code-tabs" data-code-tabs>
@@ -15,6 +17,7 @@ const vueTrimmed = vue.replace(/^\n/, "").replace(/\n$/, "");
 	<div class="ct-header">
 		<button type="button" class="ct-tab active" data-ct-fw="react" aria-selected="true">React</button>
 		<button type="button" class="ct-tab" data-ct-fw="vue" aria-selected="false">Vue</button>
+		{svelteTrimmed && <button type="button" class="ct-tab" data-ct-fw="svelte" aria-selected="false">Svelte</button>}
 		<div class="ct-indicator" aria-hidden="true"></div>
 		<button type="button" class="ct-copy" data-ct-copy aria-label="Copy code">Copy</button>
 	</div>
@@ -24,6 +27,11 @@ const vueTrimmed = vue.replace(/^\n/, "").replace(/\n$/, "");
 	<div class="ct-panel" data-ct-panel="vue">
 		<pre><code set:text={vueTrimmed} /></pre>
 	</div>
+	{svelteTrimmed && (
+		<div class="ct-panel" data-ct-panel="svelte">
+			<pre><code set:text={svelteTrimmed} /></pre>
+		</div>
+	)}
 </div>
 
 <style>
@@ -159,6 +167,10 @@ const vueTrimmed = vue.replace(/^\n/, "").replace(/\n$/, "");
 			}
 
 			function switchTab(fw: string) {
+				// Only switch if this block has a tab for the framework
+				const hasTab = Array.from(tabs).some((t) => t.dataset.ctFw === fw);
+				if (!hasTab) return;
+
 				tabs.forEach((t) => {
 					const isActive = t.dataset.ctFw === fw;
 					t.classList.toggle("active", isActive);
@@ -172,7 +184,7 @@ const vueTrimmed = vue.replace(/^\n/, "").replace(/\n$/, "");
 				tab.addEventListener("click", () => {
 					const fw = tab.dataset.ctFw!;
 					switchTab(fw);
-					setFramework(fw as "react" | "vue");
+					setFramework(fw as "react" | "vue" | "svelte");
 					dispatchFwChange(fw);
 				});
 			});
@@ -191,9 +203,7 @@ const vueTrimmed = vue.replace(/^\n/, "").replace(/\n$/, "");
 			const saved = getFramework();
 			switchTab(saved);
 
-			onFwChange((fw) => {
-				if (fw === "react" || fw === "vue") switchTab(fw);
-			});
+			onFwChange((fw) => switchTab(fw));
 
 			requestAnimationFrame(refreshIndicator);
 		});

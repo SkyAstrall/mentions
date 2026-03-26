@@ -46,6 +46,9 @@ import Code from "../../../components/Code.astro";
 		vue={`<MentionsLoading>
   <Spinner /> Searching...
 </MentionsLoading>`}
+		svelte={`<MentionsLoading>
+  <Spinner /> Searching...
+</MentionsLoading>`}
 	/>
 
 	<h2>Error Handling</h2>
@@ -58,6 +61,10 @@ import Code from "../../../components/Code.astro";
 		vue={`<Mentions
   :triggers="triggers"
   @error="(error) => toast.error(error.message)"
+/>`}
+		svelte={`<Mentions
+  {triggers}
+  onError={(error) => toast.error(error.message)}
 />`}
 	/>
 	<p>If a fetch fails, the dropdown closes and the user can retry by typing more.</p>

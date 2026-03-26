@@ -42,6 +42,7 @@ const handleMethods = [
 	<CodeTabs
 		react={`import { Mentions } from "@skyastrall/mentions-react";`}
 		vue={`import { Mentions } from "@skyastrall/mentions-vue";`}
+		svelte={`import { Mentions } from "@skyastrall/mentions-svelte";`}
 	/>
 
 	<h2>Props</h2>
@@ -75,6 +76,13 @@ const handleMethods = [
   <div :style="{ fontWeight: highlighted ? 600 : 400 }">
     {{ item.label }}
   </div>
+</MentionsItem>`}
+		svelte={`<MentionsItem>
+  {#snippet children({ item, highlighted })}
+    <div style:font-weight={highlighted ? 600 : 400}>
+      {item.label}
+    </div>
+  {/snippet}
 </MentionsItem>`}
 	/>
 

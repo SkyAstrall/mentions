@@ -50,6 +50,27 @@ const markup = ref("");
     v-model="markup"
   />
 </template>`}
+		svelte={`<script>
+import { Mentions } from "@skyastrall/mentions-svelte";
+
+const users = [
+  { id: "1", label: "Alice Johnson" },
+  { id: "2", label: "Bob Smith" },
+  { id: "3", label: "Charlie Brown" },
+];
+
+let markup = $state("");
+</script>
+
+<Mentions
+  triggers={[{ char: "@", data: users }]}
+  placeholder="Type @ to mention someone..."
+  onChange={(m, plainText) => {
+    markup = m;
+    console.log("Markup:", m);
+    console.log("Plain:", plainText);
+  }}
+/>`}
 	/>
 	<p>Type <code>@</code> in the editor. A dropdown appears. Select a user — it becomes a highlighted mention.</p>
 
@@ -71,6 +92,14 @@ const markup = ref("");
   ]"
   v-model="markup"
 />`}
+		svelte={`<Mentions
+  triggers={[
+    { char: "@", data: users, color: "oklch(0.75 0.15 250)" },
+    { char: "#", data: tags, color: "oklch(0.75 0.12 300)" },
+    { char: "/", data: commands, color: "oklch(0.80 0.12 80)" },
+  ]}
+  onChange={(m, p) => { markup = m; }}
+/>`}
 	/>
 
 	<h2>Understanding the Markup</h2>
@@ -88,6 +117,10 @@ const mentions = extractMentions(markup, triggers);
 		vue={`import { extractMentions } from "@skyastrall/mentions-vue";
 
 const mentions = extractMentions(markup.value, triggers);
+// [{ id: "1", label: "Alice Johnson" }, { id: "t1", label: "urgent" }]`}
+		svelte={`import { extractMentions } from "@skyastrall/mentions-svelte";
+
+const mentions = extractMentions(markup, triggers);
 // [{ id: "1", label: "Alice Johnson" }, { id: "t1", label: "urgent" }]`}
 	/>
 
@@ -122,6 +155,18 @@ const mentionsRef = ref<MentionsInstance | null>(null);
   <button @click="mentionsRef?.clear()">Clear</button>
   <button @mousedown.prevent="mentionsRef?.insertTrigger('@')">Insert @</button>
 </template>`}
+		svelte={`<script>
+import { Mentions } from "@skyastrall/mentions-svelte";
+
+let mentions;
+</script>
+
+<Mentions bind:this={mentions} {triggers} />
+<button onclick={() => mentions.focus()}>Focus</button>
+<button onclick={() => mentions.clear()}>Clear</button>
+<button onmousedown={(e) => { e.preventDefault(); mentions.insertTrigger("@"); }}>
+  Insert @
+</button>`}
 	/>
 
 	<h2>Next</h2>

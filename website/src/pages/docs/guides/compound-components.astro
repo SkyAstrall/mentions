@@ -36,6 +36,21 @@ import {
     </MentionsPortal>
   </Mentions>
 </template>`}
+		svelte={`<script>
+import {
+  Mentions, MentionsEditor, MentionsPortal,
+  MentionsList, MentionsItem,
+} from "@skyastrall/mentions-svelte";
+</script>
+
+<Mentions {triggers}>
+  <MentionsEditor placeholder="Type @..." class="my-editor" />
+  <MentionsPortal>
+    <MentionsList>
+      <MentionsItem />
+    </MentionsList>
+  </MentionsPortal>
+</Mentions>`}
 	/>
 
 	<h2>Custom Item Rendering</h2>
@@ -68,6 +83,18 @@ import {
     </div>
   </div>
 </MentionsItem>`}
+		svelte={`<MentionsItem>
+  {#snippet children({ item, highlighted })}
+    <div style:display="flex" style:align-items="center" style:gap="8px"
+      style:font-weight={highlighted ? 600 : 400}>
+      <img src={item.avatar} width="24" height="24" style="border-radius: 50%" />
+      <div>
+        <div>{item.label}</div>
+        <div style="font-size: 12px; opacity: 0.6">{item.role}</div>
+      </div>
+    </div>
+  {/snippet}
+</MentionsItem>`}
 	/>
 
 	<h2>Loading and Empty States</h2>
@@ -90,6 +117,15 @@ import {
   </MentionsEmpty>
   <MentionsItem />
 </MentionsList>`}
+		svelte={`<MentionsList>
+  <MentionsLoading>
+    <Spinner /> Searching...
+  </MentionsLoading>
+  <MentionsEmpty>
+    No results found
+  </MentionsEmpty>
+  <MentionsItem />
+</MentionsList>`}
 	/>
 
 	<h2>Portal Container</h2>
@@ -99,6 +135,10 @@ import {
   <Mentions.List>...</Mentions.List>
 </Mentions.Portal>`}
 		vue={`<MentionsPortal to="body">
+  <MentionsList>...</MentionsList>
+</MentionsPortal>`}
+		svelte={`<!-- Svelte portal renders inline with fixed positioning -->
+<MentionsPortal>
   <MentionsList>...</MentionsList>
 </MentionsPortal>`}
 	/>

@@ -13,5 +13,6 @@ blob-report/
 .env
 .env.*
 .astro/
+.svelte-kit/
 .claude/
 .cursor/

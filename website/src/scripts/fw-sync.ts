@@ -1,10 +1,12 @@
 const STORAGE_KEY = "fw-preference";
 
-export type Framework = "react" | "vue";
+export type Framework = "react" | "vue" | "svelte";
 
 export function getFramework(): Framework {
 	const saved = localStorage.getItem(STORAGE_KEY);
-	return saved === "vue" ? "vue" : "react";
+	if (saved === "vue") return "vue";
+	if (saved === "svelte") return "svelte";
+	return "react";
 }
 
 export function setFramework(fw: Framework): void {

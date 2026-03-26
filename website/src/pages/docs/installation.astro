@@ -11,11 +11,13 @@ import CodeTabs from "../../components/CodeTabs.astro";
 	<CodeTabs
 		react="npm install @skyastrall/mentions-react"
 		vue="npm install @skyastrall/mentions-vue"
+		svelte="npm install @skyastrall/mentions-svelte"
 	/>
 	<p>Or with pnpm / yarn:</p>
 	<CodeTabs
 		react="pnpm add @skyastrall/mentions-react"
 		vue="pnpm add @skyastrall/mentions-vue"
+		svelte="pnpm add @skyastrall/mentions-svelte"
 	/>
 
 	<h2>Requirements</h2>
@@ -32,6 +34,12 @@ import CodeTabs from "../../components/CodeTabs.astro";
 		</ul>
 		<p>Works with Nuxt, Vite, Astro, and any Vue 3 project.</p>
 	</div>
+	<div class="fw-req" data-fw-content="svelte" style="display:none">
+		<ul>
+			<li>Svelte 5.0 or later</li>
+		</ul>
+		<p>Works with SvelteKit, Vite, Astro, and any Svelte 5 project.</p>
+	</div>
 
 	<h2>What Gets Installed</h2>
 	<p>Your framework adapter depends on <code>@skyastrall/mentions-core</code>, which is installed automatically. You only need core separately for server-side usage or building a custom adapter.</p>
@@ -44,6 +52,7 @@ import CodeTabs from "../../components/CodeTabs.astro";
 	<CodeTabs
 		react={`import "@skyastrall/mentions-react/effects.css";`}
 		vue={`// CSS effects coming soon for Vue adapter`}
+		svelte={`// CSS effects coming soon for Svelte adapter`}
 	/>
 	<p>Entirely optional. The component works without it.</p>
 </DocsLayout>
