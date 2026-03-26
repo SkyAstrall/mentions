@@ -51,8 +51,12 @@ import CodeTabs from "../../components/CodeTabs.astro";
 	<p>For animated borders, glow, and dropdown animations:</p>
 	<CodeTabs
 		react={`import "@skyastrall/mentions-react/effects.css";`}
-		vue={`// CSS effects coming soon for Vue adapter`}
-		svelte={`// CSS effects coming soon for Svelte adapter`}
+		vue={`// CSS effects available via React adapter:
+// import "@skyastrall/mentions-react/effects.css";
+// Works with any framework — it's just CSS.`}
+		svelte={`// CSS effects available via React adapter:
+// import "@skyastrall/mentions-react/effects.css";
+// Works with any framework — it's just CSS.`}
 	/>
 	<p>Entirely optional. The component works without it.</p>
 </DocsLayout>
