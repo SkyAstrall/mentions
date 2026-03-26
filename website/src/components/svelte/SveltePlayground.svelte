@@ -22,7 +22,7 @@
 		"rgba(20,184,166,0.25)",
 	];
 
-	let mentionsApi: ReturnType<typeof import("@skyastrall/mentions-svelte").useMentions> | null = $state(null);
+	let mentionsRef: { focus: () => void; clear: () => void; getValue: () => { markup: string; plainText: string }; insertTrigger: (t: string) => void } | undefined = $state();
 	let triggerStates: TriggerState[] = $state([
 		{ enabled: true, char: "@", label: "Users", color: colorOptions[0], data: users as MentionItem[] },
 		{ enabled: true, char: "#", label: "Tags", color: colorOptions[2], data: tags as MentionItem[] },
@@ -126,27 +126,27 @@
 	}
 
 	function handleClearAction() {
-		mentionsApi?.clear();
+		mentionsRef?.clear();
 		markup = "";
 		plainText = "";
 	}
 
 	function stressClearInsert() {
-		mentionsApi?.clear();
-		mentionsApi?.focus();
-		setTimeout(() => mentionsApi?.insertTrigger("@"), 50);
+		mentionsRef?.clear();
+		mentionsRef?.focus();
+		setTimeout(() => mentionsRef?.insertTrigger("@"), 50);
 	}
 
 	function stressRapid5x() {
 		for (let i = 0; i < 5; i++) {
-			setTimeout(() => mentionsApi?.insertTrigger("@"), i * 80);
+			setTimeout(() => mentionsRef?.insertTrigger("@"), i * 80);
 		}
 	}
 
 	function stressRapid10xMixed() {
 		for (let i = 0; i < 10; i++) {
 			const char = triggerStates[i % triggerStates.length].char;
-			setTimeout(() => mentionsApi?.insertTrigger(char), i * 60);
+			setTimeout(() => mentionsRef?.insertTrigger(char), i * 60);
 		}
 	}
 </script>
@@ -155,6 +155,7 @@
 	<div class="pg-main">
 		<div class="pg-preview">
 			<Mentions
+				bind:this={mentionsRef}
 				class="pg-editor"
 				{triggers}
 				{singleLine}
@@ -282,10 +283,10 @@
 		<div class="pg-section">
 			<h3>Actions</h3>
 			<div class="pg-actions">
-				<button type="button" onclick={() => mentionsApi?.focus()}>Focus</button>
+				<button type="button" onclick={() => mentionsRef?.focus()}>Focus</button>
 				<button type="button" onclick={handleClearAction}>Clear</button>
 				{#each triggerStates.filter(t => t.enabled) as t (t.char)}
-					<button type="button" onmousedown={(e) => { e.preventDefault(); mentionsApi?.insertTrigger(t.char); }}>Insert {t.char}</button>
+					<button type="button" onmousedown={(e) => { e.preventDefault(); mentionsRef?.insertTrigger(t.char); }}>Insert {t.char}</button>
 				{/each}
 			</div>
 		</div>
