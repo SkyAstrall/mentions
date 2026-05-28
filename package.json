@@ -10,7 +10,7 @@
 		"lint:fix": "biome check --fix .",
 		"changeset": "changeset",
 		"version": "changeset version",
-		"release": "pnpm build && pnpm -r publish --access public",
+		"release": "pnpm build && changeset publish && git push --follow-tags",
 		"deploy": "pnpm build && cd website && pnpm build && wrangler pages deploy dist --project-name skyastrall-mentions --branch main --commit-dirty=true"
 	},
 	"devDependencies": {

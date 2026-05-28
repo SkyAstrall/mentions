@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 640" width="1280" height="640" role="img" aria-labelledby="og-title">
+  <title id="og-title">@skyastrall/mentions — Mentions that just work.</title>
+  <defs>
+    <radialGradient id="glow-top-right" cx="0.85" cy="0.05" r="0.65" fx="0.85" fy="0.05">
+      <stop offset="0%" stop-color="#8B2FC9" stop-opacity="0.42"/>
+      <stop offset="55%" stop-color="#6818A5" stop-opacity="0.12"/>
+      <stop offset="100%" stop-color="#0a0a0a" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow-bot-left" cx="0.1" cy="0.95" r="0.55" fx="0.1" fy="0.95">
+      <stop offset="0%" stop-color="#AB51E3" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0a0a0a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="accent-line" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#6818A5" stop-opacity="0"/>
+      <stop offset="25%" stop-color="#8B2FC9"/>
+      <stop offset="75%" stop-color="#AB51E3"/>
+      <stop offset="100%" stop-color="#8B2FC9" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#ffffff" stroke-opacity="0.025" stroke-width="1"/>
+    </pattern>
+  </defs>
+
+  <!-- Background layers -->
+  <rect width="1280" height="640" fill="#0a0a0a"/>
+  <rect width="1280" height="640" fill="url(#grid)"/>
+  <rect width="1280" height="640" fill="url(#glow-top-right)"/>
+  <rect width="1280" height="640" fill="url(#glow-bot-left)"/>
+
+  <!-- Top accent line -->
+  <rect x="0" y="0" width="1280" height="3" fill="url(#accent-line)"/>
+
+  <!-- Wordmark -->
+  <text x="80" y="118" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="500" letter-spacing="0.5">
+    <tspan fill="#AB51E3" font-weight="700">@</tspan><tspan fill="#fafafa">skyastrall</tspan><tspan fill="#52525b">/</tspan><tspan fill="#fafafa" font-weight="600">mentions</tspan>
+  </text>
+
+  <!-- Headline -->
+  <text x="80" y="290" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif" font-size="92" font-weight="700" fill="#fafafa" letter-spacing="-3.5">Mentions that just work.</text>
+
+  <!-- Subhead — triggers, accent purple -->
+  <text x="80" y="368" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif" font-size="34" font-weight="500">
+    <tspan fill="#AB51E3" font-weight="700">@users</tspan><tspan fill="#52525b" font-weight="400">  ·  </tspan><tspan fill="#AB51E3" font-weight="700">#tags</tspan><tspan fill="#52525b" font-weight="400">  ·  </tspan><tspan fill="#AB51E3" font-weight="700">/commands</tspan>
+  </text>
+
+  <!-- Subhead — value prop -->
+  <text x="80" y="420" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif" font-size="26" font-weight="400" fill="#a1a1aa" letter-spacing="-0.3">One tiny core. Every framework.</text>
+
+  <!-- Framework pills -->
+  <g font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="600">
+    <g>
+      <rect x="80" y="510" width="148" height="58" rx="29" fill="#141416" stroke="#3f3f46" stroke-width="1.5"/>
+      <text x="154" y="548" fill="#fafafa" text-anchor="middle">React 19</text>
+    </g>
+    <g>
+      <rect x="244" y="510" width="148" height="58" rx="29" fill="#141416" stroke="#3f3f46" stroke-width="1.5"/>
+      <text x="318" y="548" fill="#fafafa" text-anchor="middle">Vue 3</text>
+    </g>
+    <g>
+      <rect x="408" y="510" width="148" height="58" rx="29" fill="#141416" stroke="#3f3f46" stroke-width="1.5"/>
+      <text x="482" y="548" fill="#fafafa" text-anchor="middle">Svelte 5</text>
+    </g>
+  </g>
+
+  <!-- Right-side spec column -->
+  <g font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif">
+    <text x="1200" y="280" font-size="20" font-weight="500" fill="#71717a" text-anchor="end">CORE</text>
+    <text x="1200" y="322" font-size="48" font-weight="700" fill="#fafafa" text-anchor="end" letter-spacing="-1.5">~9 KB</text>
+    <text x="1200" y="350" font-size="18" font-weight="400" fill="#71717a" text-anchor="end">gzipped · zero deps</text>
+
+    <text x="1200" y="430" font-size="20" font-weight="500" fill="#71717a" text-anchor="end">A11Y</text>
+    <text x="1200" y="465" font-size="26" font-weight="700" fill="#fafafa" text-anchor="end">WAI-ARIA combobox</text>
+  </g>
+
+  <!-- Bottom-right URL -->
+  <text x="1200" y="552" font-family="Helvetica, 'Helvetica Neue', Arial, sans-serif" font-size="22" font-weight="500" fill="#a1a1aa" text-anchor="end">mentions.skyastrall.com</text>
+
+  <!-- Bottom accent line -->
+  <rect x="0" y="637" width="1280" height="3" fill="url(#accent-line)"/>
+</svg>
