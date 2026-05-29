@@ -32,21 +32,11 @@
 		"tslib": "^2.8.0"
 	},
 	"peerDependencies": {
-		"@angular/cdk": ">=19.0.0",
 		"@angular/common": ">=19.0.0",
 		"@angular/core": ">=19.0.0",
 		"@angular/forms": ">=19.0.0"
 	},
-	"peerDependenciesMeta": {
-		"@angular/cdk": {
-			"optional": true
-		},
-		"@angular/forms": {
-			"optional": true
-		}
-	},
 	"devDependencies": {
-		"@angular/cdk": "^21.0.0",
 		"@angular/common": "^21.0.0",
 		"@angular/compiler": "^21.0.0",
 		"@angular/compiler-cli": "^21.0.0",
@@ -77,7 +67,6 @@
 		"hashtag",
 		"slash-commands",
 		"headless",
-		"control-value-accessor",
-		"cdk"
+		"control-value-accessor"
 	]
 }
