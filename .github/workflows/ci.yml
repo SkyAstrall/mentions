@@ -27,6 +27,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm test -- --run
+      - run: pnpm size
 
   e2e:
     needs: ci

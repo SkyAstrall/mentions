@@ -11,9 +11,12 @@ export default defineConfig({
 	use: {
 		baseURL: "http://localhost:4321",
 		headless: true,
+		browserName: "chromium",
 	},
 	projects: [
-		{ name: "chromium", use: { browserName: "chromium" } },
+		{ name: "react", testMatch: /react-mentions\.spec\.ts$/ },
+		{ name: "vue", testMatch: /vue-mentions\.spec\.ts$/ },
+		{ name: "svelte", testMatch: /svelte-mentions\.spec\.ts$/ },
 	],
 	webServer: {
 		command: "pnpm build && cd website && pnpm dev",
