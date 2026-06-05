@@ -20,7 +20,7 @@ export {
 	markupToPlainText,
 	parseMarkup,
 } from "@skyastrall/mentions-core";
-export type { MentionsInstance } from "./components.ts";
+export type { MentionsInstance } from "./components.js";
 export {
 	Mentions,
 	MentionsEditor,
@@ -29,6 +29,6 @@ export {
 	MentionsList,
 	MentionsLoading,
 	MentionsPortal,
-} from "./components.ts";
-export type { MentionsContext, UseMentionsOptions, UseMentionsReturn } from "./use-mentions.ts";
-export { MentionsKey, useMentions, useMentionsContext } from "./use-mentions.ts";
+} from "./components.js";
+export type { MentionsContext, UseMentionsOptions, UseMentionsReturn } from "./use-mentions.js";
+export { MentionsKey, useMentions, useMentionsContext } from "./use-mentions.js";

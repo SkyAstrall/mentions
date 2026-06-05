@@ -17,10 +17,10 @@ This project uses **pnpm** with workspaces. Key commands:
 ## Architecture
 
 - `packages/core` — framework-agnostic engine (zero dependencies)
-- `packages/react` — React 18/19 adapter
+- `packages/react` — React 19 adapter
 - `packages/vue` — Vue 3.4+ adapter
 - `packages/svelte` — Svelte 5 adapter (runes)
-- `packages/angular` — Angular 19+ adapter (in progress)
+- `packages/angular` — Angular 21+ adapter
 - `website/` — Astro documentation site
 - `playground/` — Vite dev playground
 

@@ -20,7 +20,16 @@ export {
 	markupToPlainText,
 	parseMarkup,
 } from "@skyastrall/mentions-core";
-export type { MentionsHandle, MentionsProps } from "./mentions.tsx";
-export { Mentions } from "./mentions.tsx";
-export type { UseMentionsOptions, UseMentionsReturn } from "./use-mentions.ts";
-export { useMentions } from "./use-mentions.ts";
+export type {
+	EditorProps as MentionsEditorProps,
+	EmptyProps as MentionsEmptyProps,
+	ItemProps as MentionsItemProps,
+	ListProps as MentionsListProps,
+	LoadingProps as MentionsLoadingProps,
+	MentionsHandle,
+	MentionsProps,
+	PortalProps as MentionsPortalProps,
+} from "./mentions.js";
+export { Mentions } from "./mentions.js";
+export type { UseMentionsOptions, UseMentionsReturn } from "./use-mentions.js";
+export { useMentions } from "./use-mentions.js";

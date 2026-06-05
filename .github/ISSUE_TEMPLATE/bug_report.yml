@@ -1,62 +1,109 @@
 name: Bug Report
-description: Report a bug
-labels: ["bug"]
+description: Report a bug in @skyastrall/mentions
+labels: ["type: bug", "status: needs-repro"]
 body:
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I have searched [existing issues](https://github.com/SkyAstrall/mentions/issues?q=is%3Aissue) and discussions
+          required: true
+        - label: I am using the latest version of the affected package
+          required: true
+
   - type: textarea
     id: description
     attributes:
       label: Description
-      description: What happened?
+      description: A clear, concise description of what the bug is.
     validations:
       required: true
+
   - type: input
     id: reproduction
     attributes:
       label: Reproduction link
-      description: StackBlitz or CodeSandbox link with a minimal reproduction.
+      description: Minimal StackBlitz / CodeSandbox link. Issues without a reproduction will be closed.
       placeholder: "https://stackblitz.com/edit/..."
     validations:
       required: true
+
   - type: textarea
     id: steps
     attributes:
       label: Steps to reproduce
       description: Minimal steps to reproduce the issue.
+      placeholder: |
+        1. Open the reproduction
+        2. Type `@` in the editor
+        3. ...
     validations:
       required: true
+
   - type: textarea
     id: expected
     attributes:
       label: Expected behavior
-      description: What did you expect to happen?
     validations:
       required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: dropdown
+    id: framework
+    attributes:
+      label: Affected adapter
+      description: Which package(s) is this bug in?
+      multiple: true
+      options:
+        - "React (@skyastrall/mentions-react)"
+        - "Vue (@skyastrall/mentions-vue)"
+        - "Svelte (@skyastrall/mentions-svelte)"
+        - "Angular (@skyastrall/mentions-angular)"
+        - "Core only (@skyastrall/mentions-core)"
+    validations:
+      required: true
+
   - type: input
-    id: version
+    id: package_version
     attributes:
       label: Package version
-      placeholder: "0.1.0"
+      description: Version of the affected `@skyastrall/mentions-*` package.
+      placeholder: "0.4.0"
     validations:
       required: true
+
   - type: input
-    id: react
+    id: framework_version
     attributes:
-      label: React version
-      placeholder: "19.0.0"
+      label: Framework version
+      description: Version of React / Vue / Svelte / Angular (whichever applies). Use "N/A" for core-only.
+      placeholder: "React 19.0.0"
     validations:
       required: true
+
   - type: input
-    id: browser
+    id: env
     attributes:
       label: Browser / OS
-      placeholder: "Chrome 130 / macOS 15"
+      placeholder: "Chrome 132 / macOS 15.2"
+    validations:
+      required: true
+
   - type: textarea
     id: screenshots
     attributes:
       label: Screenshots or videos
-      description: If applicable, add screenshots or screen recordings.
+      description: If applicable, drag-and-drop screenshots or screen recordings.
+
   - type: textarea
     id: context
     attributes:
       label: Additional context
-      description: Any other information that might help.
+      description: Anything else that might help — console errors, network logs, related issues, workarounds tried.

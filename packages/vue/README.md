@@ -22,6 +22,10 @@ Requires `vue` >= 3.4.
 import { ref } from "vue";
 import { Mentions } from "@skyastrall/mentions-vue";
 
+const users = [{ id: "1", label: "Alice" }, { id: "2", label: "Bob" }];
+const tags = [{ id: "t1", label: "design" }, { id: "t2", label: "bug" }];
+const commands = [{ id: "c1", label: "summarize" }];
+
 const markup = ref("");
 </script>
 
@@ -46,12 +50,12 @@ const markup = ref("");
 - Single-line mode
 - Full ARIA keyboard navigation
 - Controlled and uncontrolled modes
-- ~5KB gzipped (~9KB core)
+- ~4 KB minified + gzipped (~6 KB core)
 
 ## API Layers
 
 1. **`<Mentions>`** — drop-in, works out of the box
-2. **Compound components** — `MentionsEditor`, `MentionsPortal`, `MentionsList`, `MentionsItem`
+2. **Compound components** — `MentionsEditor`, `MentionsPortal`, `MentionsList`, `MentionsItem`, `MentionsEmpty`, `MentionsLoading`
 3. **`useMentions()`** — composable, full control
 
 See the [full documentation](https://mentions.skyastrall.com/docs) for API reference and guides.

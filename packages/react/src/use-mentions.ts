@@ -1,3 +1,5 @@
+"use client";
+
 import {
 	buildMentionHTML,
 	type ConnectReturn,
@@ -5,16 +7,19 @@ import {
 	extractMentions,
 	getCaretRect,
 	getCursorOffset,
-	getMarkupFromDOM,
 	getPlainTextFromDOM,
+	handleEditorPaste,
 	insertTextAtCursor,
 	type MentionCallbacks,
 	MentionController,
 	type MentionItem,
 	type MentionState,
 	performMentionInsertion,
+	readEditorState,
 	restoreCursor,
+	supportsPlaintextOnly,
 	type TriggerConfig,
+	updateCaretIfActive,
 } from "@skyastrall/mentions-core";
 import {
 	type RefObject,
@@ -60,6 +65,7 @@ export type UseMentionsReturn = ConnectReturn & {
 		onCompositionStart: React.CompositionEventHandler<HTMLDivElement>;
 		onCompositionEnd: React.CompositionEventHandler<HTMLDivElement>;
 		onBlur: React.FocusEventHandler<HTMLDivElement>;
+		onPaste: React.ClipboardEventHandler<HTMLDivElement>;
 	};
 	getItemProps: (index: number) => ReturnType<ConnectReturn["getItemProps"]> & {
 		onPointerDown: React.PointerEventHandler;
@@ -124,13 +130,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const stateRef = useRef(state);
 	stateRef.current = state;
 
-	const prevValueRef = useRef(value);
-	useEffect(() => {
-		if (!isControlled || value === prevValueRef.current || value === state.markup) return;
-		prevValueRef.current = value;
-		controller.setValue(value);
-	}, [value, isControlled, controller, state.markup]);
-
 	const buildHTML = useCallback((markup: string): string => {
 		return buildMentionHTML(markup, triggersRef.current);
 	}, []);
@@ -138,19 +137,32 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const syncEditor = useCallback(() => {
 		const el = editorRef.current;
 		if (!el) return;
-		const html = buildHTML(stateRef.current.markup);
+		const markup = controller.getState().markup;
+		// When the markup was just read from the DOM, the DOM is already
+		// correct — rebuilding would serialize the whole editor for nothing
+		// (and runs on every render for inline `triggers={[...]}` arrays).
+		if (markup === lastReportedMarkupRef.current) return;
+		const html = buildHTML(markup);
 		if (el.innerHTML !== html) {
 			const cursor = getCursorOffset(el);
 			el.innerHTML = html;
 			restoreCursor(el, cursor);
 		}
-	}, [buildHTML]);
+		lastReportedMarkupRef.current = markup;
+	}, [buildHTML, controller]);
+
+	const prevValueRef = useRef(value);
+	useEffect(() => {
+		if (!isControlled || value === prevValueRef.current || value === state.markup) return;
+		prevValueRef.current = value;
+		controller.setValue(value);
+		syncEditor();
+	}, [value, isControlled, controller, state.markup, syncEditor]);
 
 	useEffect(() => {
 		syncEditor();
 	}, [syncEditor]);
 
-	// Re-sync editor HTML when triggers change (e.g., color picker)
 	const prevTriggersRef = useRef(triggers);
 	useEffect(() => {
 		if (prevTriggersRef.current !== triggers) {
@@ -159,7 +171,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		}
 	}, [triggers, syncEditor]);
 
-	// Update caret position on scroll when dropdown is open
 	useEffect(() => {
 		const handleScroll = () => {
 			const s = stateRef.current;
@@ -171,14 +182,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		window.addEventListener("scroll", handleScroll, true);
 		return () => window.removeEventListener("scroll", handleScroll, true);
 	}, [controller]);
-
-	useEffect(() => {
-		if (!isControlled || value === undefined) return;
-		if (value === lastReportedMarkupRef.current) return;
-		const el = editorRef.current;
-		if (!el) return;
-		el.innerHTML = buildHTML(value);
-	}, [value, isControlled, buildHTML]);
 
 	const performDOMInsertion = useCallback(
 		(item: MentionItem) => {
@@ -214,15 +217,19 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		if (!el) return;
 
 		const cursorOffset = getCursorOffset(el);
-		const newPlainText = getPlainTextFromDOM(el);
-		const newMarkup = getMarkupFromDOM(el, triggersRef.current);
+		const { markup, plainText } = readEditorState(el, triggersRef.current);
 
-		lastReportedMarkupRef.current = newMarkup;
+		lastReportedMarkupRef.current = markup;
 
-		const caretPos = getCaretRect(el);
-		controller.updateCaretPosition(caretPos);
-		controller.handleInputChange(newMarkup, newPlainText, cursorOffset);
+		controller.handleInputChange(markup, plainText, cursorOffset);
+		updateCaretIfActive(controller, el);
 	}, [controller]);
+
+	const onPaste = useCallback((e: React.ClipboardEvent<HTMLDivElement>) => {
+		const el = editorRef.current;
+		if (!el) return;
+		handleEditorPaste(e.nativeEvent, el, { plaintextOnly: supportsPlaintextOnly() });
+	}, []);
 
 	const clear = useCallback(() => {
 		if (editorRef.current) {
@@ -244,9 +251,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		const sel = window.getSelection();
 		if (!sel) return;
 
-		// After focus(), the browser may not have a selection range yet
-		// (e.g., after blur, clear, or programmatic focus from a button click).
-		// Create a collapsed range at the end of the element content.
+		// After focus() the browser may not have a selection range yet
+		// (e.g. after blur, clear, or programmatic focus from a button click).
 		if (sel.rangeCount === 0) {
 			const range = document.createRange();
 			range.selectNodeContents(el);
@@ -347,6 +353,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			onCompositionStart,
 			onCompositionEnd,
 			onBlur,
+			onPaste,
 		},
 		listProps: aria.listProps,
 		getItemProps,

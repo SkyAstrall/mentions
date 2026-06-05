@@ -14,7 +14,7 @@ import CodeTabs from "../../../components/CodeTabs.astro";
 		<li>You need complete control over item rendering</li>
 	</ul>
 
-	<p>For most headless use cases, the <a href="/docs/guides/compound-components">compound component API</a> gives you layout control while the library handles the editor internals. Use the raw hook/composable only when you need to control the contenteditable element itself.</p>
+	<p>For most headless use cases, the <a href="/docs/guides/compound-components">compound component API</a> gives you layout control while the library handles the editor internals. Use the raw hook/composable only when you need to control the contenteditable element itself. (Compound components are React / Vue / Svelte only — in Angular, use <code>&lt;sa-mentions&gt;</code> for the batteries-included path, or the bridge below for full control.)</p>
 
 	<h2>Compound Components (Recommended)</h2>
 	<CodeTabs
@@ -96,8 +96,26 @@ const users = [
 	/>
 
 	<h2>Raw Hook / Composable (Full Control)</h2>
-	<p>When you need to render the contenteditable div yourself:</p>
+	<p>When you need to render the contenteditable div yourself. Angular has no hook — drive the <code>MentionsControllerBridge</code> directly (it wraps the same core controller that <code>&lt;sa-mentions&gt;</code> uses internally; the DOM-read helpers live in <code>@skyastrall/mentions-core</code>):</p>
 	<CodeTabs
+		angular={`import { Component, DestroyRef, inject } from "@angular/core";
+import { MentionsControllerBridge } from "@skyastrall/mentions-angular";
+
+@Component({ /* your own template with a contenteditable div */ })
+export class CustomEditor {
+  triggers = [{ char: "@", data: users }];
+  bridge = new MentionsControllerBridge({ triggers: this.triggers }, inject(DestroyRef));
+
+  // bridge.state() is a signal:
+  //   .status / .items / .query / .highlightedIndex / .caretPosition
+  // Read the DOM, then feed the controller:
+  onInput(markup: string, plainText: string, cursor: number) {
+    this.bridge.controller.handleInputChange(markup, plainText, cursor);
+  }
+  onKeyDown(e: KeyboardEvent) {
+    if (this.bridge.controller.handleKeyDown(e.key).handled) e.preventDefault();
+  }
+}`}
 		react={`import { useMentions } from "@skyastrall/mentions-react";
 
 function CustomEditor() {
@@ -258,6 +276,12 @@ const api = useMentions({
 // api.markup: "@[Alice](1) hello"
 // api.plainText: "@Alice hello"
 // api.mentions: [{ id: "1", label: "Alice" }]`}
+		angular={`// From the bridge's state signal:
+bridge.state().markup;     // "@[Alice](1) hello"
+bridge.state().plainText;  // "@Alice hello"
+
+// Or from a <sa-mentions> template ref:
+ref.getValue();            // { markup, plainText }`}
 	/>
 
 	<h2>Programmatic Actions</h2>
@@ -277,5 +301,10 @@ insertTrigger("@");   // Insert @ and open dropdown`}
 api.focus();              // Focus the editor
 api.clear();              // Clear all content
 api.insertTrigger("@");   // Insert @ and open dropdown`}
+		angular={`// Call methods on the <sa-mentions> template ref:
+ref.focus();              // Focus the editor
+ref.clear();              // Clear all content
+ref.insertTrigger("@");   // Insert @ and open dropdown
+ref.insertText("👍");     // Insert arbitrary text at the caret`}
 	/>
 </DocsLayout>

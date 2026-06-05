@@ -1,0 +1,26 @@
+{
+	"name": "angular-smoke",
+	"private": true,
+	"version": "0.0.0",
+	"description": "Consumer compile-smoke for @skyastrall/mentions-angular. Installed standalone (not a workspace member) so CI can pin any Angular major. See .github/workflows/ci.yml.",
+	"scripts": {
+		"build": "ng build"
+	},
+	"overrides": {
+		"@skyastrall/mentions-core": "file:./.tarballs/core.tgz"
+	},
+	"dependencies": {
+		"@angular/build": "^22.0.0",
+		"@angular/cli": "^22.0.0",
+		"@angular/common": "^22.0.0",
+		"@angular/compiler": "^22.0.0",
+		"@angular/compiler-cli": "^22.0.0",
+		"@angular/core": "^22.0.0",
+		"@angular/forms": "^22.0.0",
+		"@angular/platform-browser": "^22.0.0",
+		"@skyastrall/mentions-angular": "file:.tarballs/angular.tgz",
+		"rxjs": "^7.8.2",
+		"tslib": "^2.8.1",
+		"typescript": "~6.0.0"
+	}
+}

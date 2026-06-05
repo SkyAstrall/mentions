@@ -17,11 +17,9 @@ function dropdownItems(page: Page): Locator {
 async function clearEditor(page: Page) {
 	const ed = editor(page);
 	await ed.click();
-	await page.keyboard.press("Meta+a");
+	await page.keyboard.press("ControlOrMeta+a");
 	await page.keyboard.press("Backspace");
 }
-
-// -- Basic typing --
 
 test.describe("basic editor", () => {
 	test.beforeEach(async ({ page }) => {
@@ -51,8 +49,6 @@ test.describe("basic editor", () => {
 		expect(cursorAtEnd).toBe(true);
 	});
 });
-
-// -- Trigger detection & dropdown --
 
 test.describe("trigger detection", () => {
 	test.beforeEach(async ({ page }) => {
@@ -98,8 +94,6 @@ test.describe("trigger detection", () => {
 	});
 });
 
-// -- Mention selection --
-
 test.describe("mention selection", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto(PLAYGROUND);
@@ -139,7 +133,6 @@ test.describe("mention selection", () => {
 		await page.keyboard.press("Enter");
 		await expect(dropdown(page)).not.toBeVisible();
 
-		// Cursor should be after the mention, not at the start
 		const cursorPosition = await page.evaluate(() => {
 			const el = document.querySelector("#playground-react [data-mentions-editor]") as HTMLElement;
 			const sel = window.getSelection();
@@ -194,8 +187,6 @@ test.describe("mention selection", () => {
 	});
 });
 
-// -- Keyboard navigation --
-
 test.describe("keyboard navigation", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto(PLAYGROUND);
@@ -213,7 +204,6 @@ test.describe("keyboard navigation", () => {
 
 		await page.keyboard.press("ArrowDown");
 		const second = dropdownItems(page).nth(1);
-		// Second should now be highlighted
 		const secondBg = await second.evaluate((el) => getComputedStyle(el).backgroundColor);
 		expect(secondBg).not.toBe("transparent");
 	});
@@ -224,15 +214,12 @@ test.describe("keyboard navigation", () => {
 		await expect(dropdown(page)).toBeVisible();
 
 		await page.keyboard.press("ArrowUp");
-		// Should highlight last item
 		const items = await dropdownItems(page).all();
 		const lastItem = items[items.length - 1];
 		const bg = await lastItem.evaluate((el) => getComputedStyle(el).backgroundColor);
 		expect(bg).not.toBe("transparent");
 	});
 });
-
-// -- Mention marks & output --
 
 test.describe("output", () => {
 	test.beforeEach(async ({ page }) => {
@@ -258,13 +245,10 @@ test.describe("output", () => {
 		await page.keyboard.press("ArrowDown");
 		await page.keyboard.press("Enter");
 
-		// Check the Output panel in playground
 		const markupOutput = page.locator(".pg-panel-body code").first();
 		await expect(markupOutput).toContainText("@[Alice Johnson](1)");
 	});
 });
-
-// -- Edge cases --
 
 test.describe("edge cases", () => {
 	test.beforeEach(async ({ page }) => {
@@ -281,7 +265,6 @@ test.describe("edge cases", () => {
 		const marks = editor(page).locator("mark[data-mention]");
 		await expect(marks).toHaveCount(1);
 
-		// Can still type after
 		await page.keyboard.type("hello");
 		const text = await editor(page).textContent();
 		expect(text?.replace(/\u200B/g, "")).toContain("hello");
@@ -296,8 +279,7 @@ test.describe("edge cases", () => {
 		const marks = editor(page).locator("mark[data-mention]");
 		await expect(marks).toHaveCount(1);
 
-		// Select all and delete to reliably remove the mention
-		await page.keyboard.press("Meta+a");
+		await page.keyboard.press("ControlOrMeta+a");
 		await page.keyboard.press("Backspace");
 
 		await expect(marks).toHaveCount(0);
@@ -318,12 +300,19 @@ test.describe("edge cases", () => {
 		await editor(page).click();
 		await page.keyboard.type("hello@world");
 
-		// @ after non-whitespace should NOT trigger
 		await expect(dropdown(page)).not.toBeVisible();
 	});
-});
 
-// -- Bug fix regression tests --
+	test("trigger opens on a fresh line after Enter", async ({ page }) => {
+		await editor(page).click();
+		await page.keyboard.type("line1");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("@al");
+		// Fails if block-element line breaks are dropped during serialization:
+		// the "@" would then sit mid-word after "line1" and never trigger.
+		await expect(dropdown(page)).toBeVisible();
+	});
+});
 
 test.describe("bug fixes", () => {
 	test.beforeEach(async ({ page }) => {
@@ -336,23 +325,19 @@ test.describe("bug fixes", () => {
 		await page.keyboard.type("@");
 		await expect(dropdown(page)).toBeVisible();
 
-		// Capture initial dropdown position
 		const initialTop = await dropdown(page).evaluate((el) => {
 			const rect = el.closest("[data-mentions-portal]")?.getBoundingClientRect();
 			return rect?.top ?? 0;
 		});
 
-		// Scroll down
 		await page.evaluate(() => window.scrollBy(0, 100));
 		await page.waitForTimeout(100);
 
-		// Dropdown should have moved (position updated)
 		const afterScrollTop = await dropdown(page).evaluate((el) => {
 			const rect = el.closest("[data-mentions-portal]")?.getBoundingClientRect();
 			return rect?.top ?? 0;
 		});
 
-		// The dropdown should have moved roughly by the scroll amount
 		expect(Math.abs(initialTop - afterScrollTop - 100)).toBeLessThan(20);
 	});
 });
@@ -364,30 +349,25 @@ test.describe("single-line toggle", () => {
 	});
 
 	test("toggling single-line prevents Enter from creating newlines", async ({ page }) => {
-		// Type multiline content first
 		await editor(page).click();
 		await page.keyboard.type("line one");
 		await page.keyboard.press("Enter");
 		await page.keyboard.type("line two");
 
-		// Verify we have multiline content
 		const beforeHTML = await editor(page).innerHTML();
 		expect(beforeHTML).toContain("line one");
 		expect(beforeHTML).toContain("line two");
 
-		// Toggle single-line on
 		const checkbox = page.locator('#playground-react label:has-text("Single line") input');
 		await checkbox.check();
 		await page.waitForTimeout(200);
 
-		// Try pressing Enter — should NOT create a new line
 		await editor(page).click();
 		await page.keyboard.press("End");
 		await page.keyboard.type(" more");
 		await page.keyboard.press("Enter");
 		await page.keyboard.type("blocked");
 
-		// "blocked" should be on the same line (no <br> or newline)
 		const afterHTML = await editor(page).innerHTML();
 		expect(afterHTML).not.toContain("<br>");
 		expect(afterHTML).not.toMatch(/<div>/);

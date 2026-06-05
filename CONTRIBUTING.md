@@ -17,7 +17,7 @@ Search [existing issues](https://github.com/SkyAstrall/mentions/issues) first. I
 
 ## Development Setup
 
-Requires [Node.js](https://nodejs.org/) 18+ (see `.nvmrc`) and [pnpm](https://pnpm.io/).
+Requires Node.js `^20.19.0 || >=22.12.0` (see `.nvmrc`, recommend Node 22 LTS) and [pnpm](https://pnpm.io/). The lower bound matches the Vite 7 / Rolldown / `require(esm)` cutoff.
 
 1. Fork the repository and clone your fork:
 
@@ -44,27 +44,39 @@ pnpm test
 
 ```
 packages/
-  core/       Framework-agnostic engine: trigger detection, state machine, markup parsing
-  react/      React bindings: useMentions hook, Mentions component, effects CSS
-playground/   Development app for manual testing and demos
+  core/       Framework-agnostic engine: MentionController, state machine, markup parser
+  react/      React 19 adapter
+  vue/        Vue 3.4+ adapter (composable + component)
+  svelte/     Svelte 5 adapter (runes)
+  angular/    Angular 21+ adapter (signals + ControlValueAccessor)
+website/      Astro docs + playground site
+playground/   Vite dev sandbox for manual testing
+e2e/          Playwright end-to-end tests
 ```
 
-- `@skyastrall/mentions-core` has zero dependencies and no framework code.
-- `@skyastrall/mentions-react` depends on `core` and exports the public React API.
-- The `playground` imports `@skyastrall/mentions-react` via `workspace:*`.
+- `@skyastrall/mentions-core` has zero runtime dependencies and no framework code. It owns `MentionController`, trigger detection, the state machine, and markup parsing.
+- Every adapter (`react`, `vue`, `svelte`, `angular`) is a thin wrapper (~100–300 lines) around `MentionController`. Adapters expose the same three layers: drop-in component, compound components, and the framework-native primitive (hook / composable / runes / signals).
+- `playground/` imports adapters via `workspace:*` for local manual testing.
+- `website/` is the public docs and playground at https://mentions.skyastrall.com.
+- `e2e/` holds Playwright tests that exercise adapters in a real browser.
 
 ## Making Changes
 
 ### Which package to edit
 
-- **Trigger detection, markup parsing, state machine** -- `packages/core`
+- **Trigger detection, markup parsing, state machine, controller logic** -- `packages/core`
 - **React hooks, components, ARIA, rendering** -- `packages/react`
-- **Both** -- start with `core`, build it, then update `react`
+- **Vue composable / component** -- `packages/vue`
+- **Svelte runes / component** -- `packages/svelte`
+- **Angular signals / component / CVA** -- `packages/angular`
+- **Both core and an adapter** -- start with `core`, build it, then update the adapter
+- **Docs site** -- `website/`
+- **Want to add a new framework adapter (Solid, Qwik, Preact, …)?** Open a Feature Request issue first with the "New framework adapter" type — we'll discuss scope and ecosystem fit before code.
 
 ### Build and test
 
 ```bash
-pnpm build        # builds core then react
+pnpm build        # builds all packages in topological order (core → react/vue/svelte/angular)
 pnpm test         # runs vitest
 pnpm lint         # runs biome
 ```
@@ -128,7 +140,9 @@ This project uses [changesets](https://github.com/changesets/changesets) for ver
 pnpm changeset
 ```
 
-Follow the prompts to select the affected packages and describe the change.
+Follow the prompts to select the affected packages and describe the change. That's all a contributor needs to do — **versioning and publishing are handled by the maintainer.**
+
+Releases go out via `pnpm release` (which runs `changeset publish`). The adapters depend on core with `workspace:^`, which pnpm rewrites to a real version range at publish time — so publishing must go through pnpm; a direct `npm publish` would ship the unresolved `workspace:^` literal and break installs.
 
 ## Code Style
 

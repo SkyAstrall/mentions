@@ -25,27 +25,24 @@ import {
 	connect,
 	getCaretRect,
 	getCursorOffset,
-	getMarkupFromDOM,
 	getPlainTextFromDOM,
+	handleEditorPaste,
+	insertLargeText,
 	insertTextAtCursor,
+	isLargePaste,
 	type MentionControllerOptions,
 	type MentionItem,
 	performMentionInsertion,
+	readEditorState,
 	restoreCursor,
+	supportsPlaintextOnly,
 	type TriggerConfig,
+	updateCaretIfActive,
 } from "@skyastrall/mentions-core";
 import { MentionsControllerBridge } from "./controller-bridge";
 import { MENTIONS_CONFIG } from "./tokens";
 
 let nextInstanceId = 0;
-
-const SUPPORTS_PLAINTEXT_ONLY =
-	typeof document !== "undefined" &&
-	(() => {
-		const d = document.createElement("div");
-		d.contentEditable = "plaintext-only";
-		return d.contentEditable === "plaintext-only";
-	})();
 
 export const SA_MENTIONS_VALUE_ACCESSOR: Provider = {
 	provide: NG_VALUE_ACCESSOR,
@@ -182,13 +179,16 @@ export class SaMentions implements ControlValueAccessor {
 	readonly singleLine = input(false);
 	readonly placeholder = input("");
 	readonly disabled = input(false);
+	readonly readOnly = input(false);
 	readonly autoFocus = input(false);
+	readonly ghostText = input("");
 	readonly value = model("");
 
 	readonly mentionInsert = output<{ item: MentionItem; trigger: string }>();
 	readonly mentionRemove = output<{ item: MentionItem; trigger: string }>();
 	readonly opened = output<string>();
 	readonly closed = output<void>();
+	readonly acceptGhostText = output<void>();
 
 	private readonly editorEl = viewChild.required<ElementRef<HTMLDivElement>>("editorEl");
 	private readonly destroyRef = inject(DestroyRef);
@@ -198,6 +198,12 @@ export class SaMentions implements ControlValueAccessor {
 
 	private bridgeRef?: MentionsControllerBridge;
 	private isComposing = false;
+	/**
+	 * Markup last read from the editor DOM. When state.markup matches it, the
+	 * change originated from user input and the DOM is already correct — the
+	 * render effect must not rebuild (and serialize) the whole editor per keystroke.
+	 */
+	private lastDomMarkup = "";
 	private cvaOnChange: (markup: string) => void = () => {};
 	private cvaOnTouched: () => void = () => {};
 	protected readonly cvaDisabled = signal(false);
@@ -207,8 +213,8 @@ export class SaMentions implements ControlValueAccessor {
 	);
 	protected readonly isEmpty: Signal<boolean> = computed(() => !this.bridge.state().markup);
 	protected readonly editableValue: Signal<"plaintext-only" | "true" | "false"> = computed(() => {
-		if (this.disabled() || this.cvaDisabled()) return "false";
-		return SUPPORTS_PLAINTEXT_ONLY ? "plaintext-only" : "true";
+		if (this.disabled() || this.cvaDisabled() || this.readOnly()) return "false";
+		return supportsPlaintextOnly() ? "plaintext-only" : "true";
 	});
 	protected readonly portalTop: Signal<number> = computed(() => {
 		const c = this.bridge.state().caretPosition;
@@ -257,6 +263,7 @@ export class SaMentions implements ControlValueAccessor {
 
 		effect(() => {
 			const markup = this.bridge.state().markup;
+			if (markup === this.lastDomMarkup) return;
 			const el = this.editorEl().nativeElement;
 			const html = buildMentionHTML(markup, this.triggers());
 			if (el.innerHTML !== html) {
@@ -264,6 +271,7 @@ export class SaMentions implements ControlValueAccessor {
 				el.innerHTML = html;
 				restoreCursor(el, cursor);
 			}
+			this.lastDomMarkup = markup;
 		});
 
 		afterNextRender(() => {
@@ -303,6 +311,7 @@ export class SaMentions implements ControlValueAccessor {
 
 	clear(): void {
 		this.editorEl().nativeElement.innerHTML = "";
+		this.lastDomMarkup = "";
 		this.bridge.controller.clear();
 	}
 
@@ -328,6 +337,24 @@ export class SaMentions implements ControlValueAccessor {
 		insertTextAtCursor((needsSpace ? " " : "") + trigger);
 	}
 
+	insertText(text: string): void {
+		const el = this.editorEl().nativeElement;
+		el.focus();
+		const sel = window.getSelection();
+		if (sel && sel.rangeCount === 0) {
+			const range = document.createRange();
+			range.selectNodeContents(el);
+			range.collapse(false);
+			sel.addRange(range);
+		}
+		// Both branches fire an input event, so the pipeline runs once.
+		if (isLargePaste(text)) {
+			insertLargeText(el, text);
+		} else {
+			insertTextAtCursor(text);
+		}
+	}
+
 	protected onInput(): void {
 		if (this.isComposing) return;
 		const el = this.editorEl().nativeElement;
@@ -346,13 +373,22 @@ export class SaMentions implements ControlValueAccessor {
 		}
 
 		const cursor = getCursorOffset(el);
-		const plainText = getPlainTextFromDOM(el);
-		const markup = getMarkupFromDOM(el, this.triggers());
-		this.bridge.controller.updateCaretPosition(getCaretRect(el));
+		const { markup, plainText } = readEditorState(el, this.triggers());
+		this.lastDomMarkup = markup;
 		this.bridge.controller.handleInputChange(markup, plainText, cursor);
+		updateCaretIfActive(this.bridge.controller, el);
 	}
 
 	protected onKeyDown(e: KeyboardEvent): void {
+		const s = this.bridge.controller.getState();
+		const open = s.status === "suggesting" || s.status === "navigating";
+		if (e.key === "Tab" && this.ghostText() && !(open && s.highlightedIndex >= 0)) {
+			e.preventDefault();
+			insertTextAtCursor(this.ghostText());
+			this.acceptGhostText.emit();
+			return;
+		}
+
 		const result = this.bridge.controller.handleKeyDown(e.key);
 		if (result.handled) {
 			e.preventDefault();
@@ -389,17 +425,10 @@ export class SaMentions implements ControlValueAccessor {
 	}
 
 	protected onPaste(e: ClipboardEvent): void {
-		if (this.singleLine()) {
-			e.preventDefault();
-			const text = e.clipboardData?.getData("text/plain").replace(/[\n\r]/g, " ") ?? "";
-			insertTextAtCursor(text);
-			return;
-		}
-		if (!SUPPORTS_PLAINTEXT_ONLY) {
-			e.preventDefault();
-			const text = e.clipboardData?.getData("text/plain") ?? "";
-			insertTextAtCursor(text);
-		}
+		handleEditorPaste(e, this.editorEl().nativeElement, {
+			singleLine: this.singleLine(),
+			plaintextOnly: supportsPlaintextOnly(),
+		});
 	}
 
 	protected onDrop(e: DragEvent): void {
@@ -429,6 +458,7 @@ export class SaMentions implements ControlValueAccessor {
 			);
 			return;
 		}
+		this.lastDomMarkup = result.markup;
 		this.bridge.controller.handleInsertComplete(
 			result.markup,
 			result.plainText,

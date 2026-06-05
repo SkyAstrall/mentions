@@ -17,11 +17,9 @@ function dropdownItems(page: Page): Locator {
 async function clearEditor(page: Page) {
 	const ed = editor(page);
 	await ed.click();
-	await page.keyboard.press("Meta+a");
+	await page.keyboard.press("ControlOrMeta+a");
 	await page.keyboard.press("Backspace");
 }
-
-// -- Basic typing --
 
 test.describe("svelte: basic editor", () => {
 	test.beforeEach(async ({ page }) => {
@@ -52,8 +50,6 @@ test.describe("svelte: basic editor", () => {
 		expect(cursorAtEnd).toBe(true);
 	});
 });
-
-// -- Trigger detection & dropdown --
 
 test.describe("svelte: trigger detection", () => {
 	test.beforeEach(async ({ page }) => {
@@ -99,8 +95,6 @@ test.describe("svelte: trigger detection", () => {
 		await expect(dropdown(page)).not.toBeVisible();
 	});
 });
-
-// -- Mention selection --
 
 test.describe("svelte: mention selection", () => {
 	test.beforeEach(async ({ page }) => {
@@ -181,8 +175,6 @@ test.describe("svelte: mention selection", () => {
 	});
 });
 
-// -- Keyboard navigation --
-
 test.describe("svelte: keyboard navigation", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto(PLAYGROUND);
@@ -218,8 +210,6 @@ test.describe("svelte: keyboard navigation", () => {
 	});
 });
 
-// -- Mention marks & output --
-
 test.describe("svelte: output", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto(PLAYGROUND);
@@ -239,8 +229,6 @@ test.describe("svelte: output", () => {
 		await expect(mark).toHaveAttribute("contenteditable", "false");
 	});
 });
-
-// -- Edge cases --
 
 test.describe("svelte: edge cases", () => {
 	test.beforeEach(async ({ page }) => {
@@ -272,7 +260,7 @@ test.describe("svelte: edge cases", () => {
 		const marks = editor(page).locator("mark[data-mention]");
 		await expect(marks).toHaveCount(1);
 
-		await page.keyboard.press("Meta+a");
+		await page.keyboard.press("ControlOrMeta+a");
 		await page.keyboard.press("Backspace");
 		await expect(marks).toHaveCount(0);
 	});
@@ -293,9 +281,17 @@ test.describe("svelte: edge cases", () => {
 		await page.keyboard.type("hello@world");
 		await expect(dropdown(page)).not.toBeVisible();
 	});
-});
 
-// -- Bug fix regression tests --
+	test("svelte: trigger opens on a fresh line after Enter", async ({ page }) => {
+		await editor(page).click();
+		await page.keyboard.type("line1");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("@al");
+		// Fails if block-element line breaks are dropped during serialization:
+		// the "@" would then sit mid-word after "line1" and never trigger.
+		await expect(dropdown(page)).toBeVisible();
+	});
+});
 
 test.describe("svelte: bug fixes", () => {
 	test.beforeEach(async ({ page }) => {

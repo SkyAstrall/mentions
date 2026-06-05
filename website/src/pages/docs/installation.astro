@@ -12,12 +12,14 @@ import CodeTabs from "../../components/CodeTabs.astro";
 		react="npm install @skyastrall/mentions-react"
 		vue="npm install @skyastrall/mentions-vue"
 		svelte="npm install @skyastrall/mentions-svelte"
+		angular="npm install @skyastrall/mentions-angular"
 	/>
 	<p>Or with pnpm / yarn:</p>
 	<CodeTabs
 		react="pnpm add @skyastrall/mentions-react"
 		vue="pnpm add @skyastrall/mentions-vue"
 		svelte="pnpm add @skyastrall/mentions-svelte"
+		angular="pnpm add @skyastrall/mentions-angular"
 	/>
 
 	<h2>Requirements</h2>
@@ -26,7 +28,7 @@ import CodeTabs from "../../components/CodeTabs.astro";
 			<li>React 18 or 19</li>
 			<li>ReactDOM 18 or 19</li>
 		</ul>
-		<p>Works with Next.js, Remix, Vite, Astro, and any React project.</p>
+		<p>Works with Next.js 15+, Remix, Vite, Astro, and any React 18 or 19 project.</p>
 	</div>
 	<div class="fw-req" data-fw-content="vue" style="display:none">
 		<ul>
@@ -40,6 +42,12 @@ import CodeTabs from "../../components/CodeTabs.astro";
 		</ul>
 		<p>Works with SvelteKit, Vite, Astro, and any Svelte 5 project.</p>
 	</div>
+	<div class="fw-req" data-fw-content="angular" style="display:none">
+		<ul>
+			<li>Angular 21 or later</li>
+		</ul>
+		<p>Standalone component, zoneless-ready. Works with the Angular CLI, Nx, and Analog.</p>
+	</div>
 
 	<h2>What Gets Installed</h2>
 	<p>Your framework adapter depends on <code>@skyastrall/mentions-core</code>, which is installed automatically. You only need core separately for server-side usage or building a custom adapter.</p>
@@ -48,15 +56,13 @@ import CodeTabs from "../../components/CodeTabs.astro";
 	<p>All packages ship with full TypeScript declarations. No <code>@types/*</code> packages needed.</p>
 
 	<h2>Optional: CSS Effects</h2>
-	<p>For animated borders, glow, and dropdown animations:</p>
+	<p>For animated borders, glow, and dropdown animations, import the stylesheet from core (one file, works in every framework):</p>
 	<CodeTabs
-		react={`import "@skyastrall/mentions-react/effects.css";`}
-		vue={`// CSS effects available via React adapter:
-// import "@skyastrall/mentions-react/effects.css";
-// Works with any framework — it's just CSS.`}
-		svelte={`// CSS effects available via React adapter:
-// import "@skyastrall/mentions-react/effects.css";
-// Works with any framework — it's just CSS.`}
+		react={`import "@skyastrall/mentions-core/effects.css";`}
+		vue={`import "@skyastrall/mentions-core/effects.css";`}
+		svelte={`import "@skyastrall/mentions-core/effects.css";`}
+		angular={`// In your global styles.css:
+// @import "@skyastrall/mentions-core/effects.css";`}
 	/>
 	<p>Entirely optional. The component works without it.</p>
 </DocsLayout>

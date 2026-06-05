@@ -18,5 +18,19 @@
 		"ignore": ["vue", "@skyastrall/mentions-core"],
 		"gzip": true,
 		"limit": "5 kB"
+	},
+	{
+		"name": "@skyastrall/mentions-svelte (runes core)",
+		"path": "packages/svelte/dist/use-mentions.svelte.js",
+		"ignore": ["svelte", "@skyastrall/mentions-core"],
+		"gzip": true,
+		"limit": "4 kB"
+	},
+	{
+		"name": "@skyastrall/mentions-angular",
+		"path": "packages/angular/dist/fesm2022/skyastrall-mentions-angular.mjs",
+		"ignore": ["@angular/core", "@angular/common", "@angular/forms", "@skyastrall/mentions-core", "tslib", "rxjs"],
+		"gzip": true,
+		"limit": "12 kB"
 	}
 ]

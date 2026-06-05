@@ -74,7 +74,8 @@ const cssVars = [
 	</ul>
 
 	<h2>CSS Effects</h2>
-	<Code code={`import "@skyastrall/mentions-react/effects.css";
+	<p>The effects stylesheet ships from <code>@skyastrall/mentions-core</code>, so the import works from any framework (React users can also use the <code>@skyastrall/mentions-react/effects.css</code> re-export). Add the classes to the editor — <code>className</code> in React, <code>class</code> in Vue/Svelte, on <code>&lt;sa-mentions&gt;</code> in Angular.</p>
+	<Code code={`import "@skyastrall/mentions-core/effects.css";
 
 <Mentions className="mentions-gradient-border mentions-animate" triggers={triggers} />`} />
 	<ul>

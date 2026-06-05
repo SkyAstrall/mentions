@@ -60,14 +60,24 @@ function escapeForTemplate(value: string, template: string, placeholder: string)
 	return value.replace(new RegExp(escapeRegex(delimiter), "g"), `\\${delimiter}`);
 }
 
+let lastParse: { markup: string; triggers: TriggerConfig[]; segments: Segment[] } | null = null;
+
 /**
  * Parse a markup string into an array of text and mention segments.
  *
  * Each mention segment contains the display text, id, trigger character,
  * and its start/end positions within the original markup string.
+ *
+ * The most recent result is memoized: a single input event parses the same
+ * markup several times (mention diffing, HTML building, mention extraction),
+ * and re-scanning a large document for each would multiply the cost.
+ * Callers must treat the returned segments as immutable.
  */
 export function parseMarkup(markup: string, triggers: TriggerConfig[]): Segment[] {
 	if (!markup) return [];
+	if (lastParse && lastParse.markup === markup && lastParse.triggers === triggers) {
+		return lastParse.segments;
+	}
 
 	const patterns: Array<{ regex: RegExp; trigger: string }> = [];
 	for (const t of triggers) {
@@ -143,6 +153,7 @@ export function parseMarkup(markup: string, triggers: TriggerConfig[]): Segment[
 		});
 	}
 
+	lastParse = { markup, triggers, segments };
 	return segments;
 }
 

@@ -46,11 +46,18 @@ const returnProps = [
 <DocsLayout title="useMentions Hook">
 	<p class="lead">The headless hook. Full control over rendering.</p>
 
+	<blockquote><p>Angular doesn't use a hook — its headless primitive is <code>MentionsControllerBridge</code>, which wraps the same core <code>MentionController</code> and exposes its state as a signal. The options below map to <code>MentionControllerOptions</code>; the return values map to <code>bridge.state()</code> and <code>bridge.controller.*</code>.</p></blockquote>
+
 	<h2>Import</h2>
 	<CodeTabs
 		react={`import { useMentions } from "@skyastrall/mentions-react";`}
 		vue={`import { useMentions } from "@skyastrall/mentions-vue";`}
 		svelte={`import { useMentions } from "@skyastrall/mentions-svelte";`}
+		angular={`import { MentionsControllerBridge } from "@skyastrall/mentions-angular";
+
+// new MentionsControllerBridge(options, destroyRef)
+//   .state()      -> signal of MentionState (status, items, query, ...)
+//   .controller   -> MentionController (handleInputChange, handleKeyDown, ...)`}
 	/>
 
 	<h2>Options</h2>

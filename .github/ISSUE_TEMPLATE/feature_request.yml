@@ -1,42 +1,95 @@
 name: Feature Request
-description: Suggest a feature
-labels: ["enhancement"]
+description: Suggest a feature, API change, or new framework adapter
+labels: ["type: feat"]
 body:
   - type: checkboxes
     id: checks
     attributes:
       label: Before submitting
       options:
-        - label: I have searched existing issues and discussions
+        - label: I have searched [existing issues](https://github.com/SkyAstrall/mentions/issues?q=is%3Aissue) and discussions
           required: true
         - label: I have read the README and API docs
           required: true
+
+  - type: dropdown
+    id: request_type
+    attributes:
+      label: Request type
+      description: What kind of request is this?
+      options:
+        - New feature in an existing adapter
+        - New framework adapter (e.g. Solid, Qwik, Preact, Lit)
+        - Core API change
+        - Documentation improvement
+        - Developer experience / tooling improvement
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      description: Which package(s) would this touch? Leave blank for "new framework adapter" if it doesn't exist yet.
+      multiple: true
+      options:
+        - core
+        - react
+        - vue
+        - svelte
+        - angular
+        - website / docs
+        - build / tooling
+        - "N/A — new adapter"
+
   - type: textarea
     id: problem
     attributes:
       label: Problem
-      description: What problem does this solve?
+      description: What problem does this solve? Who is affected?
     validations:
       required: true
+
   - type: textarea
     id: usecase
     attributes:
       label: Use case
-      description: Describe a real-world scenario where you need this.
+      description: Describe a real-world scenario where you need this. Concrete examples beat abstract ones.
     validations:
       required: true
+
   - type: textarea
     id: solution
     attributes:
       label: Proposed solution
-      description: How should it work? Include a code example if possible.
+      description: How should it work? Include a code example or API sketch if possible.
     validations:
       required: true
+
+  - type: textarea
+    id: new_framework
+    attributes:
+      label: For new framework adapter requests
+      description: |
+        Only fill this in if "New framework adapter" was selected above. Otherwise leave blank.
+
+        Help us judge the ecosystem fit:
+        - Which framework, and which version range?
+        - Roughly how many users in the ecosystem?
+        - What is the idiomatic reactivity primitive (signals, runes, stores, hooks)?
+        - Are you willing to help maintain it?
+      placeholder: |
+        Framework: Solid 1.8+
+        Reactivity: createSignal / createEffect
+        Ecosystem: ~150k weekly npm downloads for solid-js
+        Willing to help maintain: yes / no
+
   - type: textarea
     id: prior_art
     attributes:
       label: Prior art
       description: Does another library handle this well? Link to examples.
+
   - type: textarea
     id: alternatives
     attributes:

@@ -38,7 +38,7 @@ import Code from "../../../components/Code.astro";
 	<Code code={`{ char: "@", data: fetchUsers, minChars: 2 }`} />
 
 	<h2>Loading State</h2>
-	<p>The component shows a loading indicator automatically. Customize it with compound components:</p>
+	<p>The component shows a loading indicator automatically. React, Vue, and Svelte let you customize it with compound components; Angular renders a built-in loading row you style with CSS.</p>
 	<CodeTabs
 		react={`<Mentions.Loading>
   <Spinner /> Searching...
@@ -49,6 +49,8 @@ import Code from "../../../components/Code.astro";
 		svelte={`<MentionsLoading>
   <Spinner /> Searching...
 </MentionsLoading>`}
+		angular={`/* The loading row is rendered automatically — style it: */
+.sa-mentions-empty { color: var(--muted); font-style: italic; }`}
 	/>
 
 	<h2>Error Handling</h2>
@@ -66,6 +68,12 @@ import Code from "../../../components/Code.astro";
   {triggers}
   onError={(error) => toast.error(error.message)}
 />`}
+		angular={`import { provideMentions } from "@skyastrall/mentions-angular";
+
+// In your app config (or component) providers:
+providers: [
+  provideMentions({ onError: (error) => toast.error(error.message) }),
+]`}
 	/>
 	<p>If a fetch fails, the dropdown closes and the user can retry by typing more.</p>
 </DocsLayout>

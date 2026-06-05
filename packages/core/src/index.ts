@@ -7,10 +7,19 @@ export {
 	getCursorOffset,
 	getMarkupFromDOM,
 	getPlainTextFromDOM,
+	handleEditorPaste,
+	insertLargeText,
 	insertTextAtCursor,
 	isExtensionNode,
+	isLargePaste,
+	LARGE_PASTE_CHARS,
+	LARGE_PASTE_LINES,
 	performMentionInsertion,
+	readEditorState,
 	restoreCursor,
+	supportsPlaintextOnly,
+	undoLargePaste,
+	updateCaretIfActive,
 } from "./dom.ts";
 export { filterItems } from "./filter.ts";
 export { createInitialState, mentionReducer } from "./machine.ts";

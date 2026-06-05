@@ -8,11 +8,24 @@ export type TriggerMatch = {
 } | null;
 
 /**
+ * Maximum distance (in characters) the backward scan travels from the cursor.
+ *
+ * Bounds trigger detection to O(1) per keystroke regardless of document size.
+ * No real mention query approaches this length; without the bound, a single
+ * keystroke at the end of a large pasted document scans the entire text.
+ */
+export const MAX_QUERY_LOOKBACK = 256;
+
+const WHITESPACE = /\s/;
+
+/**
  * Detect an active trigger in `plainText` at the given `cursorPosition`.
  *
- * Uses a backward character scan from the cursor (O(n), no regex backtracking)
- * to find the last trigger char preceded by start-of-string or whitespace,
- * then validates the query portion against the trigger's settings.
+ * Scans backward from the cursor, stopping at the first whitespace
+ * (or newline, for triggers that allow spaces in the query) and never
+ * traveling more than `MAX_QUERY_LOOKBACK` characters. Stopping early is
+ * sound: any candidate further back would have that boundary character
+ * inside its query and be rejected anyway.
  */
 export function detectTrigger(
 	plainText: string,
@@ -21,53 +34,49 @@ export function detectTrigger(
 ): TriggerMatch {
 	if (cursorPosition <= 0) return null;
 
-	const textBeforeCursor = plainText.slice(0, cursorPosition);
 	const sorted =
 		triggers.length > 1 ? [...triggers].sort((a, b) => b.char.length - a.char.length) : triggers;
+	const floor = Math.max(0, cursorPosition - MAX_QUERY_LOOKBACK);
 
 	for (const trigger of sorted) {
 		const triggerChar = trigger.char;
 		const triggerLen = triggerChar.length;
 
-		let scanPos = textBeforeCursor.length - 1;
-		while (scanPos >= 0) {
+		for (let scanPos = cursorPosition - 1; scanPos >= floor; scanPos--) {
+			const ch = plainText[scanPos];
+			const isBoundary = trigger.allowSpaceInQuery ? ch === "\n" : WHITESPACE.test(ch);
+
 			const candidateStart = scanPos - triggerLen + 1;
-			if (candidateStart < 0) break;
+			if (candidateStart >= 0 && matchesAt(plainText, triggerChar, candidateStart)) {
+				const beforeTrigger = candidateStart === 0 ? "" : plainText[candidateStart - 1];
+				if (beforeTrigger === "" || WHITESPACE.test(beforeTrigger)) {
+					const query = plainText.slice(candidateStart + triggerLen, cursorPosition);
+					const minChars = trigger.minChars ?? 0;
 
-			const candidate = textBeforeCursor.slice(candidateStart, candidateStart + triggerLen);
-			if (candidate !== triggerChar) {
-				scanPos--;
-				continue;
+					if ((trigger.allowSpaceInQuery || !WHITESPACE.test(query)) && query.length >= minChars) {
+						return {
+							trigger,
+							query,
+							startIndex: candidateStart,
+							endIndex: cursorPosition,
+						};
+					}
+				}
 			}
 
-			const beforeTrigger = candidateStart === 0 ? "" : textBeforeCursor[candidateStart - 1];
-			if (beforeTrigger !== "" && !/\s/.test(beforeTrigger)) {
-				scanPos = candidateStart - 1;
-				continue;
-			}
-
-			const query = textBeforeCursor.slice(candidateStart + triggerLen);
-
-			if (!trigger.allowSpaceInQuery && /\s/.test(query)) {
-				scanPos = candidateStart - 1;
-				continue;
-			}
-
-			const minChars = trigger.minChars ?? 0;
-			if (query.length < minChars) {
-				scanPos = candidateStart - 1;
-				continue;
-			}
-
-			const startIndex = candidateStart;
-			return {
-				trigger,
-				query,
-				startIndex,
-				endIndex: cursorPosition,
-			};
+			// All candidates containing this boundary character inside their
+			// trigger text were already tested at higher scan positions, so
+			// everything further back can only fail the query check.
+			if (isBoundary) break;
 		}
 	}
 
 	return null;
+}
+
+function matchesAt(text: string, needle: string, start: number): boolean {
+	for (let i = 0; i < needle.length; i++) {
+		if (text[start + i] !== needle[i]) return false;
+	}
+	return true;
 }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { detectTrigger, type TriggerMatch } from "./triggers.ts";
+import { detectTrigger, MAX_QUERY_LOOKBACK, type TriggerMatch } from "./triggers.ts";
 import type { TriggerConfig } from "./types.ts";
 
 const atTrigger: TriggerConfig = { char: "@", data: [] };
@@ -89,5 +89,51 @@ describe("detectTrigger", () => {
 
 	it("returns null for cursor at position 0", () => {
 		expect(detectTrigger("@hello", 0, triggers)).toBeNull();
+	});
+});
+
+describe("bounded backward scan", () => {
+	const at: TriggerConfig[] = [{ char: "@", data: [] }];
+
+	it("finds a trigger immediately after a whitespace boundary", () => {
+		const text = "some earlier words @ali";
+		expect(detectTrigger(text, text.length, at)?.query).toBe("ali");
+	});
+
+	it("ignores trigger characters buried in earlier words", () => {
+		const text = "email user@example.com then more text";
+		expect(detectTrigger(text, text.length, at)).toBeNull();
+	});
+
+	it("does not let a space-allowing query cross a newline", () => {
+		const spaced: TriggerConfig[] = [{ char: "@", data: [], allowSpaceInQuery: true }];
+		const text = "@john smith\nsecond line";
+		expect(detectTrigger(text, text.length, spaced)).toBeNull();
+	});
+
+	it("allows spaces in query within a single line", () => {
+		const spaced: TriggerConfig[] = [{ char: "@", data: [], allowSpaceInQuery: true }];
+		const text = "@john smith";
+		expect(detectTrigger(text, text.length, spaced)?.query).toBe("john smith");
+	});
+
+	it("gives up beyond MAX_QUERY_LOOKBACK instead of scanning the whole document", () => {
+		const text = `@${"a".repeat(MAX_QUERY_LOOKBACK + 10)}`;
+		expect(detectTrigger(text, text.length, at)).toBeNull();
+	});
+
+	it("matches a query close to the lookback limit", () => {
+		const query = "a".repeat(MAX_QUERY_LOOKBACK - 2);
+		const text = `@${query}`;
+		expect(detectTrigger(text, text.length, at)?.query).toBe(query);
+	});
+
+	it("stays fast with a trigger-dense large document", () => {
+		const text = `${"reply user@host.com @Component and more ".repeat(5000)}@que`;
+		const start = performance.now();
+		const match = detectTrigger(text, text.length, at);
+		const elapsed = performance.now() - start;
+		expect(match?.query).toBe("que");
+		expect(elapsed).toBeLessThan(5);
 	});
 });

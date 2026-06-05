@@ -25,8 +25,6 @@ function createController(
 }
 
 describe("MentionController", () => {
-	// -- Construction --
-
 	it("initializes with idle state and empty markup", () => {
 		const ctrl = createController();
 		const s = ctrl.getState();
@@ -44,8 +42,6 @@ describe("MentionController", () => {
 		expect(s.markup).toBe("Hello @[Alice](1) world");
 		expect(s.plainText).toBe("Hello @Alice world");
 	});
-
-	// -- subscribe / notify --
 
 	it("subscribe returns unsubscribe function", () => {
 		const ctrl = createController();
@@ -72,8 +68,6 @@ describe("MentionController", () => {
 		expect(l1).toHaveBeenCalled();
 		expect(l2).toHaveBeenCalled();
 	});
-
-	// -- handleInputChange --
 
 	it("updates markup and plainText on input change", () => {
 		const ctrl = createController();
@@ -183,8 +177,6 @@ describe("MentionController", () => {
 		expect(ctrl.getState().items[0].label).toBe("Alice");
 	});
 
-	// -- handleKeyDown --
-
 	it("handles ArrowDown/ArrowUp navigation", () => {
 		const ctrl = createController();
 		ctrl.handleInputChange("@", "@", 1);
@@ -238,8 +230,6 @@ describe("MentionController", () => {
 		expect(ctrl.handleKeyDown("Escape").handled).toBe(false);
 	});
 
-	// -- handleInsertComplete --
-
 	it("resets state and calls callbacks on insert complete", () => {
 		const onSelect = vi.fn();
 		const onChange = vi.fn();
@@ -262,8 +252,6 @@ describe("MentionController", () => {
 		expect(onChange).toHaveBeenCalledWith("@[Alice](1) ", "@Alice ");
 	});
 
-	// -- handleBlur --
-
 	it("resets to idle on blur", () => {
 		const ctrl = createController();
 		ctrl.handleInputChange("@", "@", 1);
@@ -272,8 +260,6 @@ describe("MentionController", () => {
 		ctrl.handleBlur();
 		expect(ctrl.getState().status).toBe("idle");
 	});
-
-	// -- handleComposition --
 
 	it("tracks composition state", () => {
 		const ctrl = createController();
@@ -284,15 +270,11 @@ describe("MentionController", () => {
 		expect(ctrl.getState().isComposing).toBe(false);
 	});
 
-	// -- updateCaretPosition --
-
 	it("updates caret position", () => {
 		const ctrl = createController();
 		ctrl.updateCaretPosition({ top: 100, left: 200, height: 20 });
 		expect(ctrl.getState().caretPosition).toEqual({ top: 100, left: 200, height: 20 });
 	});
-
-	// -- setValue --
 
 	it("sets controlled value", () => {
 		const ctrl = createController();
@@ -311,8 +293,6 @@ describe("MentionController", () => {
 		expect(listener).not.toHaveBeenCalled();
 	});
 
-	// -- clear --
-
 	it("clears all state and calls onChange", () => {
 		const onChange = vi.fn();
 		const ctrl = new MentionController({
@@ -329,8 +309,6 @@ describe("MentionController", () => {
 		expect(onChange).toHaveBeenCalledWith("", "");
 	});
 
-	// -- setOptions --
-
 	it("updates triggers via setOptions", () => {
 		const ctrl = createController();
 		ctrl.handleInputChange("@al", "@al", 3);
@@ -344,8 +322,6 @@ describe("MentionController", () => {
 		expect(ctrl.getState().items[0].label).toBe("Xavier");
 	});
 
-	// -- destroy --
-
 	it("cleans up on destroy", () => {
 		const ctrl = createController();
 		const listener = vi.fn();
@@ -356,8 +332,6 @@ describe("MentionController", () => {
 		ctrl.handleInputChange("x", "x", 1);
 		expect(listener).not.toHaveBeenCalled();
 	});
-
-	// -- Async data --
 
 	it("handles async data with debounce", async () => {
 		let resolveFetch: (items: MentionItem[]) => void;

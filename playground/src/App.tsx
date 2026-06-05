@@ -435,7 +435,8 @@ function HeadlessDemo() {
 		items,
 		highlightedIndex,
 		state,
-		textareaRef,
+		editorRef,
+		handleInput,
 		caretPosition,
 	} = useMentions({ triggers });
 
@@ -446,10 +447,13 @@ function HeadlessDemo() {
 				<code>useMentions()</code> — full control, bring your own UI.
 			</p>
 			<div style={{ position: "relative" }}>
-				<textarea
-					ref={textareaRef}
-					{...(inputProps as React.TextareaHTMLAttributes<HTMLTextAreaElement>)}
-					placeholder="Headless: type @ or #..."
+				<div
+					ref={editorRef}
+					{...inputProps}
+					contentEditable
+					onInput={handleInput}
+					data-mentions-editor=""
+					data-placeholder="Headless: type @ or #..."
 					style={{
 						width: "100%",
 						minHeight: 100,
@@ -460,12 +464,13 @@ function HeadlessDemo() {
 						lineHeight: 1.5,
 						fontFamily: "inherit",
 						boxSizing: "border-box",
-						resize: "vertical",
+						outline: "none",
+						whiteSpace: "pre-wrap",
 					}}
 				/>
 				{isOpen && items.length > 0 && (
 					<ul
-						{...(listProps as React.HTMLAttributes<HTMLUListElement>)}
+						{...listProps}
 						onMouseDown={(e) => e.preventDefault()}
 						style={{
 							position: "absolute",
@@ -487,7 +492,7 @@ function HeadlessDemo() {
 						{items.map((item, i) => (
 							<li
 								key={item.id}
-								{...(getItemProps(i) as React.LiHTMLAttributes<HTMLLIElement>)}
+								{...getItemProps(i)}
 								style={{
 									padding: "8px 12px",
 									cursor: "pointer",

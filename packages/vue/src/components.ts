@@ -1,6 +1,8 @@
 import {
+	handleEditorPaste,
 	insertTextAtCursor,
 	type MentionItem,
+	supportsPlaintextOnly,
 	type TriggerConfig,
 } from "@skyastrall/mentions-core";
 import {
@@ -13,6 +15,7 @@ import {
 	provide,
 	ref,
 	Teleport,
+	type VNode,
 	watch,
 } from "vue";
 import {
@@ -20,15 +23,7 @@ import {
 	type UseMentionsOptions,
 	useMentions,
 	useMentionsContext,
-} from "./use-mentions.ts";
-
-const SUPPORTS_PLAINTEXT_ONLY =
-	typeof document !== "undefined" &&
-	(() => {
-		const div = document.createElement("div");
-		div.contentEditable = "plaintext-only";
-		return div.contentEditable === "plaintext-only";
-	})();
+} from "./use-mentions.js";
 
 function injectStyles(): void {
 	if (typeof document === "undefined") return;
@@ -45,6 +40,7 @@ export interface MentionsInstance {
 	clear: () => void;
 	getValue: () => { markup: string; plainText: string };
 	insertTrigger: (trigger: string) => void;
+	insertText: (text: string) => void;
 }
 
 export const Mentions = defineComponent({
@@ -65,16 +61,19 @@ export const Mentions = defineComponent({
 			default: undefined,
 		},
 	},
-	emits: [
-		"update:modelValue",
-		"select",
-		"remove",
-		"queryChange",
-		"open",
-		"close",
-		"error",
-		"acceptGhostText",
-	],
+	emits: {
+		"update:modelValue": (markup: string) => typeof markup === "string",
+		select: (item: MentionItem, trigger: string) =>
+			typeof item === "object" && typeof trigger === "string",
+		remove: (item: MentionItem, trigger: string) =>
+			typeof item === "object" && typeof trigger === "string",
+		queryChange: (query: string, trigger: string) =>
+			typeof query === "string" && typeof trigger === "string",
+		open: (trigger: string) => typeof trigger === "string",
+		close: () => true,
+		error: (err: Error) => err instanceof Error,
+		acceptGhostText: () => true,
+	},
 	setup(props, { slots, emit, expose }) {
 		const opts: UseMentionsOptions = {
 			get triggers() {
@@ -114,12 +113,14 @@ export const Mentions = defineComponent({
 			handleBlur: api.handleBlur,
 			handleCompositionStart: api.handleCompositionStart,
 			handleCompositionEnd: api.handleCompositionEnd,
+			handlePaste: api.handlePaste,
 			handleScroll: api.handleScroll,
 			buildHTML: api.buildHTML,
 			performInsertion: api.performInsertion,
 			clear: api.clear,
 			focus: api.focus,
 			insertTrigger: api.insertTrigger,
+			insertText: api.insertText,
 		});
 
 		expose({
@@ -127,6 +128,7 @@ export const Mentions = defineComponent({
 			clear: api.clear,
 			getValue: () => ({ markup: api.markup.value, plainText: api.plainText.value }),
 			insertTrigger: api.insertTrigger,
+			insertText: api.insertText,
 		} satisfies MentionsInstance);
 
 		return () => {
@@ -134,7 +136,7 @@ export const Mentions = defineComponent({
 				return h("div", { "data-mentions": "", style: { position: "relative" } }, slots.default());
 			}
 
-			const children: unknown[] = [
+			const children: VNode[] = [
 				h(MentionsEditor, {
 					class: props.className,
 					placeholder: props.placeholder,
@@ -189,6 +191,10 @@ export const MentionsEditor = defineComponent({
 		const ctx = useMentionsContext();
 		const getSingleLine = () => props.singleLine ?? ctx.singleLine;
 
+		// Detected after mount: baking the detection into server-rendered markup
+		// would freeze contenteditable="true" past hydration (SSR has no DOM to probe).
+		const plaintextOnly = ref(false);
+
 		let beforeInputHandler: ((e: Event) => void) | null = null;
 		let scrollHandler: (() => void) | null = null;
 
@@ -228,6 +234,7 @@ export const MentionsEditor = defineComponent({
 
 		onMounted(() => {
 			injectStyles();
+			plaintextOnly.value = supportsPlaintextOnly();
 			if (props.autoFocus) ctx.editorRef.value?.focus();
 
 			const el = ctx.editorRef.value;
@@ -264,7 +271,7 @@ export const MentionsEditor = defineComponent({
 
 		const editableValue = (): string => {
 			if (props.disabled || props.readOnly) return "false";
-			return SUPPORTS_PLAINTEXT_ONLY ? "plaintext-only" : "true";
+			return plaintextOnly.value ? "plaintext-only" : "true";
 		};
 
 		return () => {
@@ -296,15 +303,12 @@ export const MentionsEditor = defineComponent({
 				onCompositionend: () => ctx.handleCompositionEnd(),
 				onBlur: (e: FocusEvent) => ctx.handleBlur(e),
 				onPaste: (e: ClipboardEvent) => {
-					if (isSingleLine) {
-						e.preventDefault();
-						const text = e.clipboardData?.getData("text/plain").replace(/[\n\r]/g, " ") ?? "";
-						insertTextAtCursor(text);
-					} else if (!SUPPORTS_PLAINTEXT_ONLY) {
-						e.preventDefault();
-						const text = e.clipboardData?.getData("text/plain") ?? "";
-						insertTextAtCursor(text);
-					}
+					const el = ctx.editorRef.value;
+					if (!el) return;
+					handleEditorPaste(e, el, {
+						singleLine: isSingleLine,
+						plaintextOnly: supportsPlaintextOnly(),
+					});
 				},
 				...(isSingleLine
 					? {

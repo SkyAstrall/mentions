@@ -1,13 +1,10 @@
 {
 	"name": "@skyastrall/mentions-angular",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"description": "Signal-native, zoneless-ready Angular adapter for @mentions, #tags, /commands. Powered by @skyastrall/mentions-core.",
 	"license": "MIT",
 	"author": "SkyAstrall",
 	"sideEffects": false,
-	"files": [
-		"dist"
-	],
 	"repository": {
 		"type": "git",
 		"url": "git+https://github.com/SkyAstrall/mentions.git",
@@ -18,7 +15,7 @@
 		"url": "https://github.com/SkyAstrall/mentions/issues"
 	},
 	"engines": {
-		"node": ">=18"
+		"node": "^20.19.0 || >=22.12.0"
 	},
 	"publishConfig": {
 		"access": "public",
@@ -32,9 +29,9 @@
 		"tslib": "^2.8.0"
 	},
 	"peerDependencies": {
-		"@angular/common": ">=19.0.0",
-		"@angular/core": ">=19.0.0",
-		"@angular/forms": ">=19.0.0"
+		"@angular/common": ">=21.0.0 <23.0.0",
+		"@angular/core": ">=21.0.0 <23.0.0",
+		"@angular/forms": ">=21.0.0 <23.0.0"
 	},
 	"devDependencies": {
 		"@angular/common": "^21.0.0",
@@ -48,8 +45,6 @@
 	},
 	"keywords": [
 		"angular",
-		"angular19",
-		"angular20",
 		"angular21",
 		"angular22",
 		"signal-forms",

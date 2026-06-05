@@ -21,8 +21,6 @@ describe("useMentions", () => {
 		cleanup = undefined;
 	});
 
-	// -- Initialization --
-
 	it("initializes with idle state", () => {
 		cleanup = $effect.root(() => {
 			const api = useMentions({ triggers: makeTriggers() });
@@ -59,8 +57,6 @@ describe("useMentions", () => {
 		});
 	});
 
-	// -- State subscription --
-
 	it("updates state when controller dispatches", () => {
 		cleanup = $effect.root(() => {
 			const triggers = makeTriggers();
@@ -68,15 +64,8 @@ describe("useMentions", () => {
 
 			flushSync();
 			expect(api.state.status).toBe("idle");
-
-			// Simulate input change that triggers a match
-			api.state; // read to track
-			// Directly test through the controller's handleInputChange
-			// The composable wraps the controller, so state changes propagate
 		});
 	});
-
-	// -- Derived values --
 
 	it("computes isOpen correctly", () => {
 		cleanup = $effect.root(() => {
@@ -128,8 +117,6 @@ describe("useMentions", () => {
 		});
 	});
 
-	// -- Callbacks --
-
 	it("calls onChange callback", () => {
 		cleanup = $effect.root(() => {
 			const onChange = vi.fn();
@@ -139,7 +126,6 @@ describe("useMentions", () => {
 			});
 			flushSync();
 
-			// Verify onChange is wired (actual invocation requires DOM context)
 			expect(api.state.status).toBe("idle");
 		});
 	});
@@ -153,16 +139,11 @@ describe("useMentions", () => {
 			});
 			flushSync();
 
-			// performInsertion without editorRef should bail
 			api.performInsertion({ id: "1", label: "Alice" });
 
-			// Should not error — no activeTrigger in idle state
-			// The guard checks state.activeTrigger first
 			expect(onError).not.toHaveBeenCalled();
 		});
 	});
-
-	// -- API methods --
 
 	it("clear resets markup and plainText", () => {
 		cleanup = $effect.root(() => {
@@ -198,8 +179,6 @@ describe("useMentions", () => {
 		});
 	});
 
-	// -- Reactive getters --
-
 	it("returns reactive getters that update with state", () => {
 		cleanup = $effect.root(() => {
 			const api = useMentions({
@@ -208,7 +187,6 @@ describe("useMentions", () => {
 			});
 			flushSync();
 
-			// Getters should reflect current state
 			expect(api.markup).toBe("@[Alice](1)");
 			expect(api.plainText).toBe("@Alice");
 			expect(api.mentions).toHaveLength(1);
@@ -220,8 +198,6 @@ describe("useMentions", () => {
 			expect(api.caretPosition).toBeNull();
 		});
 	});
-
-	// -- Multiple triggers --
 
 	it("handles multiple trigger configs", () => {
 		cleanup = $effect.root(() => {
@@ -241,8 +217,6 @@ describe("useMentions", () => {
 		});
 	});
 
-	// -- Async data support --
-
 	it("supports async data function in trigger config", () => {
 		cleanup = $effect.root(() => {
 			const asyncData = vi.fn().mockResolvedValue(users);
@@ -257,8 +231,6 @@ describe("useMentions", () => {
 		});
 	});
 
-	// -- Cleanup --
-
 	it("cleans up controller on destroy", () => {
 		const rootCleanup = $effect.root(() => {
 			const api = useMentions({ triggers: makeTriggers() });
@@ -269,25 +241,21 @@ describe("useMentions", () => {
 
 		// Calling cleanup should trigger $effect teardown → controller.destroy()
 		rootCleanup();
-		// If no error thrown, cleanup succeeded
 	});
 
 	it("handles rapid cleanup without errors", () => {
-		// Create and immediately destroy — no lingering effects
 		for (let i = 0; i < 10; i++) {
 			const c = $effect.root(() => {
 				useMentions({ triggers: makeTriggers() });
 			});
 			c();
 		}
-		// No errors = success
 	});
 });
 
 describe("context helpers", () => {
 	it("getMentionsContext throws outside provider", async () => {
 		// getMentionsContext requires Svelte component context
-		// Calling it outside a component should throw
 		const { getMentionsContext } = await import("../lib/use-mentions.svelte.js");
 		expect(() => getMentionsContext()).toThrow();
 	});

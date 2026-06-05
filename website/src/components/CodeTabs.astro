@@ -3,13 +3,15 @@ interface Props {
 	react: string;
 	vue: string;
 	svelte?: string;
+	angular?: string;
 	label?: string;
 }
 
-const { react, vue, svelte, label } = Astro.props;
+const { react, vue, svelte, angular, label } = Astro.props;
 const reactTrimmed = react.replace(/^\n/, "").replace(/\n$/, "");
 const vueTrimmed = vue.replace(/^\n/, "").replace(/\n$/, "");
 const svelteTrimmed = svelte?.replace(/^\n/, "").replace(/\n$/, "");
+const angularTrimmed = angular?.replace(/^\n/, "").replace(/\n$/, "");
 ---
 
 <div class="code-tabs" data-code-tabs>
@@ -18,6 +20,7 @@ const svelteTrimmed = svelte?.replace(/^\n/, "").replace(/\n$/, "");
 		<button type="button" class="ct-tab active" data-ct-fw="react" aria-selected="true">React</button>
 		<button type="button" class="ct-tab" data-ct-fw="vue" aria-selected="false">Vue</button>
 		{svelteTrimmed && <button type="button" class="ct-tab" data-ct-fw="svelte" aria-selected="false">Svelte</button>}
+		{angularTrimmed && <button type="button" class="ct-tab" data-ct-fw="angular" aria-selected="false">Angular</button>}
 		<div class="ct-indicator" aria-hidden="true"></div>
 		<button type="button" class="ct-copy" data-ct-copy aria-label="Copy code">Copy</button>
 	</div>
@@ -30,6 +33,11 @@ const svelteTrimmed = svelte?.replace(/^\n/, "").replace(/\n$/, "");
 	{svelteTrimmed && (
 		<div class="ct-panel" data-ct-panel="svelte">
 			<pre><code set:text={svelteTrimmed} /></pre>
+		</div>
+	)}
+	{angularTrimmed && (
+		<div class="ct-panel" data-ct-panel="angular">
+			<pre><code set:text={angularTrimmed} /></pre>
 		</div>
 	)}
 </div>
@@ -184,7 +192,7 @@ const svelteTrimmed = svelte?.replace(/^\n/, "").replace(/\n$/, "");
 				tab.addEventListener("click", () => {
 					const fw = tab.dataset.ctFw!;
 					switchTab(fw);
-					setFramework(fw as "react" | "vue" | "svelte");
+					setFramework(fw as "react" | "vue" | "svelte" | "angular");
 					dispatchFwChange(fw);
 				});
 			});

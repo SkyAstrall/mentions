@@ -26,6 +26,8 @@ const users = [
   { id: "2", label: "Bob Smith" },
   { id: "3", label: "Charlie Brown" },
 ];
+const tags = [{ id: "t1", label: "design" }, { id: "t2", label: "bug" }];
+const commands = [{ id: "c1", label: "summarize" }];
 
 let markup = $state("");
 </script>
@@ -36,7 +38,8 @@ let markup = $state("");
     { char: "#", data: tags, color: "rgba(16,185,129,0.25)" },
     { char: "/", data: commands, color: "rgba(245,158,11,0.25)" },
   ]}
-  onChange={(m, plainText) => { markup = m; }}
+  value={markup}
+  onChange={(m) => (markup = m)}
 />
 ```
 
@@ -50,12 +53,12 @@ let markup = $state("");
 - Full ARIA keyboard navigation
 - Svelte 5 runes ($state, $derived, $effect)
 - Snippets for custom item rendering
-- ~9KB gzipped (~9KB core)
+- ~5 KB minified + gzipped adapter (~6 KB core)
 
 ## API Layers
 
 1. **`<Mentions>`** — drop-in, works out of the box
-2. **Compound components** — `MentionsEditor`, `MentionsPortal`, `MentionsList`, `MentionsItem`
+2. **Compound components** — `MentionsEditor`, `MentionsPortal`, `MentionsList`, `MentionsItem`, `MentionsEmpty`, `MentionsLoading`
 3. **`useMentions()`** — composable with runes, full control
 
 See the [full documentation](https://mentions.skyastrall.com/docs) for API reference and guides.
