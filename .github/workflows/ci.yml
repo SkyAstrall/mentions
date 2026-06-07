@@ -27,6 +27,37 @@ jobs:
       - run: pnpm lint
       - run: pnpm build
       - run: pnpm test -- --run
+      - run: pnpm size
+
+  angular-compat:
+    needs: ci
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        # The library is built once with ng-packagr 21 (partial-Ivy); each
+        # cell installs the packed tarball into a standalone consumer app
+        # pinned to one supported Angular major and AOT-compiles it.
+        # TS ranges follow Angular's compatibility table per major.
+        include:
+          - angular: 21
+            typescript: "~5.9.0"
+          - angular: 22
+            typescript: "~6.0.0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          # Angular 22 requires Node ^22.22 || ^24.15; latest 22.x covers both legs.
+          node-version: 22
+          cache: "pnpm"
+      - run: pnpm install --frozen-lockfile
+      - name: Compile consumer app against Angular ${{ matrix.angular }}
+        run: ./ci/angular-smoke/run.sh ${{ matrix.angular }} "${{ matrix.typescript }}"
 
   e2e:
     needs: ci

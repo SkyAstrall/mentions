@@ -63,6 +63,32 @@ function handleChange(markup, plainText) {
   onChange={handleChange}
   onAcceptGhostText={() => { ghost = ""; }}
 />`}
+		angular={`import { Component, signal } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { SaMentions } from "@skyastrall/mentions-angular";
+
+@Component({
+  standalone: true,
+  imports: [SaMentions, FormsModule],
+  template: \`
+    <sa-mentions
+      [triggers]="triggers"
+      [(ngModel)]="markup"
+      [ghostText]="ghost()"
+      (ngModelChange)="onChange($event)"
+      (acceptGhostText)="ghost.set('')"
+    />
+  \`,
+})
+export class AIEditor {
+  triggers = [{ char: "@", data: users }];
+  markup = "";
+  ghost = signal("");
+
+  onChange(markup: string) {
+    fetchCompletion(markup).then((c) => this.ghost.set(c));
+  }
+}`}
 	/>
 
 	<h2>How It Works</h2>

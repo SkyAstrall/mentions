@@ -71,6 +71,31 @@ let markup = $state("");
     console.log("Plain:", plainText);
   }}
 />`}
+		angular={`import { Component } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { SaMentions } from "@skyastrall/mentions-angular";
+
+const users = [
+  { id: "1", label: "Alice Johnson" },
+  { id: "2", label: "Bob Smith" },
+  { id: "3", label: "Charlie Brown" },
+];
+
+@Component({
+  standalone: true,
+  imports: [SaMentions, FormsModule],
+  template: \`
+    <sa-mentions
+      [triggers]="triggers"
+      [(ngModel)]="markup"
+      placeholder="Type @ to mention someone..."
+    />
+  \`,
+})
+export class CommentBox {
+  triggers = [{ char: "@", data: users }];
+  markup = "";
+}`}
 	/>
 	<p>Type <code>@</code> in the editor. A dropdown appears. Select a user — it becomes a highlighted mention.</p>
 
@@ -100,6 +125,14 @@ let markup = $state("");
   ]}
   onChange={(m, p) => { markup = m; }}
 />`}
+		angular={`<sa-mentions
+  [triggers]="[
+    { char: '@', data: users, color: 'oklch(0.75 0.15 250)' },
+    { char: '#', data: tags, color: 'oklch(0.75 0.12 300)' },
+    { char: '/', data: commands, color: 'oklch(0.80 0.12 80)' },
+  ]"
+  [(ngModel)]="markup"
+/>`}
 	/>
 
 	<h2>Understanding the Markup</h2>
@@ -121,6 +154,11 @@ const mentions = extractMentions(markup.value, triggers);
 		svelte={`import { extractMentions } from "@skyastrall/mentions-svelte";
 
 const mentions = extractMentions(markup, triggers);
+// [{ id: "1", label: "Alice Johnson" }, { id: "t1", label: "urgent" }]`}
+		angular={`import { extractMentions } from "@skyastrall/mentions-angular";
+
+// In your component, against the current markup:
+const mentions = extractMentions(this.markup, this.triggers);
 // [{ id: "1", label: "Alice Johnson" }, { id: "t1", label: "urgent" }]`}
 	/>
 
@@ -167,6 +205,27 @@ let mentions;
 <button onmousedown={(e) => { e.preventDefault(); mentions.insertTrigger("@"); }}>
   Insert @
 </button>`}
+		angular={`import { Component, viewChild } from "@angular/core";
+import { FormsModule } from "@angular/forms";
+import { SaMentions } from "@skyastrall/mentions-angular";
+
+@Component({
+  standalone: true,
+  imports: [SaMentions, FormsModule],
+  template: \`
+    <sa-mentions #ref [triggers]="triggers" [(ngModel)]="markup" />
+    <button (click)="ref.focus()">Focus</button>
+    <button (click)="ref.clear()">Clear</button>
+    <button (mousedown)="$event.preventDefault(); ref.insertTrigger('@')">
+      Insert @
+    </button>
+  \`,
+})
+export class Editor {
+  readonly ref = viewChild.required(SaMentions);
+  triggers = [{ char: "@", data: users }];
+  markup = "";
+}`}
 	/>
 
 	<h2>Next</h2>

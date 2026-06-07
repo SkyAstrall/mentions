@@ -6,10 +6,29 @@ All notable changes to `@skyastrall/mentions` packages. Per-package changelogs l
 - [`@skyastrall/mentions-react`](./packages/react/CHANGELOG.md)
 - [`@skyastrall/mentions-vue`](./packages/vue/CHANGELOG.md)
 - [`@skyastrall/mentions-svelte`](./packages/svelte/CHANGELOG.md)
+- [`@skyastrall/mentions-angular`](./packages/angular/CHANGELOG.md)
 
 The repo follows [semver](https://semver.org/). Releases are tagged in `pkg-name@version` form (changesets convention) plus an umbrella `v0.x.y` tag per release.
 
 ---
+
+## v0.5.0 — 2026-06-05
+
+**New: `@skyastrall/mentions-angular`** — Angular 21+ adapter with signal-based reactivity (`input.required`, `model`, `output`), `ControlValueAccessor` for `[(ngModel)]` and reactive forms, and a standalone `<sa-mentions>` component. Zoneless-ready. First npm release.
+
+Across all adapters this release also lands:
+
+- **Large-paste fast path** — pasting thousands of lines no longer freezes the page; large pastes insert as a single text node (~25 ms for 5,000 lines) with one-step undo, and trigger detection is bounded near the cursor.
+- **Block line breaks preserved** — Enter is stored as `<div>` blocks; serialization now emits `\n` at block boundaries instead of only recognizing `<br>`.
+- **SSR-safe editor mode** — `plaintext-only` detection runs client-side after mount, fixing Next.js / Nuxt / Astro SSR.
+- **`insertText(text)`** on every adapter handle, sharing the large-paste fast path.
+- **React** ships `'use client'`; the imperative `ref` handle works on React 18 and 19; compound prop types are exported flat.
+- **Vue** `.d.ts` emits real `DefineComponent<…>` declarations with typed `emits`.
+- **Core** exports `./effects.css` for all adapters.
+- **engines** tightened to `^20.19.0 || >=22.12.0`; the `@types/react` peer is now `^18 || ^19`.
+- Multi-framework infrastructure — namespaced label taxonomy, framework-aware issue/feature templates, CODEOWNERS, multi-framework `README.md` / `CONTRIBUTING.md` / `website/README.md`.
+
+Packages: `core@0.5.0`, `react@0.5.0`, `vue@0.5.0`, `svelte@0.5.0`, `angular@0.5.0` (`angular` initial).
 
 ## v0.4.0 — 2026-03-26
 

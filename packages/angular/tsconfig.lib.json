@@ -1,0 +1,31 @@
+{
+	"compilerOptions": {
+		"target": "es2022",
+		"module": "es2022",
+		"moduleResolution": "bundler",
+		"lib": ["es2022", "dom"],
+		"strict": true,
+		"noImplicitOverride": true,
+		"noPropertyAccessFromIndexSignature": true,
+		"noImplicitReturns": true,
+		"noFallthroughCasesInSwitch": true,
+		"useDefineForClassFields": false,
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": false,
+		"skipLibCheck": true,
+		"esModuleInterop": true,
+		"declaration": true,
+		"declarationMap": true,
+		"sourceMap": true,
+		"inlineSources": true,
+		"forceConsistentCasingInFileNames": true
+	},
+	"angularCompilerOptions": {
+		"compilationMode": "partial",
+		"strictTemplates": true,
+		"strictInjectionParameters": true,
+		"strictInputAccessModifiers": true,
+		"enableI18nLegacyMessageIdFormat": false
+	},
+	"exclude": ["**/*.spec.ts", "**/*.test.ts", "dist"]
+}

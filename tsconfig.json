@@ -8,6 +8,7 @@
 		"sourceMap": true,
 		"strict": true,
 		"isolatedDeclarations": true,
+		"allowImportingTsExtensions": true,
 		"skipLibCheck": true,
 		"jsx": "react-jsx",
 		"esModuleInterop": true,

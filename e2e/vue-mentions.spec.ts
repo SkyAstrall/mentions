@@ -17,11 +17,9 @@ function dropdownItems(page: Page): Locator {
 async function clearEditor(page: Page) {
 	const ed = editor(page);
 	await ed.click();
-	await page.keyboard.press("Meta+a");
+	await page.keyboard.press("ControlOrMeta+a");
 	await page.keyboard.press("Backspace");
 }
-
-// -- Basic typing --
 
 test.describe("vue: basic editor", () => {
 	test.beforeEach(async ({ page }) => {
@@ -52,8 +50,6 @@ test.describe("vue: basic editor", () => {
 		expect(cursorAtEnd).toBe(true);
 	});
 });
-
-// -- Trigger detection & dropdown --
 
 test.describe("vue: trigger detection", () => {
 	test.beforeEach(async ({ page }) => {
@@ -99,8 +95,6 @@ test.describe("vue: trigger detection", () => {
 		await expect(dropdown(page)).not.toBeVisible();
 	});
 });
-
-// -- Mention selection --
 
 test.describe("vue: mention selection", () => {
 	test.beforeEach(async ({ page }) => {
@@ -181,8 +175,6 @@ test.describe("vue: mention selection", () => {
 	});
 });
 
-// -- Actions (template ref + expose) --
-
 test.describe("vue: actions via template ref", () => {
 	test.beforeEach(async ({ page }) => {
 		await page.goto(PLAYGROUND);
@@ -191,14 +183,11 @@ test.describe("vue: actions via template ref", () => {
 	});
 
 	test("Focus button focuses the editor", async ({ page }) => {
-		// Click somewhere else first to blur editor
 		await page.click("body");
 
-		// Click the Focus action button
 		const focusBtn = page.locator("#playground-vue .pg-actions button", { hasText: "Focus" });
 		await focusBtn.click();
 
-		// Editor should be focused
 		const isFocused = await page.evaluate(() => {
 			const el = document.querySelector("#playground-vue [data-mentions-editor]");
 			return document.activeElement === el;
@@ -207,34 +196,27 @@ test.describe("vue: actions via template ref", () => {
 	});
 
 	test("Clear button clears the editor", async ({ page }) => {
-		// Type something first
 		await editor(page).click();
 		await page.keyboard.type("some text here");
 		await expect(editor(page)).toHaveText("some text here");
 
-		// Click Clear
 		const clearBtn = page.locator("#playground-vue .pg-actions button", { hasText: /^Clear$/ });
 		await clearBtn.click();
 
-		// Editor should be empty
 		const text = await editor(page).textContent();
 		expect(text?.replace(/\u200B/g, "").trim()).toBe("");
 	});
 
 	test("Insert @ button inserts trigger character", async ({ page }) => {
-		// Focus editor first
 		await editor(page).click();
 
 		// Use mousedown on Insert @ button (same as the template uses mousedown.prevent)
 		const insertBtn = page.locator("#playground-vue .pg-actions button", { hasText: "Insert @" });
 		await insertBtn.dispatchEvent("mousedown");
 
-		// Wait for dropdown to appear (@ trigger should activate)
 		await expect(dropdown(page)).toBeVisible({ timeout: 3000 });
 	});
 });
-
-// -- Stress tests --
 
 test.describe("vue: stress tests", () => {
 	test.beforeEach(async ({ page }) => {
@@ -250,7 +232,6 @@ test.describe("vue: stress tests", () => {
 		const btn = page.locator("#playground-vue .pg-actions button", { hasText: "Clear + Insert" });
 		await btn.click();
 
-		// Wait for setTimeout(50) + processing
 		await page.waitForTimeout(300);
 
 		const edText = await editor(page).textContent();
@@ -259,42 +240,34 @@ test.describe("vue: stress tests", () => {
 	});
 
 	test("Rapid 5x @ stress test", async ({ page }) => {
-		// Focus editor first
 		await editor(page).click();
 
-		// Click Rapid 5x @ button
 		const btn = page.locator("#playground-vue .pg-actions button", { hasText: "Rapid 5x @" });
 		await btn.click();
 
 		// Wait for all 5 timeouts to complete (4 * 80ms = 320ms)
 		await page.waitForTimeout(600);
 
-		// Should have multiple @ characters
 		const edText = await editor(page).textContent();
 		const atCount = (edText?.match(/@/g) || []).length;
 		expect(atCount).toBeGreaterThanOrEqual(1);
 	});
 
 	test("Rapid 10x mixed stress test", async ({ page }) => {
-		// Focus editor first
 		await editor(page).click();
 
-		// Click Rapid 10x mixed button
 		const btn = page.locator("#playground-vue .pg-actions button", { hasText: "Rapid 10x mixed" });
 		await btn.click();
 
 		// Wait for all 10 timeouts (9 * 60ms = 540ms)
 		await page.waitForTimeout(800);
 
-		// Should have trigger characters inserted
 		const edText = await editor(page).textContent();
 		expect(edText?.replace(/\u200B/g, "").length).toBeGreaterThan(0);
 	});
 
 	test("template ref expose() returns methods", async ({ page }) => {
-		// Verify the ref is actually set by checking if methods exist
 		const refExists = await page.evaluate(() => {
-			// Access the Vue component instance's exposed methods
 			const vueEl = document.querySelector("#playground-vue [data-mentions]");
 			if (!vueEl) return "no-mentions-el";
 
@@ -308,14 +281,9 @@ test.describe("vue: stress tests", () => {
 			if (typeof component.exposed.insertTrigger !== "function") return "no-insertTrigger";
 			return "ok";
 		});
-		// Log for debugging
-		console.log("template ref expose check:", refExists);
-		// If the expose is properly set, this should be "ok"
-		// If not, the specific failure tells us what's missing
+		expect(refExists).toBe("ok");
 	});
 });
-
-// -- Edge cases --
 
 test.describe("vue: edge cases", () => {
 	test.beforeEach(async ({ page }) => {
@@ -347,7 +315,7 @@ test.describe("vue: edge cases", () => {
 		const marks = editor(page).locator("mark[data-mention]");
 		await expect(marks).toHaveCount(1);
 
-		await page.keyboard.press("Meta+a");
+		await page.keyboard.press("ControlOrMeta+a");
 		await page.keyboard.press("Backspace");
 		await expect(marks).toHaveCount(0);
 	});
@@ -368,9 +336,17 @@ test.describe("vue: edge cases", () => {
 		await page.keyboard.type("hello@world");
 		await expect(dropdown(page)).not.toBeVisible();
 	});
-});
 
-// -- Bug fix regression tests --
+	test("vue: trigger opens on a fresh line after Enter", async ({ page }) => {
+		await editor(page).click();
+		await page.keyboard.type("line1");
+		await page.keyboard.press("Enter");
+		await page.keyboard.type("@al");
+		// Fails if block-element line breaks are dropped during serialization:
+		// the "@" would then sit mid-word after "line1" and never trigger.
+		await expect(dropdown(page)).toBeVisible();
+	});
+});
 
 test.describe("vue: bug fixes", () => {
 	test.beforeEach(async ({ page }) => {
@@ -414,25 +390,22 @@ test.describe("vue: single-line toggle", () => {
 		await page.keyboard.press("Enter");
 		await page.keyboard.type("line two");
 
-		// Toggle single-line
 		const checkbox = page.locator('#playground-vue label:has-text("Single line") input');
 		await checkbox.check();
 		await page.waitForTimeout(200);
 
-		// Check single-line attributes applied
 		const hasSingleLine = await editor(page).getAttribute("data-singleline");
-		console.log("data-singleline:", hasSingleLine);
+		expect(hasSingleLine).not.toBeNull();
 
 		const whiteSpace = await editor(page).evaluate((el) => getComputedStyle(el).whiteSpace);
-		console.log("white-space:", whiteSpace);
+		expect(whiteSpace).toMatch(/nowrap|pre$/);
 
-		// Enter should be blocked
 		await editor(page).click();
 		await page.keyboard.press("End");
 		await page.keyboard.press("Enter");
 		await page.keyboard.type("x");
 
 		const html = await editor(page).innerHTML();
-		console.log("HTML after Enter:", html);
+		expect(html).not.toContain("<br");
 	});
 });

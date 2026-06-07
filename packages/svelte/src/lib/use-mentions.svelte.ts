@@ -5,16 +5,21 @@ import {
 	extractMentions,
 	getCaretRect,
 	getCursorOffset,
-	getMarkupFromDOM,
 	getPlainTextFromDOM,
+	handleEditorPaste,
+	insertLargeText,
 	insertTextAtCursor,
+	isLargePaste,
 	type MentionCallbacks,
 	MentionController,
 	type MentionItem,
 	type MentionState,
 	performMentionInsertion,
+	readEditorState,
 	restoreCursor,
+	supportsPlaintextOnly,
 	type TriggerConfig,
+	updateCaretIfActive,
 } from "@skyastrall/mentions-core";
 import { getContext, setContext } from "svelte";
 
@@ -46,12 +51,14 @@ export interface MentionsContext {
 	handleBlur: (e: FocusEvent) => void;
 	handleCompositionStart: () => void;
 	handleCompositionEnd: () => void;
+	handlePaste: (e: ClipboardEvent) => void;
 	handleScroll: () => void;
 	buildHTML: (markup: string) => string;
 	performInsertion: (item: MentionItem) => void;
 	clear: () => void;
 	focus: () => void;
 	insertTrigger: (trigger: string) => void;
+	insertText: (text: string) => void;
 }
 
 export interface UseMentionsReturn {
@@ -73,12 +80,14 @@ export interface UseMentionsReturn {
 	handleBlur: (e: FocusEvent) => void;
 	handleCompositionStart: () => void;
 	handleCompositionEnd: () => void;
+	handlePaste: (e: ClipboardEvent) => void;
 	handleScroll: () => void;
 	buildHTML: (markup: string) => string;
 	performInsertion: (item: MentionItem) => void;
 	clear: () => void;
 	focus: () => void;
 	insertTrigger: (trigger: string) => void;
+	insertText: (text: string) => void;
 }
 
 export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
@@ -105,7 +114,11 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 
 	let state: MentionState = $state(controller.getState());
 
-	// Subscribe to controller state changes
+	// Markup last read from the editor DOM. When state.markup matches it, the
+	// change originated from user input and the DOM is already correct — the
+	// sync effect must not rebuild (and serialize) the whole editor per keystroke.
+	let lastDomMarkup = options.value ?? options.defaultValue ?? "";
+
 	$effect(() => {
 		const unsub = controller.subscribe(() => {
 			state = controller.getState();
@@ -113,7 +126,6 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		return unsub;
 	});
 
-	// Sync trigger/callback changes to controller
 	$effect(() => {
 		controller.setOptions({
 			triggers: options.triggers,
@@ -130,19 +142,13 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		syncEditorHTML();
 	});
 
-	// Sync controlled value
 	$effect(() => {
 		const val = options.value;
 		if (val !== undefined && val !== state.markup) {
 			controller.setValue(val);
-			if (editorRef) {
-				const html = buildHTML(val);
-				if (editorRef.innerHTML !== html) editorRef.innerHTML = html;
-			}
 		}
 	});
 
-	// Cleanup on destroy
 	$effect(() => {
 		return () => {
 			if (compositionRAFId !== null) cancelAnimationFrame(compositionRAFId);
@@ -150,11 +156,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		};
 	});
 
-	// Initial HTML render
 	$effect(() => {
-		if (!editorRef) return;
-		const html = buildHTML(state.markup);
-		if (editorRef.innerHTML !== html) editorRef.innerHTML = html;
+		if (state.markup === lastDomMarkup) return;
+		syncEditorHTML();
 	});
 
 	const isOpen = $derived(state.status === "suggesting" || state.status === "navigating");
@@ -195,6 +199,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			return;
 		}
 
+		lastDomMarkup = result.markup;
 		controller.handleInsertComplete(result.markup, result.plainText, result.cursor, item);
 	}
 
@@ -203,12 +208,19 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		if (!editorRef) return;
 
 		const cursorOffset = getCursorOffset(editorRef);
-		const newPlainText = getPlainTextFromDOM(editorRef);
-		const newMarkup = getMarkupFromDOM(editorRef, options.triggers);
+		const { markup: newMarkup, plainText: newPlainText } = readEditorState(
+			editorRef,
+			options.triggers,
+		);
 
-		const caretPos = getCaretRect(editorRef);
-		controller.updateCaretPosition(caretPos);
+		lastDomMarkup = newMarkup;
 		controller.handleInputChange(newMarkup, newPlainText, cursorOffset);
+		updateCaretIfActive(controller, editorRef);
+	}
+
+	function handlePaste(e: ClipboardEvent): void {
+		if (!editorRef) return;
+		handleEditorPaste(e, editorRef, { plaintextOnly: supportsPlaintextOnly() });
 	}
 
 	function handleKeyDown(e: KeyboardEvent): void {
@@ -266,6 +278,7 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 
 	function clear(): void {
 		if (editorRef) editorRef.innerHTML = "";
+		lastDomMarkup = "";
 		controller.clear();
 	}
 
@@ -294,6 +307,24 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		insertTextAtCursor((needsSpace ? " " : "") + trigger);
 	}
 
+	function insertText(text: string): void {
+		if (!editorRef) return;
+		editorRef.focus();
+		const sel = window.getSelection();
+		if (sel && sel.rangeCount === 0) {
+			const range = document.createRange();
+			range.selectNodeContents(editorRef);
+			range.collapse(false);
+			sel.addRange(range);
+		}
+		// Both branches fire an input event, so the pipeline runs once.
+		if (isLargePaste(text)) {
+			insertLargeText(editorRef, text);
+		} else {
+			insertTextAtCursor(text);
+		}
+	}
+
 	function syncEditorHTML(): void {
 		if (!editorRef) return;
 		const html = buildHTML(state.markup);
@@ -302,6 +333,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 			editorRef.innerHTML = html;
 			restoreCursor(editorRef, cursor);
 		}
+		// Record what the DOM now holds so the gated sync effect doesn't skip a
+		// rebuild when the value later changes back to this same markup.
+		lastDomMarkup = state.markup;
 	}
 
 	return {
@@ -352,12 +386,14 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		handleBlur,
 		handleCompositionStart,
 		handleCompositionEnd,
+		handlePaste,
 		handleScroll,
 		buildHTML,
 		performInsertion,
 		clear,
 		focus,
 		insertTrigger,
+		insertText,
 	};
 }
 

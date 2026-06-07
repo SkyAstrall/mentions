@@ -13,12 +13,16 @@ Multi-trigger inline suggestions for React. Drop-in component, compound componen
 npm install @skyastrall/mentions-react
 ```
 
-Requires `react` >= 18.
+Requires `react` and `react-dom` >= 18 (React 18 and 19 are both supported).
 
 ## Quick Start
 
 ```tsx
 import { Mentions } from "@skyastrall/mentions-react";
+
+const users = [{ id: "1", label: "Alice" }, { id: "2", label: "Bob" }];
+const tags = [{ id: "t1", label: "design" }, { id: "t2", label: "bug" }];
+const commands = [{ id: "c1", label: "summarize" }];
 
 <Mentions
   triggers={[
@@ -39,15 +43,32 @@ import { Mentions } from "@skyastrall/mentions-react";
 - Single-line mode
 - Full ARIA keyboard navigation
 - Controlled and uncontrolled modes
-- ~5KB gzipped (~9KB core)
+- ~4 KB minified + gzipped (~6 KB core)
 
 ## API Layers
 
 1. **`<Mentions>`** — drop-in, works out of the box
-2. **Compound components** — `Mentions.Editor`, `Mentions.Portal`, `Mentions.List`, `Mentions.Item`
+2. **Compound components** — `Mentions.Editor`, `Mentions.Portal`, `Mentions.List`, `Mentions.Item`, `Mentions.Empty`, `Mentions.Loading`
 3. **`useMentions()`** — headless hook, full control
 
 See the [full documentation](https://mentions.skyastrall.com/docs) for API reference and guides.
+
+## Next.js App Router / React Server Components
+
+The bundle ships with a `'use client'` directive at the top, so importing `<Mentions>` or `useMentions()` from a Client Component works out of the box.
+
+If you need the pure data helpers (`extractMentions`, `parseMarkup`, `markupToPlainText`, `buildMentionHTML`) **inside a Server Component** (for SSR, RSC, or edge runtimes), import them directly from `@skyastrall/mentions-core` — the framework-agnostic engine has no `'use client'` boundary:
+
+```tsx
+import { extractMentions } from "@skyastrall/mentions-core";
+
+const triggers = [{ char: "@", data: [] }];
+
+export default async function Page({ comment }: { comment: string }) {
+  const mentions = extractMentions(comment, triggers); // server-safe
+  return <ul>{mentions.map((m) => <li key={m.id}>@{m.label}</li>)}</ul>;
+}
+```
 
 ## License
 

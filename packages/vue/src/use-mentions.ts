@@ -5,16 +5,21 @@ import {
 	extractMentions,
 	getCaretRect,
 	getCursorOffset,
-	getMarkupFromDOM,
 	getPlainTextFromDOM,
+	handleEditorPaste,
+	insertLargeText,
 	insertTextAtCursor,
+	isLargePaste,
 	type MentionCallbacks,
 	MentionController,
 	type MentionItem,
 	type MentionState,
 	performMentionInsertion,
+	readEditorState,
 	restoreCursor,
+	supportsPlaintextOnly,
 	type TriggerConfig,
+	updateCaretIfActive,
 } from "@skyastrall/mentions-core";
 import {
 	computed,
@@ -54,12 +59,14 @@ export interface MentionsContext {
 	handleBlur: (e: FocusEvent) => void;
 	handleCompositionStart: () => void;
 	handleCompositionEnd: () => void;
+	handlePaste: (e: ClipboardEvent) => void;
 	handleScroll: () => void;
 	buildHTML: (markup: string) => string;
 	performInsertion: (item: MentionItem) => void;
 	clear: () => void;
 	focus: () => void;
 	insertTrigger: (trigger: string) => void;
+	insertText: (text: string) => void;
 }
 
 export const MentionsKey: InjectionKey<MentionsContext> = Symbol("MentionsContext");
@@ -91,12 +98,14 @@ export interface UseMentionsReturn {
 	handleBlur: (e: FocusEvent) => void;
 	handleCompositionStart: () => void;
 	handleCompositionEnd: () => void;
+	handlePaste: (e: ClipboardEvent) => void;
 	handleScroll: () => void;
 	buildHTML: (markup: string) => string;
 	performInsertion: (item: MentionItem) => void;
 	clear: () => void;
 	focus: () => void;
 	insertTrigger: (trigger: string) => void;
+	insertText: (text: string) => void;
 }
 
 export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
@@ -160,11 +169,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		(newVal) => {
 			if (newVal !== undefined && newVal !== state.value.markup) {
 				controller.setValue(newVal);
-				const el = editorRef.value;
-				if (el) {
-					const html = buildHTML(newVal);
-					if (el.innerHTML !== html) el.innerHTML = html;
-				}
+				// Cursor-preserving rebuild: an external value change must not
+				// teleport the caret to the start of the editor.
+				syncEditorHTML();
 			}
 		},
 	);
@@ -221,12 +228,16 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		if (!el) return;
 
 		const cursorOffset = getCursorOffset(el);
-		const newPlainText = getPlainTextFromDOM(el);
-		const newMarkup = getMarkupFromDOM(el, options.triggers);
+		const { markup: newMarkup, plainText: newPlainText } = readEditorState(el, options.triggers);
 
-		const caretPos = getCaretRect(el);
-		controller.updateCaretPosition(caretPos);
 		controller.handleInputChange(newMarkup, newPlainText, cursorOffset);
+		updateCaretIfActive(controller, el);
+	}
+
+	function handlePaste(e: ClipboardEvent): void {
+		const el = editorRef.value;
+		if (!el) return;
+		handleEditorPaste(e, el, { plaintextOnly: supportsPlaintextOnly() });
 	}
 
 	function handleKeyDown(e: KeyboardEvent): void {
@@ -298,9 +309,8 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		const sel = window.getSelection();
 		if (!sel) return;
 
-		// After focus(), the browser may not have a selection range yet
-		// (e.g., after blur, clear, or programmatic focus from a button click).
-		// Create a collapsed range at the end of the element content.
+		// After focus() the browser may not have a selection range yet
+		// (e.g. after blur, clear, or programmatic focus from a button click).
 		if (sel.rangeCount === 0) {
 			const range = document.createRange();
 			range.selectNodeContents(el);
@@ -313,6 +323,25 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		const before = currentPlain.slice(0, cursorOffset);
 		const needsSpace = before.length > 0 && !/\s$/.test(before);
 		insertTextAtCursor((needsSpace ? " " : "") + trigger);
+	}
+
+	function insertText(text: string): void {
+		const el = editorRef.value;
+		if (!el) return;
+		el.focus();
+		const sel = window.getSelection();
+		if (sel && sel.rangeCount === 0) {
+			const range = document.createRange();
+			range.selectNodeContents(el);
+			range.collapse(false);
+			sel.addRange(range);
+		}
+		// Both branches fire an input event, so the pipeline runs once.
+		if (isLargePaste(text)) {
+			insertLargeText(el, text);
+		} else {
+			insertTextAtCursor(text);
+		}
 	}
 
 	function syncEditorHTML(): void {
@@ -355,11 +384,13 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		handleBlur,
 		handleCompositionStart,
 		handleCompositionEnd,
+		handlePaste,
 		handleScroll,
 		buildHTML,
 		performInsertion,
 		clear,
 		focus,
 		insertTrigger,
+		insertText,
 	};
 }

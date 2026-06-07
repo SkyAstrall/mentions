@@ -221,8 +221,6 @@ export class MentionController {
 		this.listeners.clear();
 	}
 
-	// -- Private --
-
 	private dispatch(action: Parameters<typeof mentionReducer>[1]): void {
 		const prev = this.state;
 		this.state = mentionReducer(this.state, action);

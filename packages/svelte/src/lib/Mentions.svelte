@@ -88,6 +88,7 @@
 		clear: api.clear,
 		focus: api.focus,
 		insertTrigger: api.insertTrigger,
+		insertText: api.insertText,
 	};
 
 	setMentionsContext(ctx);
@@ -96,6 +97,7 @@
 	export function clear() { api.clear(); }
 	export function getValue() { return { markup: api.markup, plainText: api.plainText }; }
 	export function insertTrigger(trigger: string) { api.insertTrigger(trigger); }
+	export function insertText(text: string) { api.insertText(text); }
 </script>
 
 {#if children}

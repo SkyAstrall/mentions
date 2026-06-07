@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { insertTextAtCursor } from "@skyastrall/mentions-core";
+	import { handleEditorPaste, insertTextAtCursor, supportsPlaintextOnly } from "@skyastrall/mentions-core";
 	import { onMount } from "svelte";
 	import { getMentionsContext } from "./use-mentions.svelte.js";
 
@@ -17,19 +17,11 @@
 	const ctx = getMentionsContext();
 	const isSingleLine = $derived(singleLineProp ?? ctx.singleLine);
 	const isEmpty = $derived(!ctx.state.markup);
-	const editable = $derived(disabled || readOnly ? false : supportsPlaintextOnly ? "plaintext-only" : true);
+	const editable = $derived(disabled || readOnly ? false : supportsPlaintextOnly() ? "plaintext-only" : true);
 
 	let el: HTMLDivElement;
 	let beforeInputHandler: ((e: Event) => void) | null = null;
 	let scrollHandler: (() => void) | null = null;
-
-	const supportsPlaintextOnly =
-		typeof document !== "undefined" &&
-		(() => {
-			const div = document.createElement("div");
-			div.contentEditable = "plaintext-only";
-			return div.contentEditable === "plaintext-only";
-		})();
 
 	function injectStyles(): void {
 		if (typeof document === "undefined") return;
@@ -73,15 +65,8 @@
 	}
 
 	function handlePaste(e: ClipboardEvent): void {
-		if (isSingleLine) {
-			e.preventDefault();
-			const text = e.clipboardData?.getData("text/plain")?.replace(/[\n\r]/g, " ") ?? "";
-			insertTextAtCursor(text);
-		} else if (!supportsPlaintextOnly) {
-			e.preventDefault();
-			const text = e.clipboardData?.getData("text/plain") ?? "";
-			insertTextAtCursor(text);
-		}
+		if (!el) return;
+		handleEditorPaste(e, el, { singleLine: isSingleLine, plaintextOnly: supportsPlaintextOnly() });
 	}
 
 	function handleDrop(e: DragEvent): void {

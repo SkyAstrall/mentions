@@ -1,0 +1,16 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"target": "ES2022",
+		"module": "preserve",
+		"moduleResolution": "bundler",
+		"useDefineForClassFields": false,
+		"skipLibCheck": true,
+		"isolatedModules": true,
+		"experimentalDecorators": true
+	},
+	"angularCompilerOptions": {
+		"strictTemplates": true
+	},
+	"files": ["src/main.ts"]
+}

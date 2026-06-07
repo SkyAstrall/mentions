@@ -16,3 +16,19 @@ blob-report/
 .svelte-kit/
 .claude/
 .cursor/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.wrangler/
+.vercel/
+.netlify/
+.turbo/
+HANDOFF.md
+PRE_REVIEW.md
+ci/angular-smoke/node_modules/
+ci/angular-smoke/dist/
+ci/angular-smoke/.tarballs/
+ci/angular-smoke/package-lock.json
+
+# Angular build cache (binary, can be large)
+.angular/

@@ -4,17 +4,18 @@ import CodeTabs from "../../components/CodeTabs.astro";
 ---
 
 <DocsLayout title="Introduction">
-	<p class="lead">Multi-trigger inline mentions for React and Vue. Built on a framework-agnostic core.</p>
+	<p class="lead">Multi-trigger inline mentions for React, Vue, Svelte, and Angular. Built on a framework-agnostic core.</p>
 
 	<h2>What is @skyastrall/mentions?</h2>
 	<p>A production-grade mentions input that supports <code>@users</code>, <code>#tags</code>, <code>/commands</code>, and custom triggers — each with its own data source, color, and configuration.</p>
 
 	<p>It ships as a core engine and thin framework adapters:</p>
 	<ul>
-		<li><code>@skyastrall/mentions-core</code> — Framework-agnostic state machine, markup parser, trigger detection. ~9KB gzipped.</li>
-		<li><code>@skyastrall/mentions-react</code> — React adapter with drop-in component, compound components, and headless hook. ~5KB.</li>
-		<li><code>@skyastrall/mentions-vue</code> — Vue 3 adapter with composable and compound components. ~5KB.</li>
-		<li><code>@skyastrall/mentions-svelte</code> — Svelte 5 adapter with composable and compound components. ~9KB.</li>
+		<li><code>@skyastrall/mentions-core</code> — Framework-agnostic state machine, markup parser, trigger detection. ~6KB gzipped.</li>
+		<li><code>@skyastrall/mentions-react</code> — React adapter with drop-in component, compound components, and headless hook. ~4KB.</li>
+		<li><code>@skyastrall/mentions-vue</code> — Vue 3 adapter with composable and compound components. ~4KB.</li>
+		<li><code>@skyastrall/mentions-svelte</code> — Svelte 5 adapter with composable and compound components. ~5KB.</li>
+		<li><code>@skyastrall/mentions-angular</code> — Angular adapter with standalone component, signals, and <code>ControlValueAccessor</code>. ~5KB.</li>
 	</ul>
 
 	<h2>Three API Layers</h2>
@@ -35,10 +36,14 @@ import CodeTabs from "../../components/CodeTabs.astro";
   triggers={[{ char: "@", data: users }]}
   onChange={(markup, plainText) => {}}
 />`}
+		angular={`<sa-mentions
+  [triggers]="[{ char: '@', data: users }]"
+  [(ngModel)]="markup"
+/>`}
 	/>
 
 	<h3>2. Compound Components</h3>
-	<p>Control the layout. The library handles state, ARIA, and keyboard navigation.</p>
+	<p>Control the layout. The library handles state, ARIA, and keyboard navigation. (Angular is component-first — it ships a single <code>&lt;sa-mentions&gt;</code>; for custom layout drop to the headless bridge below.)</p>
 	<CodeTabs
 		react={`<Mentions triggers={triggers}>
   <Mentions.Editor placeholder="Type @..." />
@@ -70,6 +75,14 @@ import CodeTabs from "../../components/CodeTabs.astro";
     </MentionsList>
   </MentionsPortal>
 </Mentions>`}
+		angular={`<!-- Angular renders a complete component; configure it via inputs -->
+<sa-mentions
+  [triggers]="triggers"
+  [(ngModel)]="markup"
+  placeholder="Type @..."
+/>
+
+<!-- For full layout control, drive the headless bridge yourself (below). -->`}
 	/>
 
 	<h3>3. Headless Hook / Composable</h3>
@@ -81,18 +94,25 @@ import CodeTabs from "../../components/CodeTabs.astro";
   useMentions({ triggers });`}
 		svelte={`const api = useMentions({ triggers });
 // api.isOpen, api.items, api.aria, api.handleInput, ...`}
+		angular={`import { DestroyRef, inject } from "@angular/core";
+import { MentionsControllerBridge } from "@skyastrall/mentions-angular";
+
+// state() is a signal; drive everything through the controller.
+bridge = new MentionsControllerBridge({ triggers }, inject(DestroyRef));
+// bridge.state().items, .status, .query ...
+// bridge.controller.handleInputChange(markup, plainText, cursor);`}
 	/>
 
 	<h2>Key Features</h2>
 	<ul>
 		<li>Multi-trigger support with per-trigger colors and data sources</li>
-		<li>Framework-agnostic core — React, Vue, and Svelte adapters shipped, more coming</li>
+		<li>Framework-agnostic core — React, Vue, Svelte, and Angular adapters shipped</li>
 		<li>Contenteditable with DOM-first architecture</li>
 		<li>Ghost text for AI inline completions (Tab to accept)</li>
 		<li>Async data with debounce, abort, and loading states</li>
 		<li>Single-line mode with Enter/paste/drop prevention</li>
 		<li>WAI-ARIA combobox pattern with keyboard navigation</li>
-		<li>~9KB core + ~5KB adapter gzipped, zero runtime dependencies in core</li>
+		<li>~6KB core + ~4–5KB adapter gzipped, zero runtime dependencies in core</li>
 	</ul>
 
 	<h2>Next Steps</h2>
