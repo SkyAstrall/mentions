@@ -50,6 +50,58 @@ describe("detectTrigger", () => {
 		expect(detectTrigger("email@test", 10, triggers)).toBeNull();
 	});
 
+	it.each([..."/-#&=+~@\\"])("rejects the URL or path joiner %s before a trigger", (prefix) => {
+		for (const trigger of triggers) {
+			const text = `path${prefix}${trigger.char}al`;
+			expect(detectTrigger(text, text.length, [trigger])).toBeNull();
+		}
+	});
+
+	it.each([
+		"https://mastodon.social/@alice",
+		"x.com/@a",
+		"name@example.com",
+	])("does not activate within %s while typing", (text) => {
+		for (let cursor = 1; cursor <= text.length; cursor++) {
+			expect(detectTrigger(text, cursor, [atTrigger])).toBeNull();
+		}
+	});
+
+	it.each(["Thanks.@bob", "Ready?@bob", "cc:@bob"])("detects a mention in %s", (text) => {
+		expect(detectTrigger(text, text.length, [atTrigger])).toEqual({
+			trigger: atTrigger,
+			query: "bob",
+			startIndex: text.indexOf("@"),
+			endIndex: text.length,
+		});
+	});
+
+	it("preserves the first @ as the trigger when only @ is configured", () => {
+		expect(detectTrigger("@@al", 4, [atTrigger])).toEqual({
+			trigger: atTrigger,
+			query: "@al",
+			startIndex: 0,
+			endIndex: 4,
+		});
+	});
+
+	it.each([
+		"你好",
+		"かな",
+		"한글",
+		..."()[]{}'\",.;!?:，。！？：－＃＆＠／＼",
+	])("detects triggers after the CJK or punctuation boundary %s", (prefix) => {
+		for (const trigger of triggers) {
+			const text = `${prefix}${trigger.char}al`;
+			expect(detectTrigger(text, text.length, [trigger])).toEqual({
+				trigger,
+				query: "al",
+				startIndex: prefix.length,
+				endIndex: text.length,
+			});
+		}
+	});
+
 	it("detects trigger with empty query (just typed the char)", () => {
 		const r = expectMatch(detectTrigger("Hey @", 5, triggers));
 		expect(r.query).toBe("");
