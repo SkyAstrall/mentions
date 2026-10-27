@@ -18,6 +18,8 @@ export type TriggerConfig = {
 	data: MentionItem[] | ((query: string, context: MentionContext) => Promise<MentionItem[]>);
 	markup?: string;
 	allowSpaceInQuery?: boolean;
+	startOfLine?: boolean;
+	allowedPrefixes?: string[];
 	minChars?: number;
 	debounce?: number;
 	maxSuggestions?: number;

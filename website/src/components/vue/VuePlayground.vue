@@ -3,6 +3,7 @@ import { ref, computed } from "vue";
 import { Mentions, extractMentions } from "@skyastrall/mentions-vue";
 import type { MentionItem, MentionsInstance, TriggerConfig } from "@skyastrall/mentions-vue";
 import { users, tags, commands } from "../../data/mock";
+import { buildPlaygroundTriggers, formatPlaygroundTrigger } from "../playground-config";
 
 type TriggerState = {
 	enabled: boolean;
@@ -85,25 +86,19 @@ function removeTrigger(idx: number) {
 }
 
 const triggers = computed<TriggerConfig[]>(() =>
-	triggerStates.value
-		.filter((t) => t.enabled)
-		.map((t) => ({
-			char: t.char,
-			data: asyncMode.value && t.char === "@" ? asyncUsers : t.data,
-			color: t.color,
-			debounce: debounceMs.value,
-			minChars: minChars.value,
-			...(maxSuggestions.value > 0 ? { maxSuggestions: maxSuggestions.value } : {}),
-		})),
+	buildPlaygroundTriggers(triggerStates.value, {
+		asyncMode: asyncMode.value,
+		asyncUsers,
+		debounce: debounceMs.value,
+		minChars: minChars.value,
+		maxSuggestions: maxSuggestions.value,
+	}),
 );
 
 const code = computed(() => {
 	const trigLines = triggerStates.value
 		.filter((t) => t.enabled)
-		.map((t) => {
-			const dataStr = asyncMode.value && t.char === "@" ? "fetchUsers" : t.label.toLowerCase();
-			return `    { char: "${t.char}", data: ${dataStr}, color: "${t.color}" }`;
-		});
+		.map((t) => formatPlaygroundTrigger(t, asyncMode.value).replaceAll('"', "'"));
 	const props: string[] = [];
 	props.push(`  :triggers="[\n${trigLines.join(",\n")}\n  ]"`);
 	if (placeholder.value) props.push(`  placeholder="${placeholder.value}"`);

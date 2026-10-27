@@ -8,6 +8,8 @@ const triggerProps = [
 	{ name: "data", type: "MentionItem[] | (query, ctx) => Promise<MentionItem[]>", description: "Static array or async fetcher", required: true },
 	{ name: "markup", type: "string", default: '"{char}[__display__](__id__)"', description: "Markup template (uses trigger char)" },
 	{ name: "allowSpaceInQuery", type: "boolean", default: "false", description: "Allow spaces in queries" },
+	{ name: "startOfLine", type: "boolean", default: "false", description: "Open only at text start or immediately after a newline (\\n)" },
+	{ name: "allowedPrefixes", type: "string[]", default: "undefined", description: "Replace default boundaries with literal allowed preceding Unicode characters" },
 	{ name: "minChars", type: "number", default: "0", description: "Min chars before suggestions" },
 	{ name: "debounce", type: "number", default: "200", description: "Debounce ms for async fetchers" },
 	{ name: "maxSuggestions", type: "number", description: "Cap number of suggestions" },
@@ -27,6 +29,18 @@ const contextProps = [
 
 	<h2>TriggerConfig</h2>
 	<PropsTable props={triggerProps} />
+
+	<h2>Where Triggers Open</h2>
+	<p><code>startOfLine: true</code> requires the trigger to begin the text or immediately follow <code>\n</code>. Leading spaces, tabs, and a lone carriage return do not count as line starts.</p>
+	<p>When <code>allowedPrefixes</code> is undefined, triggers retain the default boundaries: whitespace, CJK characters, and punctuation, with word continuations and email, URL, and path joiners excluded.</p>
+	<p>Setting <code>allowedPrefixes</code> replaces that boundary rule for this trigger. Each entry matches the single Unicode code point immediately before the complete trigger, including characters represented by surrogate pairs. Entries are literal characters, not regular expressions or multi-character sequences; Unicode normalization is not applied.</p>
+	<p>Text start is always allowed, even with an empty array. <code>allowedPrefixes: []</code> therefore permits opening only at text start. When both options are set, both restrictions must pass: opening after a newline requires <code>"\n"</code> in the prefix list as well as <code>startOfLine: true</code>.</p>
+	<Code code={`const triggers = [
+  { char: "/", data: commands, startOfLine: true },
+  { char: "#", data: tags, allowedPrefixes: [" ", "("] },
+  { char: "@", data: users },
+];`} />
+	<p>These options use the same core detection in React, Vue, Svelte, and Angular. They control opening suggestions; mention insertion and stored markup stay the same.</p>
 
 	<h2>MentionContext</h2>
 	<p>Second argument to async fetchers — provides editor context.</p>

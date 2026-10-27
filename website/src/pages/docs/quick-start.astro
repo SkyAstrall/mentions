@@ -135,6 +135,26 @@ export class CommentBox {
 />`}
 	/>
 
+	<h2>Line-Start Slash Commands</h2>
+	<p>Set <code>startOfLine: true</code> on a slash trigger to open commands at text start or directly after pressing Enter. An inline command such as <code>hello /</code>, or a slash after indentation, does not open suggestions.</p>
+	<CodeTabs
+		react={`<Mentions
+  triggers={[{ char: "/", data: [{ id: "help", label: "help" }], startOfLine: true }]}
+/>`}
+		vue={`<Mentions
+  :triggers="[{ char: '/', data: [{ id: 'help', label: 'help' }], startOfLine: true }]"
+  v-model="markup"
+/>`}
+		svelte={`<Mentions
+  triggers={[{ char: "/", data: [{ id: "help", label: "help" }], startOfLine: true }]}
+/>`}
+		angular={`<sa-mentions
+  [triggers]="[{ char: '/', data: [{ id: 'help', label: 'help' }], startOfLine: true }]"
+  [(ngModel)]="markup"
+/>`}
+	/>
+	<p>For custom boundaries, use <code>allowedPrefixes</code>, for example <code>allowedPrefixes: [" ", "("]</code> on a hashtag trigger. See <a href="/docs/api/trigger-config">TriggerConfig</a> for defaults and how the options combine.</p>
+
 	<h2>Understanding the Markup</h2>
 	<p>The component emits two values on change:</p>
 	<ul>

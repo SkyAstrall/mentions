@@ -24,6 +24,6 @@ export default defineConfig({
 		command: "pnpm build && cd website && pnpm dev",
 		port: 4321,
 		reuseExistingServer: !isCI,
-		timeout: 120_000,
+		timeout: 300_000,
 	},
 });

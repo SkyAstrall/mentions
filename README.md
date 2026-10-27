@@ -112,6 +112,17 @@ export class CommentComponent {
 
 > **More patterns** — multi-trigger, async data, compound components, ghost text, single-line mode, headless hook/composable/runes/signals — live in the [docs](https://mentions.skyastrall.com/docs).
 
+Each trigger accepts `startOfLine?: boolean` and `allowedPrefixes?: string[]` across all four adapters:
+
+```ts
+const triggers = [
+  { char: "/", data: commands, startOfLine: true },
+  { char: "#", data: tags, allowedPrefixes: [" ", "("] },
+];
+```
+
+`startOfLine: true` opens only at text start or immediately after `\n`, so inline slash commands stay closed. `allowedPrefixes` replaces the default boundary rule with literal preceding Unicode characters; text start remains allowed, and `[]` allows only text start. If both options are set, both must pass. Omitting them preserves existing whitespace, CJK, and punctuation boundaries and email/URL suppression. See [TriggerConfig](https://mentions.skyastrall.com/docs/api/trigger-config).
+
 ---
 
 ## Three API layers
