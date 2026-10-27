@@ -2,6 +2,7 @@
 	import { Mentions, extractMentions } from "@skyastrall/mentions-svelte";
 	import type { MentionItem, TriggerConfig } from "@skyastrall/mentions-svelte";
 	import { users, tags, commands } from "../../data/mock";
+	import { buildPlaygroundTriggers, formatPlaygroundTrigger } from "../playground-config";
 
 	type TriggerState = {
 		enabled: boolean;
@@ -84,16 +85,9 @@
 	}
 
 	const triggers: TriggerConfig[] = $derived(
-		triggerStates
-			.filter((t) => t.enabled)
-			.map((t) => ({
-				char: t.char,
-				data: asyncMode && t.char === "@" ? asyncUsers : t.data,
-				color: t.color,
-				debounce: debounceMs,
-				minChars: minChars,
-				...(maxSuggestions > 0 ? { maxSuggestions } : {}),
-			})),
+		buildPlaygroundTriggers(triggerStates, {
+			asyncMode, asyncUsers, debounce: debounceMs, minChars, maxSuggestions,
+		}),
 	);
 
 	const mentionsList = $derived.by(() => {
@@ -107,10 +101,7 @@
 	const code = $derived.by(() => {
 		const trigLines = triggerStates
 			.filter((t) => t.enabled)
-			.map((t) => {
-				const dataStr = asyncMode && t.char === "@" ? "fetchUsers" : t.label.toLowerCase();
-				return `    { char: "${t.char}", data: ${dataStr}, color: "${t.color}" }`;
-			});
+			.map((t) => formatPlaygroundTrigger(t, asyncMode));
 		const props: string[] = [];
 		props.push(`  triggers={[\n${trigLines.join(",\n")}\n  ]}`);
 		if (placeholder) props.push(`  placeholder="${placeholder}"`);

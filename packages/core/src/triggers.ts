@@ -22,8 +22,9 @@ const WORD_CONTINUATION = /[\p{N}\p{M}\p{Pc}]/u;
 const CJK_OR_PUNCTUATION =
 	/[\p{Script_Extensions=Han}\p{Script_Extensions=Hiragana}\p{Script_Extensions=Katakana}\p{Script_Extensions=Hangul}\p{Script_Extensions=Bopomofo}\p{P}]/u;
 
-function isTriggerBoundary(text: string, start: number): boolean {
+function isTriggerBoundary(text: string, start: number, trigger: TriggerConfig): boolean {
 	if (start === 0) return true;
+	if (trigger.startOfLine && text[start - 1] !== "\n") return false;
 	let index = start - 1;
 	const lastUnit = text.charCodeAt(index);
 	if (lastUnit >= 0xdc00 && lastUnit <= 0xdfff && index > 0) {
@@ -31,6 +32,9 @@ function isTriggerBoundary(text: string, start: number): boolean {
 		if (previousUnit >= 0xd800 && previousUnit <= 0xdbff) index--;
 	}
 	const precedingCodePoint = text.slice(index, start);
+	if (trigger.allowedPrefixes !== undefined) {
+		return trigger.allowedPrefixes.includes(precedingCodePoint);
+	}
 	if (URL_OR_PATH_JOINERS.includes(precedingCodePoint)) return false;
 	return (
 		WHITESPACE.test(precedingCodePoint) ||
@@ -68,7 +72,7 @@ export function detectTrigger(
 
 			const candidateStart = scanPos - triggerLen + 1;
 			if (candidateStart >= 0 && matchesAt(plainText, triggerChar, candidateStart)) {
-				if (isTriggerBoundary(plainText, candidateStart)) {
+				if (isTriggerBoundary(plainText, candidateStart, trigger)) {
 					const query = plainText.slice(candidateStart + triggerLen, cursorPosition);
 					const minChars = trigger.minChars ?? 0;
 

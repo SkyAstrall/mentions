@@ -15,6 +15,7 @@ import {
 	type TriggerConfig,
 } from "@skyastrall/mentions-angular";
 import { commands, tags, users } from "../../data/mock";
+import { buildPlaygroundTriggers, generateAngularCode } from "../playground-config";
 
 type TriggerState = {
 	enabled: boolean;
@@ -375,14 +376,13 @@ export class AngularPlayground {
 	protected readonly enabledTriggers = computed(() => this.triggerStates().filter((t) => t.enabled));
 
 	protected readonly triggers = computed<TriggerConfig[]>(() =>
-		this.enabledTriggers().map((t) => ({
-			char: t.char,
-			data: this.asyncMode() && t.char === "@" ? this.asyncUsers : t.data,
-			color: t.color,
+		buildPlaygroundTriggers(this.enabledTriggers(), {
+			asyncMode: this.asyncMode(),
+			asyncUsers: this.asyncUsers,
 			debounce: this.debounceMs(),
 			minChars: this.minChars(),
-			...(this.maxSuggestions() > 0 ? { maxSuggestions: this.maxSuggestions() } : {}),
-		})),
+			maxSuggestions: this.maxSuggestions(),
+		}),
 	);
 
 	protected readonly mentionsJson = computed(() => {
@@ -391,35 +391,13 @@ export class AngularPlayground {
 		return items.length ? JSON.stringify(items) : "[]";
 	});
 
-	protected readonly code = computed(() => {
-		const trigLines = this.enabledTriggers().map((t) => {
-			const data = this.asyncMode() && t.char === "@" ? "fetchUsers" : t.label.toLowerCase();
-			return `    { char: "${t.char}", data: ${data}, color: "${t.color}" }`;
-		});
-		const inputs = [`[triggers]="triggers"`, `[(ngModel)]="markup"`];
-		if (this.placeholder()) inputs.push(`placeholder="${this.placeholder()}"`);
-		if (this.singleLine()) inputs.push(`[singleLine]="true"`);
-		return [
-			`import { Component } from "@angular/core"`,
-			`import { FormsModule } from "@angular/forms"`,
-			`import { SaMentions } from "@skyastrall/mentions-angular"`,
-			``,
-			`@Component({`,
-			`  standalone: true,`,
-			`  imports: [SaMentions, FormsModule],`,
-			`  template: \``,
-			`    <sa-mentions`,
-			...inputs.map((i) => `      ${i}`),
-			`    />\`,`,
-			`})`,
-			`export class CommentBox {`,
-			`  triggers = [`,
-			trigLines.join(",\n"),
-			`  ]`,
-			`  markup = ""`,
-			`}`,
-		].join("\n");
-	});
+	protected readonly code = computed(() =>
+		generateAngularCode(this.enabledTriggers(), {
+			asyncMode: this.asyncMode(),
+			placeholder: this.placeholder(),
+			singleLine: this.singleLine(),
+		}),
+	);
 
 	protected solid(color: string): string {
 		return color.replace(/[\d.]+\)$/, "1)");

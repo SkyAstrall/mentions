@@ -2,6 +2,7 @@ import { useRef, useState, useCallback } from "react";
 import { Mentions, extractMentions } from "@skyastrall/mentions-react";
 import type { MentionItem, MentionsHandle } from "@skyastrall/mentions-react";
 import { users, tags, commands } from "../../data/mock";
+import { buildPlaygroundTriggers, formatPlaygroundTrigger } from "../playground-config";
 
 type TriggerState = {
 	enabled: boolean;
@@ -39,10 +40,7 @@ const asyncUsers: (query: string) => Promise<MentionItem[]> = (query) =>
 function generateCode(triggerStates: TriggerState[], opts: { singleLine: boolean; asyncMode: boolean; placeholder: string }): string {
 	const trigLines = triggerStates
 		.filter((t) => t.enabled)
-		.map((t) => {
-			const dataStr = opts.asyncMode && t.char === "@" ? "fetchUsers" : t.label.toLowerCase();
-			return `    { char: "${t.char}", data: ${dataStr}, color: "${t.color}" }`;
-		});
+		.map((t) => formatPlaygroundTrigger(t, opts.asyncMode));
 
 	const props: string[] = [];
 	props.push(`  triggers={[\n${trigLines.join(",\n")}\n  ]}`);
@@ -100,16 +98,9 @@ export default function Playground() {
 		setTriggerStates((prev) => prev.filter((_, i) => i !== idx));
 	};
 
-	const triggers = triggerStates
-		.filter((t) => t.enabled)
-		.map((t) => ({
-			char: t.char,
-			data: asyncMode && t.char === "@" ? asyncUsers : t.data,
-			color: t.color,
-			debounce: debounceMs,
-			minChars,
-			...(maxSuggestions > 0 ? { maxSuggestions } : {}),
-		}));
+	const triggers = buildPlaygroundTriggers(triggerStates, {
+		asyncMode, asyncUsers, debounce: debounceMs, minChars, maxSuggestions,
+	});
 
 	const code = generateCode(triggerStates, { singleLine, asyncMode, placeholder });
 
