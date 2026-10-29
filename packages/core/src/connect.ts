@@ -31,13 +31,21 @@ export function connect(state: MentionState, id: string): ConnectReturn {
 			id: listboxId,
 			role: "listbox",
 			"aria-label": "Suggestions",
-			"aria-busy": isLoading || undefined,
+			"aria-busy": isLoading || state.isLoadingMore || undefined,
 		},
 		getItemProps: (index: number): ItemAriaProps => ({
 			id: itemId(index),
 			role: "option",
 			"aria-selected": index === state.highlightedIndex,
 		}),
+		groups: state.groups ?? [],
+		hasMore: state.hasMore ?? false,
+		isLoadingMore: state.isLoadingMore ?? false,
+		getGroupProps: (index) =>
+			state.groups?.[index]?.id != null
+				? { role: "group", "aria-labelledby": `mention-group-${id}-${index}` }
+				: {},
+		getGroupLabelProps: (index) => ({ id: `mention-group-${id}-${index}` }),
 		isOpen,
 		query: state.query,
 		items: state.items,

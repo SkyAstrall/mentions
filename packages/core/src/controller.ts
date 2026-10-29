@@ -1,10 +1,11 @@
-import { filterItems } from "./filter.ts";
 import { createInitialState, mentionReducer } from "./machine.ts";
-import { extractMentions, markupToPlainText, parseMarkup } from "./markup.ts";
+import { markupToPlainText, parseMarkup } from "./markup.ts";
+import { SuggestionSource } from "./suggestion-source.ts";
 import { detectTrigger } from "./triggers.ts";
 import type {
 	CaretPosition,
 	KeyDownResult,
+	ListScrollGeometry,
 	MentionControllerOptions,
 	MentionItem,
 	MentionSegment,
@@ -25,8 +26,12 @@ export class MentionController {
 	private state: MentionState;
 	private listeners = new Set<() => void>();
 	private options: MentionControllerOptions;
-	private fetchTimer: ReturnType<typeof setTimeout> | null = null;
-	private fetchAbort: AbortController | null = null;
+	private source = new SuggestionSource(
+		() => this.options,
+		() => this.state,
+		(action) => this.dispatch(action),
+	);
+
 	private prevMentions: Array<{ id: string; label: string; trigger: string }> = [];
 	private notifying = false;
 	private pendingNotify = false;
@@ -144,6 +149,10 @@ export class MentionController {
 
 		switch (key) {
 			case "ArrowDown":
+				if (this.state.hasMore && this.state.highlightedIndex === this.state.items.length - 1) {
+					this.source.loadMore(true);
+					return { handled: true };
+				}
 				this.dispatch({ type: "ARROW_DOWN" });
 				return { handled: true };
 			case "ArrowUp":
@@ -164,6 +173,7 @@ export class MentionController {
 				return { handled: false };
 			}
 			case "Escape":
+				this.cancelFetch();
 				this.dispatch({ type: "ESCAPE" });
 				return { handled: true };
 			default:
@@ -172,6 +182,7 @@ export class MentionController {
 	}
 
 	handleBlur(): void {
+		this.cancelFetch();
 		this.dispatch({ type: "BLUR" });
 	}
 
@@ -262,65 +273,23 @@ export class MentionController {
 	}
 
 	private cancelFetch(): void {
-		if (this.fetchTimer !== null) {
-			clearTimeout(this.fetchTimer);
-			this.fetchTimer = null;
-		}
-		if (this.fetchAbort) {
-			this.fetchAbort.abort();
-			this.fetchAbort = null;
-		}
+		this.source.cancel();
 	}
 
 	private fetchForTrigger(triggerChar: string, query: string): void {
-		this.cancelFetch();
+		this.source.start(triggerChar, query);
+	}
 
-		const triggerConfig = this.options.triggers.find((t) => t.char === triggerChar);
-		if (!triggerConfig) return;
+	loadMore(): void {
+		this.source.loadMore();
+	}
 
-		const { data } = triggerConfig;
-		const filter = this.options.filterFn ?? filterItems;
-
-		if (Array.isArray(data)) {
-			let filtered = filter(data, query);
-			if (triggerConfig.maxSuggestions) {
-				filtered = filtered.slice(0, triggerConfig.maxSuggestions);
-			}
-			this.dispatch({ type: "FETCH_COMPLETE", items: filtered });
-			return;
-		}
-
-		const delay = triggerConfig.debounce ?? 200;
-		this.fetchAbort = new AbortController();
-		const { signal } = this.fetchAbort;
-
-		this.fetchTimer = setTimeout(() => {
-			this.dispatch({ type: "FETCH_START" });
-
-			const context = {
-				textBefore: this.state.plainText.slice(0, this.state.queryStartIndex),
-				textAfter: this.state.plainText.slice(this.state.queryEndIndex),
-				activeMentions: extractMentions(this.state.markup, this.options.triggers),
-				fullText: this.state.plainText,
-			};
-
-			data(query, context)
-				.then((items) => {
-					if (
-						!signal.aborted &&
-						this.state.activeTrigger === triggerChar &&
-						this.state.query === query
-					) {
-						this.dispatch({ type: "FETCH_COMPLETE", items });
-					}
-				})
-				.catch((err) => {
-					if (!signal.aborted) {
-						this.dispatch({ type: "FETCH_ERROR" });
-						if (err instanceof Error) this.options.callbacks?.onError?.(err);
-					}
-				});
-		}, delay);
+	handleListScroll(geometry: ListScrollGeometry): void {
+		if (
+			[geometry.scrollTop, geometry.clientHeight, geometry.scrollHeight].every(Number.isFinite) &&
+			geometry.scrollTop + geometry.clientHeight >= geometry.scrollHeight - 1
+		)
+			this.loadMore();
 	}
 
 	private diffMentions(newMarkup: string): void {

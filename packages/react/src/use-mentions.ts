@@ -2,7 +2,6 @@
 
 import {
 	buildMentionHTML,
-	type ConnectReturn,
 	connect,
 	extractMentions,
 	getCaretRect,
@@ -10,68 +9,19 @@ import {
 	getPlainTextFromDOM,
 	handleEditorPaste,
 	insertTextAtCursor,
-	type MentionCallbacks,
 	MentionController,
 	type MentionItem,
-	type MentionState,
 	performMentionInsertion,
 	readEditorState,
 	restoreCursor,
 	supportsPlaintextOnly,
-	type TriggerConfig,
 	updateCaretIfActive,
 } from "@skyastrall/mentions-core";
-import {
-	type RefObject,
-	useCallback,
-	useEffect,
-	useId,
-	useMemo,
-	useRef,
-	useSyncExternalStore,
-} from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useSyncExternalStore } from "react";
 
-export type UseMentionsOptions = {
-	triggers: TriggerConfig[];
-	value?: string;
-	defaultValue?: string;
-	onChange?: MentionCallbacks["onChange"];
-	onSelect?: MentionCallbacks["onSelect"];
-	onRemove?: MentionCallbacks["onRemove"];
-	onQueryChange?: MentionCallbacks["onQueryChange"];
-	onOpen?: MentionCallbacks["onOpen"];
-	onClose?: MentionCallbacks["onClose"];
-	onError?: MentionCallbacks["onError"];
-	ghostText?: string;
-	onAcceptGhostText?: () => void;
-};
+import type { UseMentionsOptions, UseMentionsReturn } from "./use-mentions-types.js";
 
-export type UseMentionsReturn = ConnectReturn & {
-	state: MentionState;
-	editorRef: RefObject<HTMLDivElement | null>;
-	markup: string;
-	plainText: string;
-	mentions: MentionItem[];
-	clear: () => void;
-	focus: () => void;
-	insertTrigger: (trigger: string) => void;
-	ghostText?: string;
-	/** @internal */
-	_buildHTML: (markup: string) => string;
-	/** Wire to `onInput` on your contenteditable div when using the headless hook. */
-	handleInput: () => void;
-	inputProps: ConnectReturn["inputProps"] & {
-		onKeyDown: React.KeyboardEventHandler<HTMLDivElement>;
-		onCompositionStart: React.CompositionEventHandler<HTMLDivElement>;
-		onCompositionEnd: React.CompositionEventHandler<HTMLDivElement>;
-		onBlur: React.FocusEventHandler<HTMLDivElement>;
-		onPaste: React.ClipboardEventHandler<HTMLDivElement>;
-	};
-	getItemProps: (index: number) => ReturnType<ConnectReturn["getItemProps"]> & {
-		onPointerDown: React.PointerEventHandler;
-		onClick: React.MouseEventHandler;
-	};
-};
+export type { UseMentionsOptions, UseMentionsReturn } from "./use-mentions-types.js";
 
 export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const {
@@ -347,6 +297,9 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	}, [controller]);
 
 	return {
+		...aria,
+		loadMore: () => controller.loadMore(),
+		handleListScroll: (geometry) => controller.handleListScroll(geometry),
 		inputProps: {
 			...aria.inputProps,
 			onKeyDown,

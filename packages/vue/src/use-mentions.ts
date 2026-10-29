@@ -1,6 +1,5 @@
 import {
 	buildMentionHTML,
-	type ConnectReturn,
 	connect,
 	extractMentions,
 	getCaretRect,
@@ -10,104 +9,20 @@ import {
 	insertLargeText,
 	insertTextAtCursor,
 	isLargePaste,
-	type MentionCallbacks,
 	MentionController,
 	type MentionItem,
-	type MentionState,
 	performMentionInsertion,
 	readEditorState,
 	restoreCursor,
 	supportsPlaintextOnly,
-	type TriggerConfig,
 	updateCaretIfActive,
 } from "@skyastrall/mentions-core";
-import {
-	computed,
-	type InjectionKey,
-	inject,
-	onScopeDispose,
-	type Ref,
-	type ShallowRef,
-	shallowRef,
-	useId,
-	watch,
-} from "vue";
+import { computed, onScopeDispose, shallowRef, useId, watch } from "vue";
 
-export interface UseMentionsOptions {
-	triggers: TriggerConfig[];
-	modelValue?: string;
-	defaultValue?: string;
-	onChange?: MentionCallbacks["onChange"];
-	onSelect?: MentionCallbacks["onSelect"];
-	onRemove?: MentionCallbacks["onRemove"];
-	onQueryChange?: MentionCallbacks["onQueryChange"];
-	onOpen?: MentionCallbacks["onOpen"];
-	onClose?: MentionCallbacks["onClose"];
-	onError?: MentionCallbacks["onError"];
-	ghostText?: string;
-	onAcceptGhostText?: () => void;
-}
+import type { UseMentionsOptions, UseMentionsReturn } from "./context.js";
 
-export interface MentionsContext {
-	state: Readonly<ShallowRef<MentionState>>;
-	aria: Readonly<Ref<ConnectReturn>>;
-	editorRef: ShallowRef<HTMLDivElement | null>;
-	triggers: TriggerConfig[];
-	singleLine?: boolean;
-	handleInput: () => void;
-	handleKeyDown: (e: KeyboardEvent) => void;
-	handleBlur: (e: FocusEvent) => void;
-	handleCompositionStart: () => void;
-	handleCompositionEnd: () => void;
-	handlePaste: (e: ClipboardEvent) => void;
-	handleScroll: () => void;
-	buildHTML: (markup: string) => string;
-	performInsertion: (item: MentionItem) => void;
-	clear: () => void;
-	focus: () => void;
-	insertTrigger: (trigger: string) => void;
-	insertText: (text: string) => void;
-}
-
-export const MentionsKey: InjectionKey<MentionsContext> = Symbol("MentionsContext");
-
-export function useMentionsContext(): MentionsContext {
-	const ctx = inject(MentionsKey);
-	if (!ctx) {
-		throw new Error("Mentions compound components must be used within <Mentions>");
-	}
-	return ctx;
-}
-
-export interface UseMentionsReturn {
-	state: Readonly<ShallowRef<MentionState>>;
-	editorRef: ShallowRef<HTMLDivElement | null>;
-	isOpen: Readonly<Ref<boolean>>;
-	isLoading: Readonly<Ref<boolean>>;
-	items: Readonly<Ref<MentionItem[]>>;
-	query: Readonly<Ref<string>>;
-	highlightedIndex: Readonly<Ref<number>>;
-	activeTrigger: Readonly<Ref<string | null>>;
-	caretPosition: Readonly<Ref<MentionState["caretPosition"]>>;
-	markup: Readonly<Ref<string>>;
-	plainText: Readonly<Ref<string>>;
-	mentions: Readonly<Ref<MentionItem[]>>;
-	aria: Readonly<Ref<ConnectReturn>>;
-	handleInput: () => void;
-	handleKeyDown: (e: KeyboardEvent) => void;
-	handleBlur: (e: FocusEvent) => void;
-	handleCompositionStart: () => void;
-	handleCompositionEnd: () => void;
-	handlePaste: (e: ClipboardEvent) => void;
-	handleScroll: () => void;
-	buildHTML: (markup: string) => string;
-	performInsertion: (item: MentionItem) => void;
-	clear: () => void;
-	focus: () => void;
-	insertTrigger: (trigger: string) => void;
-	insertText: (text: string) => void;
-}
-
+export type { MentionsContext, UseMentionsOptions, UseMentionsReturn } from "./context.js";
+export { MentionsKey, useMentionsContext } from "./context.js";
 export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const instanceId = useId();
 	const editorRef = shallowRef<HTMLDivElement | null>(null);
@@ -366,6 +281,11 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	}
 
 	return {
+		groups: computed(() => aria.value.groups),
+		hasMore: computed(() => aria.value.hasMore),
+		isLoadingMore: computed(() => aria.value.isLoadingMore),
+		loadMore: () => controller.loadMore(),
+		handleListScroll: (geometry) => controller.handleListScroll(geometry),
 		state,
 		editorRef,
 		isOpen,

@@ -4,19 +4,22 @@ import PropsTable from "../../../components/PropsTable.astro";
 import Code from "../../../components/Code.astro";
 
 const triggerProps = [
+	{ name: "groups", type: "MentionGroup[]", description: "Group order and labels; unlisted groups follow in first-seen order" },
 	{ name: "char", type: "string", description: "Trigger character — @, #, /, or any string", required: true },
-	{ name: "data", type: "MentionItem[] | (query, ctx) => Promise<MentionItem[]>", description: "Static array or async fetcher", required: true },
+	{ name: "data", type: "MentionItem[] | (query, ctx) => Promise<MentionItem[] | MentionPage>", description: "Static array or async fetcher", required: true },
 	{ name: "markup", type: "string", default: '"{char}[__display__](__id__)"', description: "Markup template (uses trigger char)" },
 	{ name: "allowSpaceInQuery", type: "boolean", default: "false", description: "Allow spaces in queries" },
 	{ name: "startOfLine", type: "boolean", default: "false", description: "Open only at text start or immediately after a newline (\\n)" },
 	{ name: "allowedPrefixes", type: "string[]", default: "undefined", description: "Replace default boundaries with literal allowed preceding Unicode characters" },
 	{ name: "minChars", type: "number", default: "0", description: "Min chars before suggestions" },
 	{ name: "debounce", type: "number", default: "200", description: "Debounce ms for async fetchers" },
-	{ name: "maxSuggestions", type: "number", description: "Cap number of suggestions" },
+	{ name: "maxSuggestions", type: "number", description: "Cap the entire displayed list across groups and loaded pages" },
 	{ name: "color", type: "string", description: "Mention highlight color" },
 ];
 
 const contextProps = [
+	{ name: "cursor", type: "string | number | undefined", description: "Previous page cursor; undefined for a new query" },
+	{ name: "signal", type: "AbortSignal | undefined", description: "Cancellation signal for the active request" },
 	{ name: "textBefore", type: "string", description: "Plain text before the trigger" },
 	{ name: "textAfter", type: "string", description: "Plain text after the query" },
 	{ name: "activeMentions", type: "MentionItem[]", description: "All mentions in the editor" },
@@ -27,7 +30,7 @@ const contextProps = [
 <DocsLayout title="Trigger Config">
 	<p class="lead">Configure each trigger with its own data source, behavior, and appearance.</p>
 
-	<h2>TriggerConfig</h2>
+	<h2>MentionItem and MentionPage</h2><p><code>MentionItem</code> contains string <code>id</code> and <code>label</code>, optional string <code>group</code>, and custom fields. <code>MentionGroup</code> contains string <code>id</code> and <code>label</code>. <code>MentionPage</code> contains <code>items: MentionItem[]</code>, <code>hasMore: boolean</code> and optional <code>cursor: string | number</code>. These types are exported by core and every adapter.</p><h2>TriggerConfig</h2>
 	<PropsTable props={triggerProps} />
 
 	<h2>Where Triggers Open</h2>

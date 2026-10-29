@@ -75,5 +75,55 @@ providers: [
   provideMentions({ onError: (error) => toast.error(error.message) }),
 ]`}
 	/>
-	<p>If a fetch fails, the dropdown closes and the user can retry by typing more.</p>
+	<p>If the initial fetch fails, the dropdown closes and the user can retry by typing more. Additional-page failures retain loaded suggestions.</p>
+	<h2>Cursor pagination</h2>
+	<p>An async data function can return <code>MentionPage</code>: <code>&#123; items, hasMore, cursor? &#125;</code>. The next request receives the previous page's cursor through <code>MentionContext.cursor</code>. The initial request has an undefined cursor. A changed query or trigger resets it.</p>
+	<Code code={`const triggers = [{
+  char: "@",
+  groups: [{ id: "people", label: "People" }],
+  data: async (query, context) => {
+    const params = new URLSearchParams({ q: query, limit: "20" });
+    if (context.cursor !== undefined) params.set("cursor", String(context.cursor));
+    const signal = context.signal
+      ? AbortSignal.any([context.signal, AbortSignal.timeout(10_000)])
+      : AbortSignal.timeout(10_000);
+    const response = await fetch("/api/users?" + params, { signal });
+    if (!response.ok) throw new Error("Could not load users");
+    return response.json();
+  },
+  debounce: 200,
+  maxSuggestions: 200,
+}];`} />
+	<p>The endpoint returns, for example, <code>&#123; items: [&#123; id: "1", label: "Alice", group: "people" &#125;], hasMore: true, cursor: "page-2" &#125;</code>. A continuing page must contain items and a new string or number cursor. Return <code>hasMore: false</code> at exhaustion. Empty final pages are valid.</p>
+	<p>Scrolling to the bottom or pressing ArrowDown past the final loaded item loads the next page. Concurrent requests coalesce. ArrowDown waits at the boundary and advances once when the page arrives. Home and End address loaded items. At exhaustion, existing wrapping behavior resumes.</p>
+	<p>While appending, options stay visible, highlighting is retained, a loading row appears and the listbox sets <code>aria-busy</code>. Grouped pages merge into existing groups and preserve the highlighted item. <code>maxSuggestions</code> caps the entire accumulated list across groups and pages; reaching it stops requests.</p>
+	<p>Pass <code>context.signal</code> to fetch. Queries, triggers, dismissal, selection, clear and destruction invalidate pending pages. Late successes and errors are ignored even when a query changes away and back. Requests time out after 30 seconds. Failed additional pages keep loaded items; report the error through the existing error callback and retry explicitly with <code>loadMore()</code>.</p>
+	<h3>Custom loading-more UI</h3>
+	<CodeTabs
+		react={`const api = useMentions({ triggers });
+<div {...api.listProps} onScroll={e => api.handleListScroll(e.currentTarget)}>
+  {renderOptions(api)}
+  {api.isLoadingMore && <div role="status">Loading more...</div>}
+</div>`}
+		vue={`const api = useMentions({ triggers });
+<div v-bind="api.aria.value.listProps" @scroll="api.handleListScroll($event.currentTarget)">
+  <SuggestionOptions :api="api" />
+  <div v-if="api.isLoadingMore.value" role="status">Loading more...</div>
+</div>`}
+		svelte={`const api = useMentions({ triggers });
+<div {...api.aria.listProps} onscroll={e => api.handleListScroll(e.currentTarget)}>
+  <SuggestionOptions {api} />
+  {#if api.isLoadingMore}<div role="status">Loading more...</div>{/if}
+</div>`}
+		angular={`<ng-template saMentionsSuggestions let-api>
+  <div role="listbox" [attr.id]="api.listProps.id"
+    [attr.aria-busy]="api.listProps['aria-busy']"
+    (scroll)="api.handleListScroll($any($event.target))">
+    <suggestion-options [api]="api" />
+    @if (api.isLoadingMore) { <div role="status">Loading more...</div> }
+  </div>
+</ng-template>`}
+	/>
+	<p><code>renderOptions</code> and <code>SuggestionOptions</code> above stand for your option rendering. The <a href="/docs/guides/grouped-suggestions">complete examples</a> cover all four frameworks and all three API layers, including global item indices and accessible headings. Compound lists wire scrolling automatically; headless lists wire <code>handleListScroll(&#123; scrollTop, clientHeight, scrollHeight &#125;)</code>. <code>hasMore</code> and <code>isLoadingMore</code> are computed refs in Vue, getters in Svelte and bridge signals in Angular.</p>
+	<p><a href="/playground/suggestions/">Explore the synthetic 10,000-user demo</a> with 20-item pages and a simulated 500 ms response. Plain array results remain non-paginated.</p>
 </DocsLayout>

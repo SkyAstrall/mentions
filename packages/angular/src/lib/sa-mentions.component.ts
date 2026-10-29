@@ -1,9 +1,11 @@
-import { isPlatformBrowser } from "@angular/common";
+import { isPlatformBrowser, NgTemplateOutlet } from "@angular/common";
 import {
 	afterNextRender,
 	ChangeDetectionStrategy,
+	ChangeDetectorRef,
 	Component,
 	computed,
+	contentChild,
 	DestroyRef,
 	type ElementRef,
 	effect,
@@ -40,6 +42,8 @@ import {
 	updateCaretIfActive,
 } from "@skyastrall/mentions-core";
 import { MentionsControllerBridge } from "./controller-bridge";
+import { editorStyles } from "./editor-styles";
+import { type MentionsSuggestionsContext, SaMentionsSuggestions } from "./suggestions-template";
 import { MENTIONS_CONFIG } from "./tokens";
 
 let nextInstanceId = 0;
@@ -55,126 +59,24 @@ export const SA_MENTIONS_VALUE_ACCESSOR: Provider = {
 	standalone: true,
 	changeDetection: ChangeDetectionStrategy.OnPush,
 	providers: [SA_MENTIONS_VALUE_ACCESSOR],
-	template: `
-		<div data-mentions="" style="position: relative;">
-			<div
-				#editorEl
-				data-mentions-editor=""
-				[attr.contenteditable]="editableValue()"
-				[attr.data-empty]="isEmpty() ? '' : null"
-				[attr.data-singleline]="singleLine() ? '' : null"
-				[attr.data-placeholder]="placeholder()"
-				[attr.aria-multiline]="!singleLine()"
-				[attr.tabindex]="disabled() || cvaDisabled() ? -1 : 0"
-				[attr.role]="aria().inputProps.role"
-				[attr.aria-expanded]="aria().inputProps['aria-expanded']"
-				[attr.aria-controls]="aria().inputProps['aria-controls']"
-				[attr.aria-autocomplete]="aria().inputProps['aria-autocomplete']"
-				[attr.aria-activedescendant]="aria().inputProps['aria-activedescendant']"
-				[attr.aria-haspopup]="aria().inputProps['aria-haspopup']"
-				data-gramm="false"
-				data-gramm_editor="false"
-				data-enable-grammarly="false"
-				(input)="onInput()"
-				(keydown)="onKeyDown($event)"
-				(compositionstart)="onCompositionStart()"
-				(compositionend)="onCompositionEnd()"
-				(blur)="onBlur($event)"
-				(paste)="onPaste($event)"
-				(drop)="onDrop($event)"
-			></div>
-			@if (aria().isOpen || aria().isLoading) {
-				<div
-					role="presentation"
-					data-mentions-portal=""
-					data-mentions=""
-					(mousedown)="$event.preventDefault()"
-					[style.position]="'fixed'"
-					[style.top.px]="portalTop()"
-					[style.left.px]="portalLeft()"
-					[style.z-index]="9999"
-				>
-					<ul
-						[attr.id]="aria().listProps.id"
-						role="listbox"
-						aria-label="Suggestions"
-						[attr.aria-busy]="aria().listProps['aria-busy']"
-						class="sa-mentions-list"
-					>
-						@if (aria().isLoading) {
-							<li class="sa-mentions-empty">Loading...</li>
-						} @else if (aria().items.length === 0) {
-							<li class="sa-mentions-empty">No results</li>
-						} @else {
-							@for (item of aria().items; track item.id; let i = $index) {
-								<li
-									[attr.id]="aria().getItemProps(i).id"
-									role="option"
-									[attr.aria-selected]="aria().getItemProps(i)['aria-selected']"
-									class="sa-mentions-item"
-									[class.sa-mentions-item--active]="i === aria().highlightedIndex"
-									(pointerdown)="$event.preventDefault()"
-									(click)="selectAt(i)"
-								>{{ item.label }}</li>
-							}
-						}
-					</ul>
-				</div>
-			}
-		</div>
-	`,
-	styles: [
-		`
-			:host { display: block; }
-			[data-mentions-editor] {
-				outline: none;
-				min-height: 1.5em;
-				white-space: pre-wrap;
-				overflow-wrap: break-word;
-			}
-			[data-mentions-editor][data-singleline] {
-				white-space: nowrap;
-				overflow: hidden;
-				overflow-x: auto;
-				min-height: 0;
-			}
-			[data-mentions-editor][data-singleline] br { display: none; }
-			[data-mentions-editor][data-empty]::before {
-				content: attr(data-placeholder);
-				color: var(--mention-placeholder, var(--color-text-dim, #9ca3af));
-				pointer-events: none;
-				float: left;
-				height: 0;
-			}
-			.sa-mentions-list {
-				list-style: none;
-				margin: 0;
-				padding: 4px 0;
-				max-height: var(--dropdown-max-height, 240px);
-				overflow-y: auto;
-				background: var(--dropdown-bg, white);
-				border: var(--dropdown-border, 1px solid #e2e8f0);
-				border-radius: var(--dropdown-radius, 8px);
-				box-shadow: var(--dropdown-shadow, 0 4px 12px rgba(0, 0, 0, 0.08));
-				min-width: 200px;
-			}
-			.sa-mentions-item {
-				padding: var(--item-padding, 8px 12px);
-				cursor: pointer;
-			}
-			.sa-mentions-item--active {
-				background: var(--item-active-bg, #f1f5f9);
-			}
-			.sa-mentions-empty {
-				padding: var(--item-padding, 8px 12px);
-				color: #94a3b8;
-				font-size: 0.875rem;
-				list-style: none;
-			}
-		`,
-	],
+	templateUrl: "./sa-mentions.component.html",
+	styles: [editorStyles],
+	imports: [NgTemplateOutlet],
 })
 export class SaMentions implements ControlValueAccessor {
+	readonly suggestionsTemplate = contentChild(SaMentionsSuggestions);
+	readonly suggestionsContext = computed<MentionsSuggestionsContext>(() => ({
+		...this.aria(),
+		selectAt: (index) => this.selectAt(index),
+		loadMore: () => {
+			this.bridge.controller.loadMore();
+			this.renderSuggestions();
+		},
+		handleListScroll: (geometry) => {
+			this.bridge.controller.handleListScroll(geometry);
+			this.renderSuggestions();
+		},
+	}));
 	readonly triggers = input.required<TriggerConfig[]>();
 	readonly singleLine = input(false);
 	readonly placeholder = input("");
@@ -192,6 +94,7 @@ export class SaMentions implements ControlValueAccessor {
 
 	private readonly editorEl = viewChild.required<ElementRef<HTMLDivElement>>("editorEl");
 	private readonly destroyRef = inject(DestroyRef);
+	private readonly changeDetector = inject(ChangeDetectorRef);
 	private readonly platformId = inject(PLATFORM_ID);
 	private readonly globalConfig = inject(MENTIONS_CONFIG, { optional: true }) ?? {};
 	private readonly instanceId = `sa${++nextInstanceId}`;
@@ -244,6 +147,17 @@ export class SaMentions implements ControlValueAccessor {
 			},
 		};
 		this.bridgeRef = new MentionsControllerBridge(options, this.destroyRef);
+		const controller = this.bridgeRef.controller;
+		let previousState = controller.getState();
+		const unsubscribe = controller.subscribe(() => {
+			const state = controller.getState();
+			const suggestionsChanged =
+				state.highlightedIndex !== previousState.highlightedIndex ||
+				state.items !== previousState.items;
+			previousState = state;
+			if (suggestionsChanged) this.renderSuggestions();
+		});
+		this.destroyRef.onDestroy(unsubscribe);
 		return this.bridgeRef;
 	}
 
@@ -287,6 +201,17 @@ export class SaMentions implements ControlValueAccessor {
 			window.addEventListener("scroll", onScroll, true);
 			this.destroyRef.onDestroy(() => window.removeEventListener("scroll", onScroll, true));
 		});
+	}
+
+	private renderSuggestions(): void {
+		this.changeDetector.detectChanges();
+		const id = this.aria().inputProps["aria-activedescendant"];
+		if (id) {
+			this.editorEl().nativeElement.ownerDocument.getElementById(id)?.scrollIntoView({
+				block: "nearest",
+				inline: "nearest",
+			});
+		}
 	}
 
 	writeValue(v: string | null): void {
@@ -395,6 +320,7 @@ export class SaMentions implements ControlValueAccessor {
 			if ("action" in result && result.action === "select") {
 				this.performInsertion(result.item);
 			}
+			this.renderSuggestions();
 			return;
 		}
 		if (this.singleLine() && e.key === "Enter") {

@@ -5,7 +5,7 @@
 	import MentionsEditor from "./MentionsEditor.svelte";
 	import MentionsPortal from "./MentionsPortal.svelte";
 	import MentionsList from "./MentionsList.svelte";
-	import MentionsItem from "./MentionsItem.svelte";
+	import MentionsSuggestions from "./MentionsSuggestions.svelte";
 	import MentionsEmpty from "./MentionsEmpty.svelte";
 	import MentionsLoading from "./MentionsLoading.svelte";
 
@@ -83,6 +83,9 @@
 		handleCompositionStart: api.handleCompositionStart,
 		handleCompositionEnd: api.handleCompositionEnd,
 		handleScroll: api.handleScroll,
+		handleListScroll: api.handleListScroll,
+		loadMore: api.loadMore,
+		handlePaste: api.handlePaste,
 		buildHTML: api.buildHTML,
 		performInsertion: api.performInsertion,
 		clear: api.clear,
@@ -115,17 +118,7 @@
 					{:else if api.items.length === 0}
 						<MentionsEmpty>No results</MentionsEmpty>
 					{:else}
-						{#each api.items as item, i (item.id)}
-							<MentionsItem index={i}>
-								{#snippet children({ item: it, highlighted })}
-									{#if renderItem}
-										{@render renderItem({ item: it, highlighted })}
-									{:else}
-										{it.label}
-									{/if}
-								{/snippet}
-							</MentionsItem>
-						{/each}
+						<MentionsSuggestions {renderItem} />
 					{/if}
 				</MentionsList>
 			</MentionsPortal>
