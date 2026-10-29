@@ -1,6 +1,5 @@
 import {
 	buildMentionHTML,
-	type ConnectReturn,
 	connect,
 	extractMentions,
 	getCaretRect,
@@ -10,7 +9,6 @@ import {
 	insertLargeText,
 	insertTextAtCursor,
 	isLargePaste,
-	type MentionCallbacks,
 	MentionController,
 	type MentionItem,
 	type MentionState,
@@ -18,78 +16,13 @@ import {
 	readEditorState,
 	restoreCursor,
 	supportsPlaintextOnly,
-	type TriggerConfig,
 	updateCaretIfActive,
 } from "@skyastrall/mentions-core";
-import { getContext, setContext } from "svelte";
 
-const MENTIONS_CTX = Symbol("MentionsContext");
+import type { UseMentionsOptions, UseMentionsReturn } from "./context.js";
 
-export interface UseMentionsOptions {
-	triggers: TriggerConfig[];
-	value?: string;
-	defaultValue?: string;
-	onChange?: MentionCallbacks["onChange"];
-	onSelect?: MentionCallbacks["onSelect"];
-	onRemove?: MentionCallbacks["onRemove"];
-	onQueryChange?: MentionCallbacks["onQueryChange"];
-	onOpen?: MentionCallbacks["onOpen"];
-	onClose?: MentionCallbacks["onClose"];
-	onError?: MentionCallbacks["onError"];
-	ghostText?: string;
-	onAcceptGhostText?: () => void;
-}
-
-export interface MentionsContext {
-	readonly state: MentionState;
-	readonly aria: ConnectReturn;
-	editorRef: HTMLDivElement | null;
-	triggers: TriggerConfig[];
-	singleLine?: boolean;
-	handleInput: () => void;
-	handleKeyDown: (e: KeyboardEvent) => void;
-	handleBlur: (e: FocusEvent) => void;
-	handleCompositionStart: () => void;
-	handleCompositionEnd: () => void;
-	handlePaste: (e: ClipboardEvent) => void;
-	handleScroll: () => void;
-	buildHTML: (markup: string) => string;
-	performInsertion: (item: MentionItem) => void;
-	clear: () => void;
-	focus: () => void;
-	insertTrigger: (trigger: string) => void;
-	insertText: (text: string) => void;
-}
-
-export interface UseMentionsReturn {
-	readonly state: MentionState;
-	readonly isOpen: boolean;
-	readonly isLoading: boolean;
-	readonly items: MentionItem[];
-	readonly query: string;
-	readonly highlightedIndex: number;
-	readonly activeTrigger: string | null;
-	readonly caretPosition: MentionState["caretPosition"];
-	readonly markup: string;
-	readonly plainText: string;
-	readonly mentions: MentionItem[];
-	readonly aria: ConnectReturn;
-	editorRef: HTMLDivElement | null;
-	handleInput: () => void;
-	handleKeyDown: (e: KeyboardEvent) => void;
-	handleBlur: (e: FocusEvent) => void;
-	handleCompositionStart: () => void;
-	handleCompositionEnd: () => void;
-	handlePaste: (e: ClipboardEvent) => void;
-	handleScroll: () => void;
-	buildHTML: (markup: string) => string;
-	performInsertion: (item: MentionItem) => void;
-	clear: () => void;
-	focus: () => void;
-	insertTrigger: (trigger: string) => void;
-	insertText: (text: string) => void;
-}
-
+export type { MentionsContext, UseMentionsOptions, UseMentionsReturn } from "./context.js";
+export { getMentionsContext, setMentionsContext } from "./context.js";
 export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	const instanceId = `svelte-mentions-${Math.random().toString(36).slice(2, 9)}`;
 	let editorRef: HTMLDivElement | null = $state(null);
@@ -339,6 +272,17 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 	}
 
 	return {
+		loadMore: () => controller.loadMore(),
+		handleListScroll: (geometry) => controller.handleListScroll(geometry),
+		get groups() {
+			return aria.groups;
+		},
+		get hasMore() {
+			return aria.hasMore;
+		},
+		get isLoadingMore() {
+			return aria.isLoadingMore;
+		},
 		get state() {
 			return state;
 		},
@@ -395,16 +339,4 @@ export function useMentions(options: UseMentionsOptions): UseMentionsReturn {
 		insertTrigger,
 		insertText,
 	};
-}
-
-export function setMentionsContext(ctx: MentionsContext): void {
-	setContext(MENTIONS_CTX, ctx);
-}
-
-export function getMentionsContext(): MentionsContext {
-	const ctx = getContext<MentionsContext>(MENTIONS_CTX);
-	if (!ctx) {
-		throw new Error("Mentions compound components must be used within <Mentions>");
-	}
-	return ctx;
 }

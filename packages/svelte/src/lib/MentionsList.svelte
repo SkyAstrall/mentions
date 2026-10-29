@@ -13,6 +13,7 @@
 </script>
 
 <ul
+	onscroll={(event) => ctx.handleListScroll(event.currentTarget)}
 	class={className}
 	id={ctx.aria.listProps.id}
 	role={ctx.aria.listProps.role}

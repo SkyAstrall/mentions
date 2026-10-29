@@ -8,6 +8,9 @@ const initialState: MentionState = {
 	queryStartIndex: 0,
 	queryEndIndex: 0,
 	items: [],
+	groups: [],
+	hasMore: false,
+	isLoadingMore: false,
 	highlightedIndex: -1,
 	markup: "",
 	plainText: "",
@@ -29,6 +32,9 @@ const idleReset = {
 	queryStartIndex: 0,
 	queryEndIndex: 0,
 	items: [],
+	groups: [],
+	hasMore: false,
+	isLoadingMore: false,
 	highlightedIndex: -1,
 	caretPosition: null,
 };
@@ -74,9 +80,29 @@ export function mentionReducer(state: MentionState, action: MentionAction): Ment
 				...state,
 				status: "suggesting",
 				items: action.items,
+				groups: action.groups ?? [],
+				hasMore: action.hasMore ?? false,
+				isLoadingMore: false,
 				highlightedIndex: -1,
 			};
 
+		case "PAGE_START":
+			if (state.status !== "suggesting" && state.status !== "navigating") return state;
+			return { ...state, isLoadingMore: true };
+		case "PAGE_RESET":
+			return { ...state, hasMore: false, isLoadingMore: false };
+		case "PAGE_ERROR":
+			return state.isLoadingMore ? { ...state, isLoadingMore: false } : state;
+		case "PAGE_COMPLETE":
+			if (!state.isLoadingMore) return state;
+			return {
+				...state,
+				items: action.items,
+				groups: action.groups,
+				hasMore: action.hasMore,
+				highlightedIndex: action.highlightedIndex,
+				isLoadingMore: false,
+			};
 		case "FETCH_ERROR":
 			if (state.status !== "loading") return state;
 			return { ...state, ...idleReset };

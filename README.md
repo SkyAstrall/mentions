@@ -251,3 +251,28 @@ See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full workflow.
 ## License
 
 [MIT](./LICENSE) — built by [SkyAstrall](https://skyastrall.com).
+
+### Grouped and paginated suggestions
+
+All four adapters support optional `MentionItem.group`, ordered `TriggerConfig.groups`, and async cursor pages. Drop-in components render accessible headings and loading rows. Compound/template and headless APIs expose group metadata and pagination controls.
+
+```ts
+const triggers = [{
+  char: "@",
+  groups: [{ id: "people", label: "People" }],
+  data: async (query, { cursor, signal }) => {
+    const params = new URLSearchParams({ q: query, limit: "20" });
+    if (cursor !== undefined) params.set("cursor", String(cursor));
+    const response = await fetch("/api/users?" + params, {
+      signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10_000)]) : AbortSignal.timeout(10_000),
+    });
+    if (!response.ok) throw new Error("Could not load users");
+    return response.json();
+  },
+  maxSuggestions: 200,
+}];
+```
+
+The endpoint returns `{ items: [{ id: "1", label: "Alice", group: "people" }], hasMore: true, cursor: "next" }`. Arrays continue to work. `maxSuggestions` caps the whole list across groups and pages. Scroll to the bottom or press ArrowDown past loaded items to append another page. Headless lists wire `handleListScroll`; `loadMore()` explicitly retries failed pages. Use global indices (`group.startIndex + offset`) for item props and selection.
+
+See [grouped suggestions](https://mentions.skyastrall.com/docs/guides/grouped-suggestions), [async pagination](https://mentions.skyastrall.com/docs/guides/async-data), and the [four-framework playground](https://mentions.skyastrall.com/playground/suggestions/) with synthetic 10,000-user data.

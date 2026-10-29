@@ -14,16 +14,10 @@ import {
 	type PropType,
 	provide,
 	ref,
-	Teleport,
 	type VNode,
 	watch,
 } from "vue";
-import {
-	MentionsKey,
-	type UseMentionsOptions,
-	useMentions,
-	useMentionsContext,
-} from "./use-mentions.js";
+import { MentionsKey, type UseMentionsOptions, useMentions } from "./use-mentions.js";
 
 function injectStyles(): void {
 	if (typeof document === "undefined") return;
@@ -35,6 +29,25 @@ function injectStyles(): void {
 	document.head.appendChild(style);
 }
 
+import { useMentionsContext } from "./context.js";
+import {
+	MentionsEmpty,
+	MentionsList,
+	MentionsLoading,
+	MentionsPortal,
+	MentionsSuggestions,
+} from "./suggestions.js";
+
+export {
+	MentionsEmpty,
+	MentionsGroup,
+	MentionsGroupLabel,
+	MentionsItem,
+	MentionsList,
+	MentionsLoading,
+	MentionsPortal,
+	MentionsSuggestions,
+} from "./suggestions.js";
 export interface MentionsInstance {
 	focus: () => void;
 	clear: () => void;
@@ -115,6 +128,8 @@ export const Mentions = defineComponent({
 			handleCompositionEnd: api.handleCompositionEnd,
 			handlePaste: api.handlePaste,
 			handleScroll: api.handleScroll,
+			handleListScroll: api.handleListScroll,
+			loadMore: api.loadMore,
 			buildHTML: api.buildHTML,
 			performInsertion: api.performInsertion,
 			clear: api.clear,
@@ -152,18 +167,7 @@ export const Mentions = defineComponent({
 					? [h(MentionsLoading, null, { default: () => "Loading..." })]
 					: api.items.value.length === 0
 						? [h(MentionsEmpty, null, { default: () => "No results" })]
-						: api.items.value.map((item, i) =>
-								h(
-									MentionsItem,
-									{ key: item.id, index: i },
-									{
-										default: () =>
-											props.renderItem
-												? props.renderItem(item, i === api.highlightedIndex.value)
-												: item.label,
-									},
-								),
-							);
+						: [h(MentionsSuggestions, { renderItem: props.renderItem })];
 
 				children.push(
 					h(MentionsPortal, null, {
@@ -330,163 +334,5 @@ export const MentionsEditor = defineComponent({
 				} as CSSProperties,
 			});
 		};
-	},
-});
-
-export const MentionsPortal = defineComponent({
-	name: "MentionsPortal",
-	props: {
-		to: { type: [String, Object] as PropType<string | HTMLElement>, default: undefined },
-	},
-	setup(props, { slots }) {
-		const ctx = useMentionsContext();
-
-		return () => {
-			if (!ctx.aria.value.isOpen && !ctx.aria.value.isLoading) return null;
-
-			const dropdownStyle: CSSProperties = {
-				position: "fixed",
-				zIndex: 9999,
-			};
-
-			const cp = ctx.state.value.caretPosition;
-			if (cp) {
-				dropdownStyle.top = `${cp.top + cp.height + 4}px`;
-				dropdownStyle.left = `${cp.left}px`;
-			}
-
-			const content = h(
-				"div",
-				{
-					role: "presentation",
-					style: dropdownStyle,
-					"data-mentions-portal": "",
-					"data-mentions": "",
-					onMousedown: (e: MouseEvent) => e.preventDefault(),
-				},
-				slots.default?.(),
-			);
-
-			return props.to ? h(Teleport, { to: props.to }, { default: () => content }) : content;
-		};
-	},
-});
-
-export const MentionsList = defineComponent({
-	name: "MentionsList",
-	props: {
-		class: { type: String, default: undefined },
-	},
-	setup(props, { slots }) {
-		const ctx = useMentionsContext();
-
-		return () =>
-			h(
-				"ul",
-				{
-					class: props.class,
-					...ctx.aria.value.listProps,
-					style: {
-						listStyle: "none",
-						margin: 0,
-						padding: "4px 0",
-						maxHeight: "var(--dropdown-max-height, 240px)",
-						overflowY: "auto",
-						backgroundColor: "var(--dropdown-bg, white)",
-						border: "var(--dropdown-border, 1px solid #e2e8f0)",
-						borderRadius: "var(--dropdown-radius, 8px)",
-						boxShadow: "var(--dropdown-shadow, 0 4px 12px rgba(0,0,0,0.08))",
-						minWidth: "200px",
-					} as CSSProperties,
-				},
-				slots.default?.(),
-			);
-	},
-});
-
-export const MentionsItem = defineComponent({
-	name: "MentionsItem",
-	props: {
-		index: { type: Number, required: true },
-		class: { type: String, default: undefined },
-	},
-	setup(props, { slots }) {
-		const ctx = useMentionsContext();
-		const itemEl = ref<HTMLLIElement | null>(null);
-
-		const highlighted = (): boolean => props.index === ctx.state.value.highlightedIndex;
-
-		watch(
-			() => ctx.state.value.highlightedIndex,
-			() => {
-				if (highlighted() && itemEl.value) {
-					itemEl.value.scrollIntoView({ block: "nearest" });
-				}
-			},
-		);
-
-		return () => {
-			const item = ctx.state.value.items[props.index];
-			if (!item) return null;
-
-			const ariaItemProps = ctx.aria.value.getItemProps(props.index);
-
-			return h(
-				"li",
-				{
-					ref: itemEl,
-					class: props.class,
-					...ariaItemProps,
-					onPointerdown: (e: PointerEvent) => e.preventDefault(),
-					onClick: () => ctx.performInsertion(item),
-					style: {
-						padding: "var(--item-padding, 8px 12px)",
-						cursor: "pointer",
-						backgroundColor: highlighted() ? "var(--item-active-bg, #f1f5f9)" : "transparent",
-					} as CSSProperties,
-				},
-				slots.default?.({ item, highlighted: highlighted() }) ?? item.label,
-			);
-		};
-	},
-});
-
-export const MentionsEmpty = defineComponent({
-	name: "MentionsEmpty",
-	setup(_, { slots }) {
-		const ctx = useMentionsContext();
-
-		return () => {
-			if (ctx.state.value.items.length > 0) return null;
-			return h(
-				"div",
-				{
-					style: {
-						padding: "var(--item-padding, 8px 12px)",
-						color: "#94a3b8",
-						fontSize: "0.875rem",
-					} as CSSProperties,
-				},
-				slots.default?.(),
-			);
-		};
-	},
-});
-
-export const MentionsLoading = defineComponent({
-	name: "MentionsLoading",
-	setup(_, { slots }) {
-		return () =>
-			h(
-				"div",
-				{
-					style: {
-						padding: "var(--item-padding, 8px 12px)",
-						color: "#94a3b8",
-						fontSize: "0.875rem",
-					} as CSSProperties,
-				},
-				slots.default?.(),
-			);
 	},
 });

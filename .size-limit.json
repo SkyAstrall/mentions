@@ -3,7 +3,7 @@
 		"name": "@skyastrall/mentions-core",
 		"path": "packages/core/dist/index.js",
 		"gzip": true,
-		"limit": "7 kB"
+		"limit": "8 kB"
 	},
 	{
 		"name": "@skyastrall/mentions-react",

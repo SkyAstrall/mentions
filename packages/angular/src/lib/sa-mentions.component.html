@@ -1,0 +1,81 @@
+<div data-mentions="" style="position: relative;">
+			<div
+				#editorEl
+				data-mentions-editor=""
+				[attr.contenteditable]="editableValue()"
+				[attr.data-empty]="isEmpty() ? '' : null"
+				[attr.data-singleline]="singleLine() ? '' : null"
+				[attr.data-placeholder]="placeholder()"
+				[attr.aria-multiline]="!singleLine()"
+				[attr.tabindex]="disabled() || cvaDisabled() ? -1 : 0"
+				[attr.role]="aria().inputProps.role"
+				[attr.aria-expanded]="aria().inputProps['aria-expanded']"
+				[attr.aria-controls]="aria().inputProps['aria-controls']"
+				[attr.aria-autocomplete]="aria().inputProps['aria-autocomplete']"
+				[attr.aria-activedescendant]="aria().inputProps['aria-activedescendant']"
+				[attr.aria-haspopup]="aria().inputProps['aria-haspopup']"
+				data-gramm="false"
+				data-gramm_editor="false"
+				data-enable-grammarly="false"
+				(input)="onInput()"
+				(keydown)="onKeyDown($event)"
+				(compositionstart)="onCompositionStart()"
+				(compositionend)="onCompositionEnd()"
+				(blur)="onBlur($event)"
+				(paste)="onPaste($event)"
+				(drop)="onDrop($event)"
+			></div>
+			@if (aria().isOpen || aria().isLoading) {
+				<div
+					role="presentation"
+					data-mentions-portal=""
+					data-mentions=""
+					(mousedown)="$event.preventDefault()"
+					[style.position]="'fixed'"
+					[style.top.px]="portalTop()"
+					[style.left.px]="portalLeft()"
+					[style.z-index]="9999"
+				>
+					@if (suggestionsTemplate(); as custom) {
+	<ng-container [ngTemplateOutlet]="custom.template" [ngTemplateOutletContext]="{ $implicit: suggestionsContext() }" />
+} @else {
+	<ul [attr.id]="aria().listProps.id" role="listbox" aria-label="Suggestions"
+		[attr.aria-busy]="aria().listProps['aria-busy']" class="sa-mentions-list"
+		(scroll)="suggestionsContext().handleListScroll($any($event.target))">
+		@if (aria().isLoading) {
+			<li class="sa-mentions-empty">Loading...</li>
+		} @else if (aria().items.length === 0) {
+			<li class="sa-mentions-empty">No results</li>
+		} @else if (aria().groups.length) {
+			@for (group of aria().groups; track group.id; let gi = $index) {
+				@if (group.id === null) {
+					@for (item of group.items; track item.id; let offset = $index) {
+						<ng-container [ngTemplateOutlet]="option" [ngTemplateOutletContext]="{ i: group.startIndex + offset }" />
+					}
+				} @else {
+					<li role="presentation"><ul role="group" [attr.aria-labelledby]="aria().getGroupProps(gi)['aria-labelledby']" style="list-style:none;padding:0;margin:0">
+						<li role="presentation" [attr.id]="aria().getGroupLabelProps(gi).id" style="padding:8px 12px;font-weight:600" [textContent]="group.label"></li>
+						@for (item of group.items; track item.id; let offset = $index) {
+							<ng-container [ngTemplateOutlet]="option" [ngTemplateOutletContext]="{ i: group.startIndex + offset }" />
+						}
+					</ul></li>
+				}
+			}
+		} @else {
+			@for (item of aria().items; track item.id; let i = $index) {
+				<ng-container [ngTemplateOutlet]="option" [ngTemplateOutletContext]="{ i: i }" />
+			}
+		}
+		@if (aria().isLoadingMore) { <li role="status">Loading...</li> }
+	</ul>
+}
+<ng-template #option let-i="i">
+	<li [attr.id]="aria().getItemProps(i).id" role="option"
+		[attr.aria-selected]="aria().getItemProps(i)['aria-selected']" class="sa-mentions-item"
+		[class.sa-mentions-item--active]="i === aria().highlightedIndex"
+		(pointerdown)="$event.preventDefault()" (click)="selectAt(i)" [textContent]="aria().items[i].label"></li>
+</ng-template>
+				</div>
+			}
+		</div>
+	

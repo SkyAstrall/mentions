@@ -1,0 +1,72 @@
+---
+import DocsLayout from "../../../layouts/DocsLayout.astro";
+import Code from "../../../components/Code.astro";
+import CodeTabs from "../../../components/CodeTabs.astro";
+import reactExample from "../../../components/react/SuggestionFeatures.tsx?raw";
+import vueExample from "../../../components/vue/SuggestionExample.vue?raw";
+import svelteExample from "../../../components/svelte/SuggestionExample.svelte?raw";
+import angularExample from "../../../components/angular/SuggestionFeatures.ts?raw";
+import angularHeadless from "../../../components/angular/SuggestionHeadless.ts?raw";
+import angularList from "../../../components/angular/SuggestionList.ts?raw";
+---
+
+<DocsLayout title="Grouped Suggestions">
+	<p class="lead">Organize people, teams and channels under accessible group headings in React, Vue, Svelte and Angular.</p>
+	<Code code={`const triggers = [{
+  char: "@",
+  groups: [
+    { id: "people", label: "People" },
+    { id: "teams", label: "Teams" },
+    { id: "channels", label: "Channels" },
+  ],
+  data: [
+    { id: "alice", label: "Alice", group: "people" },
+    { id: "bob", label: "Bob", group: "people" },
+    { id: "platform", label: "Platform", group: "teams" },
+    { id: "general", label: "general", group: "channels" },
+  ],
+  maxSuggestions: 50,
+}];`} />
+	<p><code>MentionItem.group</code> is optional. <code>TriggerConfig.groups</code> fixes group order and labels. Unlisted groups follow in first-seen order. Without configuration, group ids become labels. Empty groups are omitted. Ungrouped items come first without headings; entirely ungrouped lists retain their existing rendering.</p>
+	<p><code>maxSuggestions</code> applies to the whole displayed list, after ordering groups, across every group and loaded page. It never applies separately to each group or page.</p>
+	<p>Arrow keys, Home and End navigate the flat items array. Headings never receive a selectable index. Groups work with static arrays, async arrays and <a href="/docs/guides/async-data">paginated async data</a>.</p>
+
+	<h2>Drop-in components</h2>
+	<CodeTabs react={`<Mentions triggers={triggers} />`} vue={`<Mentions :triggers="triggers" />`} svelte={`<Mentions {triggers} />`} angular={`<sa-mentions [triggers]="triggers" />`} />
+	<p>All four components render headings, grouping semantics and loading-more rows automatically.</p>
+
+	<h2>Compound and template composition</h2>
+	<CodeTabs
+		react={`<Mentions triggers={triggers}>
+  <Mentions.Editor />
+  <Mentions.Portal><Mentions.List><Mentions.Suggestions /></Mentions.List></Mentions.Portal>
+</Mentions>`}
+		vue={`<Mentions :triggers="triggers">
+  <MentionsEditor />
+  <MentionsPortal><MentionsList><MentionsSuggestions /></MentionsList></MentionsPortal>
+</Mentions>`}
+		svelte={`<Mentions {triggers}>
+  <MentionsEditor />
+  <MentionsPortal><MentionsList><MentionsSuggestions /></MentionsList></MentionsPortal>
+</Mentions>`}
+		angular={`<sa-mentions [triggers]="triggers">
+  <ng-template saMentionsSuggestions let-api>
+    <suggestion-list [api]="api" />
+  </ng-template>
+</sa-mentions>`}
+	/>
+	<p>For custom composition, React exports <code>useMentionsContext()</code>, <code>Mentions.Group</code> and <code>Mentions.GroupLabel</code>. Vue exports <code>useMentionsContext()</code>, <code>MentionsGroup</code> and <code>MentionsGroupLabel</code>; Svelte exports <code>getMentionsContext()</code> with the same component names. Pass a group index to the group primitives. Render that group's items using <code>group.startIndex + offset</code> as the global item index. Anonymous groups have no heading or group role.</p>
+	<p>Angular exports <code>SaMentionsSuggestions</code>, a directive with a typed template context. Its implicit value exposes the connected view plus <code>selectAt(index)</code>, <code>loadMore()</code> and <code>handleListScroll(geometry)</code>. Import the directive alongside <code>SaMentions</code>.</p>
+
+	<h2>Headless data and ARIA</h2>
+	<p><code>SuggestionGroup</code> contains <code>id</code>, <code>label</code>, <code>items</code> and <code>startIndex</code>. The connected view exposes <code>groups</code>, <code>getGroupProps(index)</code> and <code>getGroupLabelProps(index)</code>. Spread group props onto the group wrapper and heading props onto its visible label. They connect <code>role="group"</code> to the heading through <code>aria-labelledby</code>. Keep option props on items only.</p>
+	<p>React exposes these directly from <code>useMentions</code>. Vue exposes group data as computed refs and props through <code>api.aria.value</code>. Svelte exposes reactive getters and <code>api.aria</code>. Angular exposes signals on <code>MentionsControllerBridge</code> and <code>bridge.connect(id)</code>. Use a stable unique id for each editor.</p>
+
+	<h2>Complete examples for all API layers</h2>
+	<p>The following runnable playground sources show drop-in, compound/template and headless rendering. Both grouped and paginated examples use the same rendering paths.</p>
+	<CodeTabs react={reactExample} vue={vueExample} svelte={svelteExample} angular={angularExample} />
+	<h3>Angular headless controller and suggestion template</h3>
+	<Code code={angularHeadless} />
+	<Code code={angularList} />
+	<p><a href="/playground/suggestions/">Try every framework and API layer in the playground.</a> The 10,000 users are synthetic demonstration data.</p>
+</DocsLayout>

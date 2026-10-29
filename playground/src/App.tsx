@@ -1,3 +1,5 @@
+import SuggestionFeatures from "../../website/src/components/react/SuggestionFeatures";
+import { AsyncDemo } from "./AsyncDemo";
 import type { MentionItem, MentionsHandle, TriggerConfig } from "@skyastrall/mentions-react";
 import { extractMentions, Mentions, useMentions } from "@skyastrall/mentions-react";
 import { useRef, useState } from "react";
@@ -377,24 +379,6 @@ function SingleLineDemo() {
 	);
 }
 
-function AsyncDemo() {
-	const fetchUsers = async (query: string): Promise<MentionItem[]> => {
-		await new Promise((r) => setTimeout(r, 800));
-		return users.filter((u) => u.label.toLowerCase().includes(query.toLowerCase()));
-	};
-
-	return (
-		<section>
-			<h2>Async data with loading state</h2>
-			<p className="desc">Simulates 800ms API call. Shows "Loading..." in dropdown.</p>
-			<Mentions
-				triggers={[{ char: "@", data: fetchUsers, debounce: 300 }]}
-				placeholder="Type @ and wait for async results..."
-			/>
-		</section>
-	);
-}
-
 function DisabledReadOnlyDemo() {
 	return (
 		<section>
@@ -532,7 +516,8 @@ function App() {
 			<CSSEffectsDemo />
 			<ProgrammaticDemo />
 			<SingleLineDemo />
-			<AsyncDemo />
+			<AsyncDemo users={users} />
+			<SuggestionFeatures />
 			<DisabledReadOnlyDemo />
 			<HeadlessDemo />
 			<style>{`

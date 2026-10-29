@@ -22,6 +22,7 @@ export const docsNav: NavSection[] = [
 		items: [
 			{ label: "Compound Components", href: "/docs/guides/compound-components" },
 			{ label: "Headless Usage", href: "/docs/guides/headless-hook" },
+			{ label: "Grouped Suggestions", href: "/docs/guides/grouped-suggestions" },
 			{ label: "Async Data", href: "/docs/guides/async-data" },
 			{ label: "Single Line", href: "/docs/guides/single-line" },
 			{ label: "Ghost Text / AI", href: "/docs/guides/ghost-text" },

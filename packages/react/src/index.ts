@@ -5,12 +5,16 @@ export type {
 	ItemAriaProps,
 	KeyDownResult,
 	ListAriaProps,
+	ListScrollGeometry,
 	MachineStatus,
 	MentionCallbacks,
 	MentionContext,
 	MentionControllerOptions,
+	MentionGroup,
 	MentionItem,
+	MentionPage,
 	MentionState,
+	SuggestionGroup,
 	TriggerConfig,
 } from "@skyastrall/mentions-core";
 export {
@@ -20,6 +24,7 @@ export {
 	markupToPlainText,
 	parseMarkup,
 } from "@skyastrall/mentions-core";
+export { useMentionsContext } from "./context.js";
 export type {
 	EditorProps as MentionsEditorProps,
 	EmptyProps as MentionsEmptyProps,

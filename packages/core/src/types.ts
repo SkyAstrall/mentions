@@ -2,7 +2,18 @@
 export type MentionItem<TData extends Record<string, unknown> = Record<string, unknown>> = {
 	id: string;
 	label: string;
+	group?: string;
 } & TData;
+
+export type MentionGroup = { id: string; label: string };
+export type MentionPage = { items: MentionItem[]; hasMore: boolean; cursor?: string | number };
+export type SuggestionGroup = {
+	id: string | null;
+	label: string | null;
+	items: MentionItem[];
+	startIndex: number;
+};
+export type ListScrollGeometry = { scrollTop: number; clientHeight: number; scrollHeight: number };
 
 /** Contextual information passed to async data fetchers. */
 export type MentionContext = {
@@ -10,12 +21,17 @@ export type MentionContext = {
 	textAfter: string;
 	activeMentions: MentionItem[];
 	fullText: string;
+	cursor?: string | number;
+	signal?: AbortSignal;
 };
 
 /** Configuration for a single trigger character (e.g. `@`, `#`, `/`). */
 export type TriggerConfig = {
 	char: string;
-	data: MentionItem[] | ((query: string, context: MentionContext) => Promise<MentionItem[]>);
+	data:
+		| MentionItem[]
+		| ((query: string, context: MentionContext) => Promise<MentionItem[] | MentionPage>);
+	groups?: MentionGroup[];
 	markup?: string;
 	allowSpaceInQuery?: boolean;
 	startOfLine?: boolean;
@@ -67,6 +83,9 @@ export type MentionState = {
 	selectionEnd: number;
 	caretPosition: CaretPosition | null;
 	isComposing: boolean;
+	groups?: SuggestionGroup[];
+	hasMore?: boolean;
+	isLoadingMore?: boolean;
 };
 
 /** Actions dispatched to the mention state machine. */
@@ -81,7 +100,17 @@ export type MentionAction =
 	| { type: "TRIGGER_MATCH"; trigger: string; query: string; startIndex: number; endIndex: number }
 	| { type: "TRIGGER_LOST" }
 	| { type: "FETCH_START" }
-	| { type: "FETCH_COMPLETE"; items: MentionItem[] }
+	| { type: "FETCH_COMPLETE"; items: MentionItem[]; groups?: SuggestionGroup[]; hasMore?: boolean }
+	| { type: "PAGE_START" }
+	| {
+			type: "PAGE_COMPLETE";
+			items: MentionItem[];
+			groups: SuggestionGroup[];
+			hasMore: boolean;
+			highlightedIndex: number;
+	  }
+	| { type: "PAGE_ERROR" }
+	| { type: "PAGE_RESET" }
 	| { type: "FETCH_ERROR" }
 	| { type: "ARROW_DOWN" }
 	| { type: "ARROW_UP" }
@@ -136,6 +165,11 @@ export type ConnectReturn = {
 	inputProps: InputAriaProps;
 	listProps: ListAriaProps;
 	getItemProps: (index: number) => ItemAriaProps;
+	groups: SuggestionGroup[];
+	getGroupProps: (index: number) => { role?: "group"; "aria-labelledby"?: string };
+	getGroupLabelProps: (index: number) => { id: string };
+	hasMore: boolean;
+	isLoadingMore: boolean;
 	isOpen: boolean;
 	query: string;
 	items: MentionItem[];

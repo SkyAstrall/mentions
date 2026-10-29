@@ -20,6 +20,13 @@ const optionProps = [
 ];
 
 const returnProps = [
+	{ name: "groups", type: "SuggestionGroup[]", description: "Ordered groups with items and global startIndex; empty for ungrouped lists" },
+	{ name: "getGroupProps", type: "(index) => object", description: "Group role and aria-labelledby" },
+	{ name: "getGroupLabelProps", type: "(index) => object", description: "Stable heading id" },
+	{ name: "hasMore", type: "boolean", description: "Whether another page can load" },
+	{ name: "isLoadingMore", type: "boolean", description: "Whether a page is being appended; loaded items remain visible" },
+	{ name: "loadMore", type: "() => void", description: "Request or explicitly retry the next page" },
+	{ name: "handleListScroll", type: "(geometry) => void", description: "Load at scrollTop + clientHeight >= scrollHeight" },
 	{ name: "editorRef", type: "RefObject<HTMLDivElement | null>", description: "Attach to your contenteditable div" },
 	{ name: "inputProps", type: "object", description: "ARIA + event handlers — spread onto the editor div" },
 	{ name: "listProps", type: "object", description: "ARIA attributes for the suggestion list" },
@@ -68,7 +75,7 @@ const returnProps = [
 
 	<p><code>inputProps</code> includes ARIA combobox attributes (<code>role="combobox"</code>, <code>aria-expanded</code>, <code>aria-activedescendant</code>, etc.) plus <code>onKeyDown</code>, <code>onBlur</code>, <code>onCompositionStart</code>, and <code>onCompositionEnd</code> handlers. Spread it onto your contenteditable div.</p>
 
-	<h2>Basic Example</h2>
+	<p>Group props come from the connected view: directly in React, <code>aria.value</code> in Vue, <code>aria</code> in Svelte and <code>bridge.connect(id)</code> in Angular. Vue group and pagination state use computed refs; Svelte uses getters; Angular exposes bridge signals. See <a href="/docs/guides/grouped-suggestions">grouped examples</a> and <a href="/docs/guides/async-data">pagination</a>.</p><h2>Basic Example</h2>
 	<Code code={`import { useMentions } from "@skyastrall/mentions-react";
 
 const users = [

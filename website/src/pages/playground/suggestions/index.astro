@@ -1,0 +1,40 @@
+---
+import BaseLayout from "../../../layouts/BaseLayout.astro";
+import ReactFeatures from "../../../components/react/SuggestionFeatures";
+import VueFeatures from "../../../components/vue/SuggestionFeatures.vue";
+import SvelteFeatures from "../../../components/svelte/SuggestionFeatures.svelte";
+import { SuggestionFeatures as AngularFeatures } from "../../../components/angular/SuggestionFeatures";
+---
+
+<BaseLayout title="Grouped and paginated suggestions">
+	<main class="suggestion-examples">
+		<a href="/playground/">Back to playground</a>
+		<h1>Grouped and paginated suggestions</h1>
+		<nav aria-label="Framework"><a href="?fw=react">React</a><a href="?fw=vue">Vue</a><a href="?fw=svelte">Svelte</a><a href="?fw=angular">Angular</a></nav>
+		<div id="suggestions-react"><ReactFeatures client:load /></div>
+		<div id="suggestions-vue" hidden><VueFeatures client:load /></div>
+		<div id="suggestions-svelte" hidden><SvelteFeatures client:load /></div>
+		<div id="suggestions-angular" hidden><AngularFeatures client:load /></div>
+	</main>
+</BaseLayout>
+
+<script>
+	const framework = new URLSearchParams(location.search).get("fw") ?? "react";
+	for (const name of ["react", "vue", "svelte", "angular"]) {
+		const root = document.getElementById(`suggestions-${name}`);
+		if (root) root.hidden = name !== framework;
+	}
+</script>
+
+<style is:global>
+	.suggestion-examples { max-width: 800px; margin: auto; padding: 24px; }
+	.suggestion-examples nav { display: flex; flex-wrap: wrap; gap: 16px; }
+	.suggestion-examples a, .suggestion-examples select { display: inline-block; min-height: 44px; padding: 10px; }
+	.suggestion-examples section { margin: 24px 0; padding: 20px; border: 1px solid #64748b; border-radius: 8px; }
+	.suggestion-examples [data-mentions-editor] { min-height: 60px; padding: 12px; border: 1px solid #64748b; border-radius: 4px; }
+	.suggestion-examples [data-mentions-editor]:focus-visible { box-shadow: 0 0 0 2px #6366f1; outline-offset: 2px; }
+	.suggestion-examples [role="listbox"] { max-height: 240px; overflow-y: auto; background: white; color: #111827; max-width: calc(100vw - 48px); }
+	.suggestion-examples [role="option"] { min-height: 44px; padding: 12px; cursor: pointer; }
+	.suggestion-examples [aria-selected="true"] { background: #e0e7ff; }
+	.suggestion-examples [role="group"] > [id]:first-child { padding: 8px 12px; font-weight: 600; }
+</style>
